@@ -1,3 +1,9 @@
 # Default ignored files
 /shelf/
 /workspace.xml
+build/
+out/
+*.class
+.gradle
+.DS_Store
+www/public
