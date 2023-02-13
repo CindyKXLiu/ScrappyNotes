@@ -5,7 +5,7 @@ plugins {
     `java-library`
 }
 
-group = "net.codebot"
+group = "cs346"
 version = "1.0.0"
 
 val compileKotlin: KotlinCompile by tasks
