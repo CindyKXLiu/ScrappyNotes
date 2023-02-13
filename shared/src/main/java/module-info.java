@@ -1,4 +1,4 @@
 module shared {
     requires kotlin.stdlib;
-    exports net.codebot.shared;
+    exports cs346.shared;
 }

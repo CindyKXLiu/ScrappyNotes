@@ -1,16 +1,15 @@
-package net.codebot.application
+package cs346.application
 
 import javafx.application.Application
 import javafx.scene.Scene
 import javafx.scene.control.Label
 import javafx.scene.layout.StackPane
 import javafx.stage.Stage
-import net.codebot.shared.SysInfo
 
 class Main : Application() {
     override fun start(stage: Stage) {
         stage.scene = Scene(
-            StackPane(Label("Hello ${SysInfo.userName}")),
+            StackPane(Label("Hello")),
             250.0,
             150.0)
         stage.isResizable = false

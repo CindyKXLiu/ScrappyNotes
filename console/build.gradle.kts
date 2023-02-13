@@ -5,7 +5,7 @@ plugins {
     kotlin("jvm") version "1.6.20"
 }
 
-group = "net.codebot"
+group = "cs346"
 version = "1.0.0"
 
 val compileKotlin: KotlinCompile by tasks
@@ -31,5 +31,5 @@ tasks.withType<KotlinCompile> {
 
 application {
     mainModule.set("console")
-    mainClass.set("net.codebot.console.MainKt")
+    mainClass.set("cs346.console.MainKt")
 }

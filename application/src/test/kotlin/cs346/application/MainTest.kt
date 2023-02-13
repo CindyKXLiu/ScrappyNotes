@@ -1,3 +1,5 @@
+package cs346.application
+
 import kotlin.test.Test
 import kotlin.test.assertEquals
 internal class MainTest {

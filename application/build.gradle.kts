@@ -7,7 +7,7 @@ plugins {
     id("org.beryx.jlink") version "2.25.0"
 }
 
-group = "net.codebot"
+group = "cs346"
 version = "1.0.0"
 
 val compileKotlin: KotlinCompile by tasks
@@ -34,7 +34,7 @@ tasks.withType<KotlinCompile> {
 
 application {
     mainModule.set("application")
-    mainClass.set("net.codebot.application.Main")
+    mainClass.set("cs346.application.Main")
 }
 
 javafx {
