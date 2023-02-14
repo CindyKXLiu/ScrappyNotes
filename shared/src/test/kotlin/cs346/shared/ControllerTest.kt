@@ -9,13 +9,13 @@ internal class ControllerTest {
     fun createNote() {
         val controller = Controller()
         var expectedNotesSize = 0
-        assert(controller.getAllNotes().size == expectedNotesSize)
+        assertEquals(expectedNotesSize, controller.getAllNotes().size)
 
         var note = controller.createNote()
         expectedNotesSize = 1
         var expectedTitle = ""
         var expectedContent = ""
-        assert(controller.getAllNotes().size == expectedNotesSize)
+        assertEquals(expectedNotesSize, controller.getAllNotes().size)
         assert(controller.getNoteByDateCreated(note.dateCreated) != null)
         assertEquals(expectedTitle, note.title)
         assertEquals(expectedContent, note.content)
@@ -24,7 +24,7 @@ internal class ControllerTest {
         expectedNotesSize = 2
         expectedTitle = "title"
         expectedContent = ""
-        assert(controller.getAllNotes().size == expectedNotesSize)
+        assertEquals(expectedNotesSize, controller.getAllNotes().size)
         assert(controller.getNoteByDateCreated(note.dateCreated) != null)
         assertEquals(expectedTitle, note.title)
         assertEquals(expectedContent, note.content)
@@ -33,7 +33,7 @@ internal class ControllerTest {
         expectedNotesSize = 3
         expectedTitle = ""
         expectedContent = "content"
-        assert(controller.getAllNotes().size == expectedNotesSize)
+        assertEquals(expectedNotesSize, controller.getAllNotes().size)
         assert(controller.getNoteByDateCreated(note.dateCreated) != null)
         assertEquals(expectedTitle, note.title)
         assertEquals(expectedContent, note.content)
@@ -42,7 +42,7 @@ internal class ControllerTest {
         expectedNotesSize = 4
         expectedTitle = "title"
         expectedContent = "content"
-        assert(controller.getAllNotes().size == expectedNotesSize)
+        assertEquals(expectedNotesSize, controller.getAllNotes().size)
         assert(controller.getNoteByDateCreated(note.dateCreated) != null)
         assertEquals(expectedTitle, note.title)
         assertEquals(expectedContent, note.content)
@@ -55,14 +55,14 @@ internal class ControllerTest {
         val id2 = controller.createNote().dateCreated
         val id3 = controller.createNote().dateCreated
         var expectedNotesSize = 3
-        assert(controller.getAllNotes().size == expectedNotesSize)
+        assertEquals(expectedNotesSize, controller.getAllNotes().size)
 
         controller.deleteNote(Instant.now())
-        assert(controller.getAllNotes().size == expectedNotesSize)
+        assertEquals(expectedNotesSize, controller.getAllNotes().size)
 
         controller.deleteNote(id1)
         expectedNotesSize = 2
-        assert(controller.getAllNotes().size == expectedNotesSize)
+        assertEquals(expectedNotesSize, controller.getAllNotes().size)
 
         // Add one test for removing a note that belongs to a group when group functions are added
     }
@@ -284,6 +284,7 @@ internal class ControllerTest {
         controller.editNoteContent(note5.dateCreated, "content")
         expectedSize = 5
         sortedNote = controller.getSortedNotesByModifiedDateDescending()
+        assertEquals(expectedSize, sortedNote.size)
         assertEquals("1", sortedNote[4].title)
         assertEquals("2", sortedNote[3].title)
         assertEquals("3", sortedNote[2].title)
@@ -321,6 +322,7 @@ internal class ControllerTest {
         controller.editNoteContent(note1.dateCreated, "content")
         expectedSize = 5
         sortedNote = controller.getSortedNotesByCreatedDateAscending()
+        assertEquals(expectedSize, sortedNote.size)
         assertEquals("1", sortedNote[0].title)
         assertEquals("2", sortedNote[1].title)
         assertEquals("3", sortedNote[2].title)
