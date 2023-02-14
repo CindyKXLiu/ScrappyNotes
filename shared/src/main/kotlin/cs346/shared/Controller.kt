@@ -23,7 +23,7 @@ class Controller() {
      * @return the note that was created
      */
     fun createNote(title: String = "", content: String = ""): Note {
-        var newNote = Note(title, content)
+        val newNote = Note(title, content)
         notes[newNote.dateCreated] = newNote
         return newNote
     }
@@ -39,9 +39,7 @@ class Controller() {
 
         // Remove note from their groups
         for ((_, group) in groups) {
-            if (group.notes.containsKey(createdDate)) {
-                group.notes.remove(createdDate)
-            }
+            group.removeNote(createdDate)
         }
 
         // Delete note from controller
@@ -77,6 +75,145 @@ class Controller() {
     }
 
     /**
+     * Create a group with a given name
+     *
+     * @param name is the name of the group
+     *
+     */
+    fun createGroup(name: String) {
+        val newGroup = Group(name)
+        groups[name] = newGroup
+    }
+
+    /**
+     * Delete the group
+     * By extension, the notes under the deleted group are not
+     * associated with it anymore
+     *
+     * @param name is the name of the group
+     *
+     */
+    fun deleteGroup(name: String) {
+        // Check that the group given exists
+        if (!groups.containsKey(name)) return
+
+        // Delete group from controller
+        groups.remove(name)
+    }
+
+    /**
+     * Modifies the name of the given group.
+     *
+     * @param currentName is the current name of the group
+     * @param newName is the new name of the group
+     *
+     */
+    fun editGroupName(currentName: String, newName: String) {
+        // Check that the group given exists
+        if (!groups.containsKey(currentName)) return
+
+        // Save the content of the group
+        val groupContent: Group = groups[currentName] ?: return
+        // Delete the group
+        deleteGroup(currentName)
+        // Add a group with a new name and the same content
+        groups[newName] = groupContent
+    }
+
+    /**
+     * Adds a note to a given group
+     *
+     * @param name is the name of the group
+     * @param note is the note to be added to the group
+     *
+     */
+    fun addNoteToGroup(name: String, note: Note) {
+        // Check that the group given exists
+        if (!groups.containsKey(name)) return
+
+        // Call the addNote function
+        groups[name]!!.addNote(note)
+    }
+
+    /**
+     * Adds a hashmap of notes to a given group
+     *
+     * @param name is the name of the group
+     * @param notes are the notes to be added to the group
+     *
+     */
+    fun addNotesToGroup(name: String, notes: HashMap<Instant, Note>) {
+        // Check that the group given exists
+        if (!groups.containsKey(name)) return
+
+        // Call the addNote function
+        groups[name]!!.addNotes(notes)
+    }
+
+    /**
+     * Removes a note from a given group
+     *
+     * @param name is the name of the group
+     * @param note is the note to be removed from the group
+     *
+     */
+    fun removeNoteFromGroup(name: String, note: Note) {
+        // Check that the group given exists
+        if (!groups.containsKey(name)) return
+
+        // Call the removeNote function
+        groups[name]!!.removeNote(note.dateCreated)
+    }
+
+    /**
+     * Removes a hashmap of notes to a given group
+     *
+     * @param name is the name of the group
+     * @param notes are the notes to be removed to the group
+     *
+     */
+    fun removeNotesFromGroup(name: String, notes: HashMap<Instant, Note>) {
+        // Check that the group given exists
+        if (!groups.containsKey(name)) return
+
+        groups[name]!!.removeNotes(notes)
+    }
+
+    /**
+     * Moves a note from one group to another
+     *
+     * @param oldGroup is the name of the group the note is currently in
+     * @param newGroup is tne name of the group to move the note to
+     * @param note is the note in question
+     *
+     */
+    fun moveNoteBetweenGroup(oldGroup: String, newGroup: String, note: Note) {
+        // Check that the old and new groups given exist
+        if (!groups.containsKey(oldGroup) || !groups.containsKey(newGroup)) return
+
+        // Add the note to the new group
+        addNoteToGroup(newGroup, note)
+        // Remove the note from the old group
+        removeNoteFromGroup(oldGroup, note)
+    }
+
+    /**
+     * Moves a hashmap of notes from one group to another
+     *
+     * @param oldGroup is the name of the group the notes is currently in
+     * @param newGroup is tne name of the group to move the notes to
+     * @param notes is the hashmap of notes in question
+     *
+     */
+    fun moveNotesBetweenGroup(oldGroup: String, newGroup: String, notes: HashMap<Instant, Note>) {
+        // Check that the old and new groups given exist
+        if (!groups.containsKey(oldGroup) || !groups.containsKey(newGroup)) return
+
+        addNotesToGroup(newGroup, notes)
+        removeNotesFromGroup(oldGroup, notes)
+    }
+
+    /**
      * Returns all existing notes
      *
      * @return immutable list of all existing notes in unsorted order
@@ -103,7 +240,7 @@ class Controller() {
      * @return immutable list of all notes titled [title]
      */
     fun getNotesByTitle(title: String): List<Note> {
-        var retNotes = ArrayList<Note>()
+        val retNotes = ArrayList<Note>()
 
         for ((_, note) in notes) {
             if (note.title == title){
@@ -121,7 +258,7 @@ class Controller() {
      * @return immutable list of all notes whose content contains [content]
      */
     fun getNotesByContent(content: String): List<Note> {
-        var retNotes = ArrayList<Note>()
+        val retNotes = ArrayList<Note>()
 
         for ((_, note) in notes) {
             if (note.content.contains(content)) {
@@ -137,7 +274,7 @@ class Controller() {
      * @return immutable list of all notes sorted by title in ascending order
      */
     fun getSortedNotesByTitleAscending(): List<Note> {
-        var unsortedNotes = getAllNotes()
+        val unsortedNotes = getAllNotes()
         return unsortedNotes.sortedWith(compareBy { it.title })
     }
 
@@ -147,7 +284,7 @@ class Controller() {
      * @return immutable list of all notes sorted by title in descending order
      */
     fun getSortedNotesByTitleDescending(): List<Note> {
-        var unsortedNotes = getAllNotes()
+        val unsortedNotes = getAllNotes()
         return unsortedNotes.sortedWith(compareByDescending { it.title })
     }
 
@@ -157,7 +294,7 @@ class Controller() {
      * @return immutable list of all notes sorted by modified date in ascending order
      */
     fun getSortedNotesByModifiedDateAscending(): List<Note> {
-        var unsortedNotes = getAllNotes()
+        val unsortedNotes = getAllNotes()
         return unsortedNotes.sortedWith(compareBy { it.dateModified })
     }
 
@@ -167,7 +304,7 @@ class Controller() {
      * @return immutable list of all notes sorted by modified date in descending order
      */
     fun getSortedNotesByModifiedDateDescending(): List<Note> {
-        var unsortedNotes = getAllNotes()
+        val unsortedNotes = getAllNotes()
         return unsortedNotes.sortedWith(compareByDescending { it.dateModified })
     }
 
@@ -177,7 +314,7 @@ class Controller() {
      * @return immutable list of all notes sorted by creation date in ascending order
      */
     fun getSortedNotesByCreatedDateAscending(): List<Note> {
-        var unsortedNotes = getAllNotes()
+        val unsortedNotes = getAllNotes()
         return unsortedNotes.sortedWith(compareBy { it.dateCreated })
     }
 
@@ -187,7 +324,7 @@ class Controller() {
      * @return immutable list of all notes sorted by creation date in descending order
      */
     fun getSortedNotesByCreatedDateDescending(): List<Note> {
-        var unsortedNotes = getAllNotes()
+        val unsortedNotes = getAllNotes()
         return unsortedNotes.sortedWith(compareByDescending { it.dateCreated })
     }
 }
