@@ -10,8 +10,7 @@ import java.time.Instant
  *
  * @constructor creates an empty group
  */
-internal class Group(name: String) {
-    var name = name
+internal class Group(var name: String) {
     val notes: HashMap<Instant, Note> = HashMap<Instant, Note>()
 
     /**

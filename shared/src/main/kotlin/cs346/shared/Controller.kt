@@ -187,7 +187,7 @@ class Controller() {
      * @param note is the note in question
      *
      */
-    fun moveNoteBetweenGroup(oldGroup: String, newGroup: String, note: Note) {
+    fun moveNoteBetweenGroups(oldGroup: String, newGroup: String, note: Note) {
         // Check that the old and new groups given exist
         if (!groups.containsKey(oldGroup) || !groups.containsKey(newGroup)) return
 
@@ -205,7 +205,7 @@ class Controller() {
      * @param notes is the hashmap of notes in question
      *
      */
-    fun moveNotesBetweenGroup(oldGroup: String, newGroup: String, notes: HashMap<Instant, Note>) {
+    fun moveNotesBetweenGroups(oldGroup: String, newGroup: String, notes: HashMap<Instant, Note>) {
         // Check that the old and new groups given exist
         if (!groups.containsKey(oldGroup) || !groups.containsKey(newGroup)) return
 
