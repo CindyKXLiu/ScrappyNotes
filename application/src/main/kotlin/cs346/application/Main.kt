@@ -3,8 +3,6 @@ package cs346.application
 import cs346.shared.Controller
 import cs346.shared.Note
 import javafx.application.Application
-import javafx.beans.value.ChangeListener
-import javafx.beans.value.ObservableValue
 import javafx.collections.FXCollections
 import javafx.event.ActionEvent
 import javafx.geometry.Insets
@@ -21,6 +19,7 @@ import java.util.*
 class Main : Application() {
     private val noteview = ListView<String>()
     private val notedata = FXCollections.observableArrayList<Note>()
+    private val textarea = TextArea()
     private val lastmodified = HBox()
     private val layout = BorderPane()
     private val controller = Controller()
@@ -94,6 +93,11 @@ class Main : Application() {
             createNote()
         }
 
+        val saveButton = Button("Save Note")
+        saveButton.setOnAction { actionEvent: ActionEvent ->
+            saveSelectedNote()
+        }
+
         val deleteButton = Button("Delete")
         deleteButton.setOnAction { event -> deleteSelectedNote() }
 
@@ -105,7 +109,7 @@ class Main : Application() {
 
         secondBar.spacing = 7.0
         secondBar.padding = Insets(3.0, 5.0, 3.0, 5.0)
-        secondBar.children.addAll(createButton, deleteButton, renameButton, moveButton)
+        secondBar.children.addAll(createButton, saveButton, deleteButton, renameButton, moveButton)
         twotop.top = menuBar
         twotop.bottom = secondBar
 
@@ -115,37 +119,33 @@ class Main : Application() {
         ////////////////////////////////////////////////////////////////////////////////////////////////
         // left: list of notes
         updateNoteview(controller.getSortedNotesByModifiedDateAscending())
-        noteview.selectionModel.selectedItemProperty().addListener(
-            ChangeListener<String>() { observableValue: ObservableValue<out String>, old_val: String?, new_val: String? ->
-                // updateTimeDisplayed() //TO DO: ADD UPDATE NOTE TIME
-                // displaySelectedNote() // TO DO: ADD DISPLAY SELECTED NOTE
-            })
 
         // handle mouse clicked action
         noteview.setOnMouseClicked { event ->
             if (event.button.equals(MouseButton.PRIMARY)) {
-                if (event.clickCount == 2) {
-                    // change to open note
+                if (event.clickCount == 1 && noteview.items.size != 0) {
+                    displayNoteContents(notedata[noteview.selectionModel.selectedIndex])
                 }
             }
         }
         noteview.setOnKeyPressed { event ->
             if (event.code == KeyCode.ENTER) {
-                // open note
+                displayNoteContents(notedata[noteview.selectionModel.selectedIndex])
             } else if (event.code == KeyCode.DELETE || event.code == KeyCode.BACK_SPACE) {
                deleteSelectedNote()
+            } else {
+                displayNoteContents(notedata[noteview.selectionModel.selectedIndex])
             }
         }
 
         // default center
-        val default = TextArea()
-        default.focusTraversableProperty().set(false)
-        default.disableProperty().set(true)
+        textarea.focusTraversableProperty().set(false)
+        textarea.disableProperty().set(true)
 
         // build the scene graph
         layout.top = twotop
         layout.left = noteview
-        layout.center = default
+        layout.center = textarea
         layout.bottom = lastmodified
 
         // create and show the scene
@@ -160,15 +160,26 @@ class Main : Application() {
         stage.show()
     }
 
-    private fun updateNoteview(listofnotes : List<Note>? = controller.getAllNotes())
+    private fun updateNoteview(listofnotes : List<Note>? = controller.getAllNotes(), selectedNote : Note? = null)
     {
         if (listofnotes != null)
         {
-            noteview.items.clear()
+            noteview.selectionModel.clearSelection()
+            val newview = FXCollections.observableArrayList<String>()
             notedata.clear()
-            for (note in listofnotes) {
+            var indexofnote = -1
+            listofnotes.forEachIndexed { index, note ->
                 notedata.add(note)
-                noteview.items.add(note.title)
+                newview.add(note.title)
+                if (selectedNote != null && selectedNote == note)
+                {
+                    indexofnote = index
+                }
+            }
+            noteview.items = newview
+            if (selectedNote != null && indexofnote != -1) {
+                noteview.scrollTo(indexofnote)
+                noteview.selectionModel.select(indexofnote)
             }
         }
     }
@@ -179,9 +190,12 @@ class Main : Application() {
         td.headerText = "Create a new note"
         val result: Optional<String> = td.showAndWait()
         if (result.isPresent) {
-            controller.createNote(result.get(),"")
+            val newnote = controller.createNote(result.get(),"blank")
+            layout.center = textarea
+            textarea.disableProperty().set(false)
+            displayNoteContents(newnote)
+            updateNoteview(controller.getSortedNotesByModifiedDateDescending(), newnote)
         }
-        updateNoteview(controller.getSortedNotesByModifiedDateDescending())
     }
 
     private fun deleteSelectedNote()
@@ -196,12 +210,25 @@ class Main : Application() {
 
             val result = alert.showAndWait()
             if (result.get() == ButtonType.OK) {
-                controller.deleteNote(notedata[currIndex].dateCreated)
+                controller.deleteNote(notedata[currIndex].id)
                 layout.center = null
                 updateNoteview(controller.getSortedNotesByModifiedDateDescending())
             } else {
                 alert.close()
             }
+        }
+    }
+
+    private fun displayNoteContents(note: Note) {
+        layout.center = textarea
+        textarea.text = note.content
+    }
+
+    private fun saveSelectedNote() {
+        val currIndex = noteview.selectionModel.selectedIndex
+        if (currIndex != -1) {
+            val currNote = notedata[currIndex]
+            controller.editNoteContent(currNote.id, textarea.text)
         }
     }
 }
