@@ -1,6 +1,9 @@
 package cs346.shared
 
 import java.time.Instant
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 /**
  * This class is responsible for the logic behind the app.
@@ -10,9 +13,9 @@ import java.time.Instant
  *
  * @constructor creates a controller with no elements in notes and groups
  */
-class Controller() {
-    private var notes: HashMap<Instant, Note> = HashMap<Instant, Note>()
-    private var groups: HashMap<String, Group> = HashMap<String, Group>()
+class Controller {
+    private var notes: HashMap<UUID, Note> = HashMap()
+    private var groups: HashMap<String, Group> = HashMap()
 
     /**
      * Converts lists of notes to hashmaps of notes
@@ -21,10 +24,10 @@ class Controller() {
      *
      * @return hashmap structure containing notes indexed by date created
      */
-    private fun listToHashMapNotes(notes: List<Note>): HashMap<Instant, Note> {
-        var notesHashMap = HashMap<Instant, Note>()
+    private fun listToHashMapNotes(notes: List<Note>): HashMap<UUID, Note> {
+        val notesHashMap = HashMap<UUID, Note>()
         for (note in notes) {
-            notesHashMap[note.dateCreated] = note
+            notesHashMap[note.id] = note
         }
 
         return notesHashMap
@@ -40,54 +43,54 @@ class Controller() {
      */
     fun createNote(title: String = "", content: String = ""): Note {
         val newNote = Note(title, content)
-        notes[newNote.dateCreated] = newNote
+        notes[newNote.id] = newNote
         return newNote
     }
 
     /**
      * Delete the given note.
      *
-     * @param createdDate is the date the note was created, the creation date of the note is used as its unique id
+     * @param id is the unique id of the note
      */
-    fun deleteNote(createdDate: Instant) {
+    fun deleteNote(id: UUID) {
         // Check that the note given exists
-        if (!notes.containsKey(createdDate)) return
+        if (!notes.containsKey(id)) return
 
         // Remove note from their groups
         for ((_, group) in groups) {
-            group.removeNote(createdDate)
+            group.removeNote(id)
         }
 
         // Delete note from controller
-        notes.remove(createdDate)
+        notes.remove(id)
     }
 
     /**
      * Modifies the title of the given note.
      *
-     * @param createdDate is the date the note was created, the creation date of the note is used as its unique id
+     * @param id is the unique id of the note
      * @param title is the new title of the note
      */
-    fun editNoteTitle(createdDate: Instant, title:String = "") {
+    fun editNoteTitle(id: UUID, title:String = "") {
         // Check that the note given exists
-        if (!notes.containsKey(createdDate)) return
+        if (!notes.containsKey(id)) return
 
         //Edit note
-        notes[createdDate]!!.title = title
+        notes[id]!!.title = title
     }
 
     /**
      * Modifies the title of the given note.
      *
-     * @param createdDate is the date the note was created, the creation date of the note is used as its unique id
+     * @param id is the unique id of the note
      * @param content is the new content of the note
      */
-    fun editNoteContent(createdDate: Instant, content:String = "") {
+    fun editNoteContent(id: UUID, content:String = "") {
         // Check that the note given exists
-        if (!notes.containsKey(createdDate)) return
+        if (!notes.containsKey(id)) return
 
         //Edit note
-        notes[createdDate]!!.content = content
+        notes[id]!!.content = content
     }
 
     /**
@@ -182,7 +185,7 @@ class Controller() {
      * Adds a list of notes to a given group
      *
      * @param groupName is the name of the group
-     * @param notes is the list ofnotes to be added to the group
+     * @param notes is the list of notes to be added to the group
      *
      */
     fun addNotesToGroup(groupName: String, notes: List<Note>) {
@@ -208,7 +211,7 @@ class Controller() {
         if (!groups.containsKey(groupName)) return
 
         // Call the removeNote function
-        groups[groupName]!!.removeNote(note.dateCreated)
+        groups[groupName]!!.removeNote(note.id)
     }
 
     /**
@@ -272,16 +275,28 @@ class Controller() {
     }
 
     /**
-     * Returns the requested note.
+     * Returns the requested notes.
      *
-     * @param createdDate is the date the note was created, the creation date of the note is used as its unique id
-     * @return the note that was requested, null will be returned if no such not exists
+     * @param dateCreated is the time that the notes were created
+     *
+     * @return the notes that were requested, empty list will be returned if no such notes exist
      */
-    fun getNoteByDateCreated(createdDate: Instant): Note? {
-        if (!notes.containsKey(createdDate)) return null
-        return notes[createdDate]
+    fun getNotesByDateCreated(dateCreated: Instant): List<Note> {
+        val allNotes = getAllNotes()
+        return allNotes.filter{ it.dateCreated == dateCreated }
     }
 
+    /**
+     * Returns the requested note.
+     *
+     * @param id is the time that the note was created
+     *
+     * @return the notes that were requested, null will be returned if no such note exists
+     */
+    fun getNoteByID(id: UUID) : Note? {
+        if (!notes.containsKey(id)) return null
+        return notes[id]
+    }
     /**
      * Returns the notes with the requested [title].
      *
