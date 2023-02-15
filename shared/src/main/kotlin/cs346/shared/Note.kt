@@ -1,10 +1,12 @@
 package cs346.shared
 
 import java.time.Instant
+import java.util.UUID
 
 /**
  * This is the Note class, it will contain the data of a note.
  *
+ * @property id is the unique id of the note
  * @property title is the title of the note, this title does not have to be unique
  * @property content is the content of the note
  * @property dateCreated is the time the note is created, this will be used as a unique identifier for the note
@@ -14,6 +16,7 @@ import java.time.Instant
  * @constructor creates a note with the given [title] and [content]
  */
 class Note(title: String = "", content: String = "") {
+    val id: UUID = UUID.randomUUID()
     val dateCreated: Instant = Instant.now()
     var dateModified: Instant = Instant.now()
         private set
