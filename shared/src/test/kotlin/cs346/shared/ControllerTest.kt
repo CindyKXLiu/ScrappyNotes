@@ -348,7 +348,7 @@ internal class ControllerTest {
         val note3 = controller.createNote("title3", "content3")
         var notesGroup1 = controller.getAllNotes()
         val note4 = controller.createNote("title4", "content4")
-        var notesGroup2 = controller.getAllNotes()
+        var notesGroup2 = controller.getNotesByTitle("title4")
 
         val group1 = controller.createGroup("group1", notesGroup1)
         val group2 = controller.createGroup("group2", notesGroup2)
@@ -385,7 +385,7 @@ internal class ControllerTest {
         val note3 = controller.createNote("title3", "content3")
         var notesGroup1 = controller.getAllNotes()
         val note4 = controller.createNote("title4", "content4")
-        var notesGroup2 = controller.getAllNotes()
+        var notesGroup2 = controller.getNotesByTitle("title4")
 
         val group1 = controller.createGroup("group1", notesGroup1)
         val group2 = controller.createGroup("group2", notesGroup2)
