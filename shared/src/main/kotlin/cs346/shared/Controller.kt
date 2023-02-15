@@ -15,6 +15,22 @@ class Controller() {
     private var groups: HashMap<String, Group> = HashMap<String, Group>()
 
     /**
+     * Converts lists of notes to hashmaps of notes
+     *
+     * @param notes is a list of notes
+     *
+     * @return hashmap structure containing notes indexed by date created
+     */
+    private fun listToHashMapNotes(notes: List<Note>): HashMap<Instant, Note> {
+        var notesHashMap = HashMap<Instant, Note>()
+        for (note in notes) {
+            notesHashMap[note.dateCreated] = note
+        }
+
+        return notesHashMap
+    }
+
+    /**
      * Create a note with the given title and content.
      *
      * @param title is the title of the note
@@ -78,11 +94,16 @@ class Controller() {
      * Create a group with a given name
      *
      * @param name is the name of the group
+     * @param notes is a list of notes to add to the new group
+     *
+     * @return the group that was created
      *
      */
-    fun createGroup(name: String) {
+    fun createGroup(name: String, notes: List<Note> = listOf()): Group {
         val newGroup = Group(name)
         groups[name] = newGroup
+        addNotesToGroup(name, notes)
+        return newGroup
     }
 
     /**
@@ -114,6 +135,7 @@ class Controller() {
 
         // Save the content of the group
         val groupContent: Group = groups[currentName] ?: return
+        groupContent.name = newName
         // Delete the group
         deleteGroup(currentName)
         // Add a group with a new name and the same content
@@ -121,96 +143,123 @@ class Controller() {
     }
 
     /**
-     * Adds a note to a given group
+     * Returns all existing groups
      *
-     * @param name is the name of the group
-     * @param note is the note to be added to the group
-     *
+     * @return immutable list of all existing groups in unsorted order
      */
-    fun addNoteToGroup(name: String, note: Note) {
-        // Check that the group given exists
-        if (!groups.containsKey(name)) return
-
-        // Call the addNote function
-        groups[name]!!.addNote(note)
+    fun getAllGroups(): List<Group> {
+        return groups.values.toList()
     }
 
     /**
-     * Adds a hashmap of notes to a given group
+     * Returns the group given a group name
      *
      * @param name is the name of the group
-     * @param notes are the notes to be added to the group
+     *
+     * @return a group with the corresponding name if it exists or null
+     */
+    fun getGroupByName(name: String): Group? {
+        if (!groups.containsKey(name)) return null
+        return groups[name]
+    }
+
+    /**
+     * Adds a note to a given group
+     *
+     * @param groupName is the name of the group
+     * @param note is the note to be added to the group
      *
      */
-    fun addNotesToGroup(name: String, notes: HashMap<Instant, Note>) {
+    fun addNoteToGroup(groupName: String, note: Note) {
         // Check that the group given exists
-        if (!groups.containsKey(name)) return
+        if (!groups.containsKey(groupName)) return
 
         // Call the addNote function
-        groups[name]!!.addNotes(notes)
+        groups[groupName]!!.addNote(note)
+    }
+
+    /**
+     * Adds a list of notes to a given group
+     *
+     * @param groupName is the name of the group
+     * @param notes is the list ofnotes to be added to the group
+     *
+     */
+    fun addNotesToGroup(groupName: String, notes: List<Note>) {
+        // Check that the group given exists
+        if (!groups.containsKey(groupName)) return
+
+        // Convert the list of notes to a hashmap of notes
+        val notesHashMap = listToHashMapNotes(notes)
+
+        // Call the addNote function
+        groups[groupName]!!.addNotes(notesHashMap)
     }
 
     /**
      * Removes a note from a given group
      *
-     * @param name is the name of the group
+     * @param groupName is the name of the group
      * @param note is the note to be removed from the group
      *
      */
-    fun removeNoteFromGroup(name: String, note: Note) {
+    fun removeNoteFromGroup(groupName: String, note: Note) {
         // Check that the group given exists
-        if (!groups.containsKey(name)) return
+        if (!groups.containsKey(groupName)) return
 
         // Call the removeNote function
-        groups[name]!!.removeNote(note.dateCreated)
+        groups[groupName]!!.removeNote(note.dateCreated)
     }
 
     /**
-     * Removes a hashmap of notes to a given group
+     * Removes a list of notes to a given group
      *
-     * @param name is the name of the group
+     * @param groupName is the name of the group
      * @param notes are the notes to be removed to the group
      *
      */
-    fun removeNotesFromGroup(name: String, notes: HashMap<Instant, Note>) {
+    fun removeNotesFromGroup(groupName: String, notes: List<Note>) {
         // Check that the group given exists
-        if (!groups.containsKey(name)) return
+        if (!groups.containsKey(groupName)) return
 
-        groups[name]!!.removeNotes(notes)
+        // Convert the list of notes to a hashmap of notes
+        val notesHashMap = listToHashMapNotes(notes)
+
+        groups[groupName]!!.removeNotes(notesHashMap)
     }
 
     /**
      * Moves a note from one group to another
      *
-     * @param oldGroup is the name of the group the note is currently in
-     * @param newGroup is tne name of the group to move the note to
+     * @param oldGroupName is the name of the group the note is currently in
+     * @param newGroupName is tne name of the group to move the note to
      * @param note is the note in question
      *
      */
-    fun moveNoteBetweenGroups(oldGroup: String, newGroup: String, note: Note) {
+    fun moveNoteBetweenGroups(oldGroupName: String, newGroupName: String, note: Note) {
         // Check that the old and new groups given exist
-        if (!groups.containsKey(oldGroup) || !groups.containsKey(newGroup)) return
+        if (!groups.containsKey(oldGroupName) || !groups.containsKey(newGroupName)) return
 
         // Add the note to the new group
-        addNoteToGroup(newGroup, note)
+        addNoteToGroup(newGroupName, note)
         // Remove the note from the old group
-        removeNoteFromGroup(oldGroup, note)
+        removeNoteFromGroup(oldGroupName, note)
     }
 
     /**
-     * Moves a hashmap of notes from one group to another
+     * Moves a list of notes from one group to another
      *
-     * @param oldGroup is the name of the group the notes is currently in
-     * @param newGroup is tne name of the group to move the notes to
-     * @param notes is the hashmap of notes in question
+     * @param oldGroupName is the name of the group the notes is currently in
+     * @param newGroupName is tne name of the group to move the notes to
+     * @param notes is the list of notes in question
      *
      */
-    fun moveNotesBetweenGroups(oldGroup: String, newGroup: String, notes: HashMap<Instant, Note>) {
+    fun moveNotesBetweenGroups(oldGroupName: String, newGroupName: String, notes: List<Note>) {
         // Check that the old and new groups given exist
-        if (!groups.containsKey(oldGroup) || !groups.containsKey(newGroup)) return
+        if (!groups.containsKey(oldGroupName) || !groups.containsKey(newGroupName)) return
 
-        addNotesToGroup(newGroup, notes)
-        removeNotesFromGroup(oldGroup, notes)
+        addNotesToGroup(newGroupName, notes)
+        removeNotesFromGroup(oldGroupName, notes)
     }
 
     /**

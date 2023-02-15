@@ -1,5 +1,6 @@
 package cs346.shared
 
+import org.junit.jupiter.api.TestFactory
 import java.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -89,6 +90,315 @@ internal class ControllerTest {
         controller.editNoteContent(noteID, "new content")
         expectedContent = "new content"
         controller.getNoteByDateCreated(noteID)?.let { assertEquals(expectedContent, it.content) }
+    }
+
+    @Test
+    fun createGroup() {
+        val controller = Controller()
+        val note1 = controller.createNote("title1", "content1")
+        val note2 = controller.createNote("title2", "content2")
+        val note3 = controller.createNote("title3", "content3")
+        val notes3 = controller.getAllNotes()
+        val note4 = controller.createNote("title4", "content4")
+        val notes4 = controller.getAllNotes()
+
+        assertEquals(0, controller.getAllGroups().size)
+
+        val group1 = controller.createGroup("group1")
+        assertEquals(1, controller.getAllGroups().size)
+        assertEquals("group1", group1.name)
+
+        val group2 = controller.createGroup("group2", notes3)
+        assertEquals(2, controller.getAllGroups().size)
+        assertEquals("group2", group2.name)
+        assertEquals(3, group2.notes.size)
+
+        val group3 = controller.createGroup("group3", notes4)
+        assertEquals(3, controller.getAllGroups().size)
+        assertEquals("group3", group3.name)
+        assertEquals(4, group3.notes.size)
+    }
+
+    @Test
+    fun deleteGroup() {
+        val controller = Controller()
+
+        val note1 = controller.createNote("title1", "content1")
+        val note2 = controller.createNote("title2", "content2")
+        val note3 = controller.createNote("title3", "content3")
+        val notes3 = controller.getAllNotes()
+        val note4 = controller.createNote("title4", "content4")
+        val notes4 = controller.getAllNotes()
+
+        val group1 = controller.createGroup("group1")
+        val group2 = controller.createGroup("group2", notes3)
+        val group3 = controller.createGroup("group3", notes4)
+
+        assertEquals(3, controller.getAllGroups().size)
+
+        controller.deleteGroup("group2")
+        var groups = controller.getAllGroups()
+        assertEquals(2, groups.size)
+        assert(groups[0].name != "group2" && groups[1].name != "group2")
+
+        controller.deleteGroup("group1")
+        groups = controller.getAllGroups()
+        assertEquals(1, groups.size)
+        assert(groups[0].name != "group1")
+
+        controller.deleteGroup("group3")
+        groups = controller.getAllGroups()
+        assertEquals(0, groups.size)
+    }
+
+    @Test
+    fun getAllGroups() {
+        val controller = Controller()
+
+        val note1 = controller.createNote("title1", "content1")
+        val note2 = controller.createNote("title2", "content2")
+        val note3 = controller.createNote("title3", "content3")
+        val notes3 = controller.getAllNotes()
+        val note4 = controller.createNote("title4", "content4")
+        val notes4 = controller.getAllNotes()
+
+        val group1 = controller.createGroup("group1")
+        var groups = controller.getAllGroups()
+        assertEquals(1, groups.size)
+
+        val group2 = controller.createGroup("group2", notes3)
+        groups = controller.getAllGroups()
+        assertEquals(2, groups.size)
+
+        val group3 = controller.createGroup("group3", notes4)
+        groups = controller.getAllGroups()
+        assertEquals(3, groups.size)
+
+        controller.deleteGroup("group1")
+        groups = controller.getAllGroups()
+        assertEquals(2, groups.size)
+
+        controller.deleteGroup("group2")
+        groups = controller.getAllGroups()
+        assertEquals(1, groups.size)
+
+        controller.deleteGroup("group3")
+        groups = controller.getAllGroups()
+        assertEquals(0, groups.size)
+    }
+
+    @Test
+    fun getGroupByName() {
+        val controller = Controller()
+
+        val note1 = controller.createNote("title1", "content1")
+        val note2 = controller.createNote("title2", "content2")
+        val note3 = controller.createNote("title3", "content3")
+        val notes3 = controller.getAllNotes()
+        val note4 = controller.createNote("title4", "content4")
+        val notes4 = controller.getAllNotes()
+
+        val group1 = controller.createGroup("group1")
+        val group2 = controller.createGroup("group2", notes3)
+        val group3 = controller.createGroup("group3", notes4)
+
+        val getGroupNull = controller.getGroupByName("notagroupname")
+        assert(getGroupNull == null)
+        val getGroup1 = controller.getGroupByName("group1")
+        assertEquals(group1.name, getGroup1?.name)
+        assertEquals(group1.notes, getGroup1?.notes)
+        val getGroup2 = controller.getGroupByName("group2")
+        assertEquals(group2.name, getGroup2?.name)
+        assertEquals(group2.notes, getGroup2?.notes)
+        val getGroup3 = controller.getGroupByName("group3")
+        assertEquals(group3.name, getGroup3?.name)
+        assertEquals(group3.notes, getGroup3?.notes)
+    }
+
+    @Test
+    fun editGroupName() {
+        val controller = Controller()
+
+        val note1 = controller.createNote("title1", "content1")
+        val note2 = controller.createNote("title2", "content2")
+        val note3 = controller.createNote("title3", "content3")
+        val notes3 = controller.getAllNotes()
+        val note4 = controller.createNote("title4", "content4")
+        val notes4 = controller.getAllNotes()
+
+        val group1 = controller.createGroup("group1")
+        val group2 = controller.createGroup("group2", notes3)
+        val group3 = controller.createGroup("group3", notes4)
+
+        controller.editGroupName("group1", "group1modified")
+        controller.editGroupName("group2", "group2modified")
+        controller.editGroupName("group3", "group3modified")
+        assert(controller.getGroupByName("group1") == null)
+        assert(controller.getGroupByName("group1modified") != null)
+        assert(controller.getGroupByName("group2") == null)
+        assert(controller.getGroupByName("group2modified") != null)
+        assert(controller.getGroupByName("group3") == null)
+        assert(controller.getGroupByName("group3modified") != null)
+    }
+
+    @Test
+    fun addNoteToGroup() {
+        val controller = Controller()
+
+        val note1 = controller.createNote("title1", "content1")
+        val note2 = controller.createNote("title2", "content2")
+        val note3 = controller.createNote("title3", "content3")
+        val note4 = controller.createNote("title4", "content4")
+
+        val group1 = controller.createGroup("group1")
+        var notes = controller.getGroupByName("group1")?.notes
+        assertEquals(0, notes?.size)
+
+        controller.addNoteToGroup("group1", note1)
+        notes = controller.getGroupByName("group1")?.notes
+        assertEquals(1, notes?.size)
+
+        controller.addNoteToGroup("group1", note2)
+        notes = controller.getGroupByName("group1")?.notes
+        assertEquals(2, notes?.size)
+
+        controller.addNoteToGroup("group1", note3)
+        notes = controller.getGroupByName("group1")?.notes
+        assertEquals(3, notes?.size)
+
+        controller.addNoteToGroup("group1", note4)
+        notes = controller.getGroupByName("group1")?.notes
+        assertEquals(4, notes?.size)
+    }
+
+    @Test
+    fun addNotesToGroup() {
+        val controller = Controller()
+
+        val note1 = controller.createNote("title1", "content1")
+        val note2 = controller.createNote("title2", "content2")
+        val note3 = controller.createNote("title3", "content3")
+        val note4 = controller.createNote("title4", "content4")
+        val notes = controller.getAllNotes()
+
+        val group1 = controller.createGroup("group1")
+        var notesInGroup = controller.getGroupByName("group1")?.notes
+        assertEquals(0, notesInGroup?.size)
+
+        controller.addNotesToGroup("group1", notes)
+        assertEquals(4, notesInGroup?.size)
+    }
+
+    @Test
+    fun removeNoteFromGroup() {
+        val controller = Controller()
+
+        val note1 = controller.createNote("title1", "content1")
+        val note2 = controller.createNote("title2", "content2")
+        val note3 = controller.createNote("title3", "content3")
+        val note4 = controller.createNote("title4", "content4")
+        val notes = controller.getAllNotes()
+
+        val group1 = controller.createGroup("group1", notes)
+        var notesInGroup = controller.getGroupByName("group1")?.notes
+        assertEquals(4, notesInGroup?.size)
+
+        controller.removeNoteFromGroup("group1", note1)
+        notesInGroup = controller.getGroupByName("group1")?.notes
+        assertEquals(3, notesInGroup?.size)
+
+        controller.removeNoteFromGroup("group1", note2)
+        notesInGroup = controller.getGroupByName("group1")?.notes
+        assertEquals(2, notesInGroup?.size)
+
+        controller.removeNoteFromGroup("group1", note3)
+        notesInGroup = controller.getGroupByName("group1")?.notes
+        assertEquals(1, notesInGroup?.size)
+
+        controller.removeNoteFromGroup("group1", note4)
+        notesInGroup = controller.getGroupByName("group1")?.notes
+        assertEquals(0, notesInGroup?.size)
+    }
+
+    @Test
+    fun removeNotesFromGroup() {
+        val controller = Controller()
+
+        val note1 = controller.createNote("title1", "content1")
+        val note2 = controller.createNote("title2", "content2")
+        val note3 = controller.createNote("title3", "content3")
+        val note4 = controller.createNote("title4", "content4")
+        val notes = controller.getAllNotes()
+
+        val group1 = controller.createGroup("group1", notes)
+        var notesInGroup = controller.getGroupByName("group1")?.notes
+        assertEquals(4, notesInGroup?.size)
+
+        controller.removeNotesFromGroup("group1", notes)
+        controller.getGroupByName("group1")?.notes
+        assertEquals(0, notesInGroup?.size)
+    }
+
+    @Test
+    fun moveNoteBetweenGroups() {
+        val controller = Controller()
+
+        val note1 = controller.createNote("title1", "content1")
+        val note2 = controller.createNote("title2", "content2")
+        val note3 = controller.createNote("title3", "content3")
+        var notesGroup1 = controller.getAllNotes()
+        val note4 = controller.createNote("title4", "content4")
+        var notesGroup2 = controller.getAllNotes()
+
+        val group1 = controller.createGroup("group1", notesGroup1)
+        val group2 = controller.createGroup("group2", notesGroup2)
+        var notesInGroup1 = controller.getGroupByName("group1")?.notes
+        var notesInGroup2 = controller.getGroupByName("group2")?.notes
+        assertEquals(3, notesInGroup1?.size)
+        assertEquals(1, notesInGroup2?.size)
+
+        controller.moveNoteBetweenGroups("group1", "group2", note1)
+        notesInGroup1 = controller.getGroupByName("group1")?.notes
+        notesInGroup2 = controller.getGroupByName("group2")?.notes
+        assertEquals(2, notesInGroup1?.size)
+        assertEquals(2, notesInGroup2?.size)
+
+        controller.moveNoteBetweenGroups("group1", "group2", note2)
+        notesInGroup1 = controller.getGroupByName("group1")?.notes
+        notesInGroup2 = controller.getGroupByName("group2")?.notes
+        assertEquals(1, notesInGroup1?.size)
+        assertEquals(3, notesInGroup2?.size)
+
+        controller.moveNoteBetweenGroups("group1", "group2", note3)
+        notesInGroup1 = controller.getGroupByName("group1")?.notes
+        notesInGroup2 = controller.getGroupByName("group2")?.notes
+        assertEquals(0, notesInGroup1?.size)
+        assertEquals(4, notesInGroup2?.size)
+    }
+
+    @Test
+    fun moveNotesBetweenGroups() {
+        val controller = Controller()
+
+        val note1 = controller.createNote("title1", "content1")
+        val note2 = controller.createNote("title2", "content2")
+        val note3 = controller.createNote("title3", "content3")
+        var notesGroup1 = controller.getAllNotes()
+        val note4 = controller.createNote("title4", "content4")
+        var notesGroup2 = controller.getAllNotes()
+
+        val group1 = controller.createGroup("group1", notesGroup1)
+        val group2 = controller.createGroup("group2", notesGroup2)
+        var notesInGroup1 = controller.getGroupByName("group1")?.notes
+        var notesInGroup2 = controller.getGroupByName("group2")?.notes
+        assertEquals(3, notesInGroup1?.size)
+        assertEquals(1, notesInGroup2?.size)
+
+        controller.moveNotesBetweenGroups("group1", "group2", notesGroup1)
+        notesInGroup1 = controller.getGroupByName("group1")?.notes
+        notesInGroup2 = controller.getGroupByName("group2")?.notes
+        assertEquals(0, notesInGroup1?.size)
+        assertEquals(4, notesInGroup2?.size)
     }
 
     @Test
