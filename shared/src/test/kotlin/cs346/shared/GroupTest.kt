@@ -1,5 +1,6 @@
 package cs346.shared
 
+import java.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -51,5 +52,92 @@ internal class GroupTest {
         group.name = "new name"
         expectedGroupName = "new name"
         assertEquals(expectedGroupName, group.name)
+    }
+
+    @Test
+    fun addNote() {
+        val group = Group("Group")
+        val note1 = Note("title1", "content1")
+        val note2 = Note("title2", "content2")
+        val note3 = Note("title3", "content3")
+
+        assertEquals(0, group.notes.size)
+
+        group.addNote(note1)
+        assertEquals(1, group.notes.size)
+
+        group.addNote(note2)
+        assertEquals(2, group.notes.size)
+
+        group.addNote(note3)
+        assertEquals(3, group.notes.size)
+    }
+
+    @Test
+    fun addNotes() {
+        val group = Group("Group")
+        val note1 = Note("title1", "content1")
+        val note2 = Note("title2", "content2")
+        val note3 = Note("title3", "content3")
+
+        assertEquals(0, group.notes.size)
+
+        val notesMap = HashMap<Instant, Note>()
+        notesMap[note1.dateCreated] = note1
+        notesMap[note2.dateCreated] = note2
+        notesMap[note3.dateCreated] = note3
+
+        group.addNotes(notesMap)
+        assertEquals(3, group.notes.size)
+    }
+
+    @Test
+    fun removeNote() {
+        val group = Group("Group")
+        val note1 = Note("title1", "content1")
+        val note2 = Note("title2", "content2")
+        val note3 = Note("title3", "content3")
+
+        group.addNote(note1)
+        group.addNote(note2)
+        group.addNote(note3)
+
+        assertEquals(3, group.notes.size)
+
+        group.removeNote(note1.dateCreated)
+        assertEquals(2, group.notes.size)
+
+        group.removeNote(note2.dateCreated)
+        assertEquals(1, group.notes.size)
+
+        group.removeNote(note3.dateCreated)
+        assertEquals(0, group.notes.size)
+    }
+
+    @Test
+    fun removeNotes() {
+        val group = Group("Group")
+        val note1 = Note("title1", "content1")
+        val note2 = Note("title2", "content2")
+        val note3 = Note("title3", "content3")
+
+        val notesMap = HashMap<Instant, Note>()
+        notesMap[note1.dateCreated] = note1
+        notesMap[note2.dateCreated] = note2
+        notesMap[note3.dateCreated] = note3
+
+        group.addNotes(notesMap)
+        assertEquals(3, group.notes.size)
+
+        val partialNotesMap1 = HashMap<Instant, Note>()
+        partialNotesMap1[note1.dateCreated] = note1
+        partialNotesMap1[note2.dateCreated] = note2
+        group.removeNotes(partialNotesMap1)
+        assertEquals(1, group.notes.size)
+
+        val partialNotesMap2 = HashMap<Instant, Note>()
+        partialNotesMap2[note1.dateCreated] = note3
+        group.removeNotes(partialNotesMap2)
+        assertEquals(0, group.notes.size)
     }
 }
