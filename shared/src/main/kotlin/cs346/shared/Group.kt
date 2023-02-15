@@ -1,6 +1,7 @@
 package cs346.shared
 
-import java.time.Instant
+import java.util.*
+import kotlin.collections.HashMap
 
 /**
  * This class is a for containing notes within the same group
@@ -11,7 +12,7 @@ import java.time.Instant
  * @constructor creates an empty group
  */
 class Group(var name: String) {
-    var notes: HashMap<Instant, Note> = HashMap<Instant, Note>()
+    var notes: HashMap<UUID, Note> = HashMap()
         private set
 
     /**
@@ -21,7 +22,7 @@ class Group(var name: String) {
      *
      */
     fun addNote(note: Note) {
-        notes[note.dateCreated] = note
+        notes[note.id] = note
     }
 
     /**
@@ -30,7 +31,7 @@ class Group(var name: String) {
      * @param addNotes is the hashmap of notes
      *
      */
-    fun addNotes(addNotes: HashMap<Instant, Note>) {
+    fun addNotes(addNotes: HashMap<UUID, Note>) {
         notes.putAll(addNotes)
     }
 
@@ -40,11 +41,11 @@ class Group(var name: String) {
      * @param dateCreated is the date the note was created for indexing purposes
      *
      */
-    fun removeNote(dateCreated: Instant) {
+    fun removeNote(id: UUID) {
         // Check that the note given exists
-        if (!notes.containsKey(dateCreated)) return
+        if (!notes.containsKey(id)) return
 
-        notes.remove(dateCreated)
+        notes.remove(id)
     }
 
     /**
@@ -53,9 +54,9 @@ class Group(var name: String) {
      * @param removeNotes is the hashmap of notes
      *
      */
-    fun removeNotes(removeNotes: HashMap<Instant, Note>) {
+    fun removeNotes(removeNotes: HashMap<UUID, Note>) {
         for ((_, note) in removeNotes) {
-            removeNote(note.dateCreated)
+            removeNote(note.id)
         }
     }
 }
