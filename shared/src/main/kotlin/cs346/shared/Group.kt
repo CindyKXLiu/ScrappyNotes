@@ -11,7 +11,8 @@ import java.time.Instant
  * @constructor creates an empty group
  */
 class Group(var name: String) {
-    val notes: HashMap<Instant, Note> = HashMap<Instant, Note>()
+    var notes: HashMap<Instant, Note> = HashMap<Instant, Note>()
+        private set
 
     /**
      * Add a note to the group
