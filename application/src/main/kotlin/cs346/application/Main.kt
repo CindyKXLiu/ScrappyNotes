@@ -3,6 +3,7 @@ package cs346.application
 import cs346.shared.Controller
 import cs346.shared.Note
 import javafx.application.Application
+import javafx.beans.value.ObservableValue
 import javafx.collections.FXCollections
 import javafx.event.ActionEvent
 import javafx.geometry.Insets
@@ -119,22 +120,26 @@ class Main : Application() {
         ////////////////////////////////////////////////////////////////////////////////////////////////
         // left: list of notes
         updateNoteview(controller.getSortedNotesByModifiedDateAscending())
+        noteview.selectionModel.selectedItemProperty().addListener { observableValue: ObservableValue<out String>, old_val: String?, new_val: String? ->
+            val currIndex = noteview.selectionModel.selectedIndex
+            if (currIndex != -1) displayNoteContents(notedata[currIndex])
+        }
 
         // handle mouse clicked action
         noteview.setOnMouseClicked { event ->
             if (event.button.equals(MouseButton.PRIMARY)) {
                 if (event.clickCount == 1 && noteview.items.size != 0) {
-                    displayNoteContents(notedata[noteview.selectionModel.selectedIndex])
+                    val currIndex = noteview.selectionModel.selectedIndex
+                    if (currIndex != -1) displayNoteContents(notedata[currIndex])
                 }
             }
         }
         noteview.setOnKeyPressed { event ->
             if (event.code == KeyCode.ENTER) {
-                displayNoteContents(notedata[noteview.selectionModel.selectedIndex])
+                val currIndex = noteview.selectionModel.selectedIndex
+                if (currIndex != -1) displayNoteContents(notedata[currIndex])
             } else if (event.code == KeyCode.DELETE || event.code == KeyCode.BACK_SPACE) {
-               deleteSelectedNote()
-            } else {
-                displayNoteContents(notedata[noteview.selectionModel.selectedIndex])
+                deleteSelectedNote()
             }
         }
 
