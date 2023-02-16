@@ -422,6 +422,38 @@ internal class ControllerTest {
     }
 
     @Test
+    fun getAllUngroupedNotes() {
+        val controller = Controller()
+        var expectedSize = 0
+        assertEquals(expectedSize, controller.getAllUngroupedNotes().size)
+
+        val note1 = controller.createNote("n1")
+        expectedSize = 1
+        assertEquals(expectedSize, controller.getAllUngroupedNotes().size)
+        assert(controller.getAllUngroupedNotes().contains(note1))
+
+        val note2 = controller.createNote("n2")
+        expectedSize = 2
+        assertEquals(expectedSize, controller.getAllUngroupedNotes().size)
+        assert(controller.getAllUngroupedNotes().contains(note1))
+        assert(controller.getAllUngroupedNotes().contains(note2))
+
+        controller.createGroup("g")
+        expectedSize = 2
+        assertEquals(expectedSize, controller.getAllUngroupedNotes().size)
+        assert(controller.getAllUngroupedNotes().contains(note1))
+        assert(controller.getAllUngroupedNotes().contains(note2))
+
+        controller.addNoteToGroup("g", note1)
+        expectedSize = 1
+        assertEquals(expectedSize, controller.getAllUngroupedNotes().size)
+        assert(controller.getAllUngroupedNotes().contains(note2))
+
+        controller.addNoteToGroup("g", note2)
+        expectedSize = 0
+        assertEquals(expectedSize, controller.getAllUngroupedNotes().size)
+    }
+    @Test
     fun getNotesByDateCreated() {
         val controller = Controller()
         var note1 = controller.createNote("n1", "c1")
