@@ -1,7 +1,7 @@
 package cs346.shared
 
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 /**
  * This is the Note class, it will contain the data of a note.
@@ -40,4 +40,8 @@ class Note(title: String = "", content: String = "") {
             field = value
             dateModified = Instant.now()
         }
+
+    override fun toString(): String {
+        return this.title
+    }
 }

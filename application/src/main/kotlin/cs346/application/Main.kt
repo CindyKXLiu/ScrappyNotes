@@ -1,14 +1,14 @@
 package cs346.application
 
 import cs346.shared.Controller
+import cs346.shared.Group
 import cs346.shared.Note
 import javafx.application.Application
-import javafx.beans.value.ObservableValue
-import javafx.collections.FXCollections
 import javafx.event.ActionEvent
 import javafx.geometry.Insets
 import javafx.scene.Scene
 import javafx.scene.control.*
+import javafx.scene.control.Alert.AlertType
 import javafx.scene.input.KeyCode
 import javafx.scene.input.MouseButton
 import javafx.scene.layout.BorderPane
@@ -20,8 +20,8 @@ import java.util.*
 
 
 class Main : Application() {
-    private val noteview = ListView<String>()
-    private val notedata = FXCollections.observableArrayList<Note>()
+    private val noteview = TreeView<Any>()
+    // private val notedata = FXCollections.observableArrayList<Note>()
     private val textarea = TextArea()
     private val lastmodified = HBox()
     private val layout = BorderPane()
@@ -37,13 +37,16 @@ class Main : Application() {
         val fileQuit = MenuItem("Quit")
         fileQuit.setOnAction { event -> stage.close() }
 
-        val newNote = MenuItem("New")
+        val newNote = MenuItem("New Note")
         newNote.setOnAction { event -> createNote() }
 
-        val deleteNote = MenuItem("Delete")
-        deleteNote.setOnAction { event -> deleteSelectedNote() }
+        val deleteObject = MenuItem("Delete")
+        deleteObject.setOnAction { event -> deleteSelectedNote() }
 
-        fileMenu.items.addAll(fileQuit, newNote, deleteNote)
+        val newGroup = MenuItem("New Group")
+        newGroup.setOnAction { event -> createGroup() }
+
+        fileMenu.items.addAll(fileQuit, newNote, newGroup, deleteObject)
         menuBar.menus.add(fileMenu)
 
         // ACTIONS menubar manipulations ////////////////////////////////////////////////////////
@@ -51,13 +54,13 @@ class Main : Application() {
 
         val actionsRename = MenuItem("Rename")
         actionsRename.setOnAction { event -> renameSelectedNote() }
-        val actionsMove = MenuItem("Move")
-        actionsMove.setOnAction { event ->
-            // moveSelected()
+
+        val actionsGroup = MenuItem("Add to Group")
+        actionsGroup.setOnAction { event ->
+            addSelectedNoteToGroup()
         }
 
-        actionsMenu.items.add(actionsRename)
-        actionsMenu.items.add(actionsMove)
+        actionsMenu.items.addAll(actionsRename, actionsGroup)
         menuBar.menus.add(actionsMenu)
 
         // OPTIONS menubar manipulations ///////////////////////////////////////////////////////////
@@ -78,26 +81,38 @@ class Main : Application() {
          * Set up for left side note list display
          */
         updateNoteview(controller.getSortedNotesByModifiedDateAscending())
-        noteview.selectionModel.selectedItemProperty().addListener { observableValue: ObservableValue<out String>, old_val: String?, new_val: String? ->
-            val currIndex = noteview.selectionModel.selectedIndex
-            if (currIndex != -1) displayNoteContents(notedata[currIndex])
-            textarea.disableProperty().set(false)
+        noteview.setShowRoot(false)
+        noteview.selectionModel.selectedItemProperty().addListener { observable, oldValue, newValue ->
+            // val currIndex = noteview.selectionModel.selectedIndex
+            // if (currIndex != -1)
+            val currSelection = noteview.selectionModel.selectedItem
+            if (currSelection != null)
+            {
+                if (currSelection.value is Note) {
+                    displayNoteContents(currSelection.value as Note)
+                    textarea.disableProperty().set(false)
+                } else if (currSelection.value is Group) {
+                    textarea.text = ""
+                    textarea.disableProperty().set(true)
+                }
+            }
         }
 
         noteview.setOnMouseClicked { event ->
             if (event.button.equals(MouseButton.PRIMARY)) {
-                if (event.clickCount == 1 && noteview.items.size != 0) {
-                    val currIndex = noteview.selectionModel.selectedIndex
-                    if (currIndex != -1) displayNoteContents(notedata[currIndex])
+                if (event.clickCount == 1) {
+                    val currSelection = noteview.selectionModel.selectedItem
+                    if (currSelection != null)
+                        if (currSelection.value is Note) {
+                            displayNoteContents(currSelection.value as Note)
+                            textarea.disableProperty().set(false)
+                        }
                 }
             }
         }
 
         noteview.setOnKeyPressed { event ->
-            if (event.code == KeyCode.ENTER) {
-                val currIndex = noteview.selectionModel.selectedIndex
-                if (currIndex != -1) displayNoteContents(notedata[currIndex])
-            } else if (event.code == KeyCode.DELETE || event.code == KeyCode.BACK_SPACE) {
+            if (event.code == KeyCode.DELETE || event.code == KeyCode.BACK_SPACE) {
                 deleteSelectedNote()
             }
         }
@@ -163,39 +178,48 @@ class Main : Application() {
         stage.show()
     }
 
-    private fun updateNoteview(listofnotes : List<Note>? = controller.getAllNotes(), selectedNote : Note? = null)
+    private fun updateNoteview(listofnotes : List<Note>? = controller.getAllNotes(), selectedNote : Note? = null,
+                               listofgroups : List<Group> ? = controller.getAllGroups())
     {
+        val rootitem = TreeItem<Any>()
         if (listofnotes != null)
         {
             noteview.selectionModel.clearSelection()
-            val newview = FXCollections.observableArrayList<String>()
-            notedata.clear()
-            var indexofnote = -1
+            var treeitemofnote : TreeItem<Any>? = null
             listofnotes.forEachIndexed { index, note ->
-                notedata.add(note)
-                newview.add(note.title)
-                if (selectedNote != null && selectedNote == note)
-                {
-                    indexofnote = index
+                val newitem = TreeItem<Any>(note)
+                rootitem.children.add(newitem)
+                if (selectedNote != null && selectedNote == note) {
+                    treeitemofnote = newitem
                 }
             }
-            noteview.items = newview
             if (selectedNote != null) {
-                if (indexofnote != -1) {
-                    noteview.scrollTo(indexofnote)
-                    noteview.selectionModel.select(indexofnote)
+                if (treeitemofnote != null) {
+                    noteview.selectionModel.select(treeitemofnote)
                 }
             } else {
                 textarea.text = null
                 textarea.disableProperty().set(true)
             }
         }
+
+        if (listofgroups != null) {
+            listofgroups.forEachIndexed { index, group ->
+                val newgroup = TreeItem<Any>(group)
+
+                for (note in group.notes) {
+                    newgroup.children.add(TreeItem(note.value))
+                }
+                rootitem.children.add(newgroup)
+            }
+        }
+        noteview.root = rootitem
     }
 
     private fun createNote()
     {
-        val td = TextInputDialog("Enter a title for your note")
-        td.headerText = "Create a new note"
+        val td = TextInputDialog("Name for Note")
+        td.headerText = "Create a new Note"
         val result: Optional<String> = td.showAndWait()
         if (result.isPresent) {
             val newnote = controller.createNote(result.get(),"blank")
@@ -207,22 +231,41 @@ class Main : Application() {
 
     private fun deleteSelectedNote()
     {
-        val currSelection = noteview.selectionModel.selectedItem
-        val currIndex = noteview.selectionModel.selectedIndex
-        if (currSelection != null) {
-            val alert = Alert(Alert.AlertType.CONFIRMATION)
+        val currSelection = noteview.selectionModel.selectedItem ?: return
+
+        if (currSelection.value is Note) {
+            val currNote = currSelection.value as Note
+            val alert = Alert(AlertType.CONFIRMATION)
             alert.title = "Warning: Delete?"
-            alert.headerText = "Are you sure you want to delete ${currSelection}"
+            alert.headerText = "Are you sure you want to delete the note ${currNote.title}"
             alert.contentText = "This cannot be undone!"
 
             val result = alert.showAndWait()
             if (result.get() == ButtonType.OK) {
-                controller.deleteNote(notedata[currIndex].id)
+                controller.deleteNote(currNote.id)
                 textarea.text = null
                 textarea.disableProperty().set(true)
-                notedata.removeAt(noteview.selectionModel.selectedIndex)
-                noteview.items.removeAt(noteview.selectionModel.selectedIndex)
-                updateNoteview(notedata.toList())
+                currSelection.parent.children.remove(currSelection)
+                updateNoteview(controller.getSortedNotesByModifiedDateDescending(), null,
+                    controller.getAllGroups())
+            } else {
+                alert.close()
+            }
+        } else if (currSelection.value is Group) {
+            val currGroup = currSelection.value as Group
+            val alert = Alert(AlertType.CONFIRMATION)
+            alert.title = "Warning: Delete?"
+            alert.headerText = "Are you sure you want to delete the group ${currGroup.name}"
+            alert.contentText = "This cannot be undone!"
+
+            val result = alert.showAndWait()
+            if (result.get() == ButtonType.OK) {
+                controller.deleteGroup(currGroup.name)
+                textarea.text = null
+                textarea.disableProperty().set(true)
+                currSelection.parent.children.remove(currSelection)
+                updateNoteview(controller.getSortedNotesByModifiedDateDescending(), null,
+                    controller.getAllGroups())
             } else {
                 alert.close()
             }
@@ -235,10 +278,9 @@ class Main : Application() {
     }
 
     private fun saveSelectedNote() {
-        val currIndex = noteview.selectionModel.selectedIndex
-        if (currIndex != -1) {
-            val currNote = notedata[currIndex]
-            controller.editNoteContent(currNote.id, textarea.text)
+        val currItem = noteview.selectionModel.selectedItem
+        if (currItem != null && currItem.value is Note) {
+            controller.editNoteContent((currItem.value as Note).id, textarea.text)
         }
     }
 
@@ -247,25 +289,74 @@ class Main : Application() {
         if (search.isNotEmpty()) {
             notes.addAll(controller.getNotesByTitle(search))
             notes.addAll(controller.getNotesByContent(search))
-            updateNoteview(notes)
+            updateNoteview(notes, null, null)
         } else {
-            updateNoteview(controller.getSortedNotesByModifiedDateDescending())
+            updateNoteview(controller.getSortedNotesByModifiedDateDescending(), null)
         }
     }
 
     private fun renameSelectedNote() {
-        val currIndex = noteview.selectionModel.selectedIndex
-        if (currIndex != -1) {
-            val td = TextInputDialog(notedata[currIndex].title)
+        val currItem = noteview.selectionModel.selectedItem
+        if (currItem != null && currItem.value is Note) {
+            val currNote = currItem.value as Note
+            val td = TextInputDialog(currNote.title)
             td.headerText = "Enter a new title for your note."
             val result: Optional<String> = td.showAndWait()
             if (result.isPresent) {
-                controller.editNoteTitle(notedata[currIndex].id, result.get())
+                controller.editNoteTitle(currNote.id, result.get())
                 textarea.disableProperty().set(false)
-                displayNoteContents(notedata[currIndex])
-                updateNoteview(controller.getSortedNotesByModifiedDateDescending(), notedata[currIndex])
+                displayNoteContents(currNote)
+                updateNoteview(controller.getSortedNotesByModifiedDateDescending(), currNote)
+            }
+        } else if (currItem != null && currItem.value is Group) {
+            val currGroup = currItem.value as Group
+            val td = TextInputDialog(currGroup.name)
+            td.headerText = "Enter a new title for your group."
+            val result: Optional<String> = td.showAndWait()
+            if (result.isPresent) {
+                controller.editGroupName(currGroup.name, result.get())
+                textarea.text = ""
+                textarea.disableProperty().set(true)
+                updateNoteview(controller.getSortedNotesByModifiedDateDescending())
             }
         }
+    }
+
+    private fun createGroup() {
+        val td = TextInputDialog("Name for Group")
+        td.headerText = "Create a new Group"
+        val result: Optional<String> = td.showAndWait()
+        if (result.isPresent) {
+            controller.createGroup(result.get())
+            textarea.text = ""
+            textarea.disableProperty().set(true)
+            updateNoteview(controller.getSortedNotesByModifiedDateDescending(), null,
+                controller.getAllGroups())
+        }
+    }
+
+    private fun addSelectedNoteToGroup() {
+        val currItem = noteview.selectionModel.selectedItem
+        if (currItem != null && currItem.value is Note) {
+            val groupList = mutableListOf<String>()
+            for (group in controller.getAllGroups()) {
+                groupList.add(group.name)
+            }
+            val td = ChoiceDialog<String>("Select a group", groupList)
+            td.headerText = "Add Note to Which Group"
+            val result: Optional<String> = td.showAndWait()
+            if (result.isPresent) {
+                controller.addNoteToGroup(result.get(), currItem.value as Note)
+                updateNoteview(controller.getSortedNotesByModifiedDateDescending(), null,
+                    controller.getAllGroups())
+            }
+        } else {
+            val alert = Alert(AlertType.WARNING)
+            alert.title = "Warning"
+            alert.headerText = "Cannot add selected item to group"
+            alert.showAndWait()
+        }
+
     }
 
 }
