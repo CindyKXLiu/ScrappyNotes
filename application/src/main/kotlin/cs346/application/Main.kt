@@ -60,7 +60,12 @@ class Main : Application() {
             addSelectedNoteToGroup()
         }
 
-        actionsMenu.items.addAll(actionsRename, actionsGroup)
+        val actionsRemove = MenuItem("Remove from Group")
+        actionsRemove.setOnAction { event ->
+            removeSelectedNoteFromGroup()
+        }
+
+        actionsMenu.items.addAll(actionsRename, actionsGroup, actionsRemove)
         menuBar.menus.add(actionsMenu)
 
         // OPTIONS menubar manipulations ///////////////////////////////////////////////////////////
@@ -357,6 +362,22 @@ class Main : Application() {
             alert.showAndWait()
         }
 
+    }
+
+    private fun removeSelectedNoteFromGroup() {
+        val currItem = noteview.selectionModel.selectedItem
+        if (currItem != null && currItem.value is Note) {
+            if (currItem.parent != null) {
+                val parentGroup = currItem.parent.value as Group
+                controller.removeNoteFromGroup(parentGroup.name, currItem.value as Note)
+                updateNoteview(controller.getSortedNotesByModifiedDateDescending(), null)
+            } else {
+                val alert = Alert(AlertType.WARNING)
+                alert.title = "Warning"
+                alert.headerText = "Current note ${(currItem.value as Note).title} is not in a group}"
+                alert.showAndWait()
+            }
+        }
     }
 
 }
