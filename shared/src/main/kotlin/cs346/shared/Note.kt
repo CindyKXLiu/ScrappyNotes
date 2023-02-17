@@ -40,4 +40,8 @@ class Note(title: String = "", content: String = "") {
             field = value
             dateModified = Instant.now()
         }
+
+    override fun toString(): String {
+        return this.title
+    }
 }
