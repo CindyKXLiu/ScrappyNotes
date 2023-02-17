@@ -59,8 +59,4 @@ class Group(var name: String) {
             removeNote(note.id)
         }
     }
-
-    override fun toString(): String {
-        return this.name
-    }
 }
