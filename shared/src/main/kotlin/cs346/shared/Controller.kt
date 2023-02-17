@@ -275,6 +275,31 @@ class Controller {
     }
 
     /**
+     * Returns all notes that do not belong to a group
+     *
+     * @return immutable list of all notes that do not belong to a group
+     */
+    fun getAllUngroupedNotes(): List<Note> {
+        val ungroupedNotes = ArrayList<Note>()
+
+        for((id, note) in notes) {
+            var belongToGroup = false
+
+            for((_, group) in groups) {
+                if (group.notes.containsKey(id)) {
+                    belongToGroup = true
+                    break
+                }
+            }
+
+            if (!belongToGroup) {
+                ungroupedNotes.add(note)
+            }
+        }
+
+        return ungroupedNotes.toList()
+    }
+    /**
      * Returns the requested notes.
      *
      * @param dateCreated is the time that the notes were created
