@@ -33,3 +33,7 @@ application {
     mainModule.set("console")
     mainClass.set("cs346.console.MainKt")
 }
+
+val run by tasks.getting(JavaExec::class) {
+    standardInput = System.`in`
+}
