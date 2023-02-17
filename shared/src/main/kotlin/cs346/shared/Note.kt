@@ -1,7 +1,7 @@
 package cs346.shared
 
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 
 /**
  * This is the Note class, it will contain the data of a note.
