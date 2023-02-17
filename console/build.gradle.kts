@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     application
     kotlin("jvm") version "1.6.20"
+    id("org.beryx.jlink") version "2.25.0"
 }
 
 group = "cs346"
@@ -18,6 +19,7 @@ repositories {
 
 dependencies {
     implementation(project(":shared"))
+    implementation(project(":application"))
     testImplementation(kotlin("test"))
 }
 
@@ -27,6 +29,12 @@ tasks.test {
 
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "1.8"
+}
+
+tasks.withType<Jar> {
+    manifest {
+        attributes["Main-Class"] = "cs346.console.MainKt"
+    }
 }
 
 application {
