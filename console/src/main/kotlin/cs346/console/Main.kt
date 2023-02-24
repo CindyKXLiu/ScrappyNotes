@@ -2,261 +2,311 @@ package cs346.console
 
 import cs346.shared.*
 
+private const val PAD = 45
+private const val HELP_MSG = "OPTIONS:\n" +
+        "ls, list                   List all notes\n" +
+        "ls, list -g                List all groups\n" +
+        "n, new [name]              Create new empty note with title [name]\n" +
+        "d, delete [name]           Delete note with title [name]\n" +
+        "p, print [name]            Print contents of note [name]\n" +
+        "rename [old] [new]         Rename note from [old] to [new]\n" +
+        "rename -g [old] [new]      Rename group from [old] to [new]\n" +
+        "n, new -g [group]          Create new group named [group]\n" +
+        "d, delete -g [group]       Delete group with name [group]\n" +
+        "add [note] [group]         Add [note] to [group]\n" +
+        "rm [note] [group]          Remove [note] from [group]\n" +
+        "h, help                    Print this message\n" +
+        "quit                       Exit"
+private const val INVALID_COMMAND_MSG = "Invalid command. Type \"help\" for all options."
+private const val COMMAND_PROMPT_MSG = "\nEnter your command: "
+
 fun main() {
-    val controller = Controller()
-    // printHelp()
-        // TODO Runtime.getRuntime().exec("notepad")
-    while (true) {
-        println("")
-        print("Enter your command: ")
-        val input = readLine()
-        if (input != null) {
-            parseArgs(input, controller)
-        }
-    }
-
+   Console()
 }
 
 /**
- * Print help message to console.
+ * This class is for the console application
+ *
+ * @property controller is the name of the Controller that is going to be used to interact with the backend
+ *
+ * @constructor creates and starts the console application
  */
-fun printHelp() {
-    println("OPTIONS:")
-    println("ls, list                   List all notes")
-    println("ls, list -g                List all groups")
-    println("ls, list [group]           List all notes under [group]")
-    println("n, new [name]              Create new empty note with title [name]")
-    println("d, delete [name]           Delete note with title [name]")
-    println("p, print [name]            Print contents of note [name]") //TODO
-    println("rename [old] [new]         Rename note from [old] to [new]")
-    println("rename -g [old] [new]      Rename group from [old] to [new]")
-    println("n, new -g [group]          Create new group named [group]")
-    println("d, delete -g [group]       Delete group with name [group]")
-    println("add [group] [note]         Add [note] to [group]")
-    println("rm [group] [note]          Remove [note] from [group]")
-    println("h, help                    Print this message")
-    println("quit                       Exit")
-}
+class Console {
+   private val controller = Controller()
 
-/**
- * Process command passed through console.
- */
-fun parseArgs(command: String, controller: Controller) {
-    val args = command.split("\\s".toRegex())
-    when (args.first()) {
-        // Create command
-        "n", "new" -> {
-            // Create new note
-            if (args.size == 2) {
-                val title = args[1]
-                val note = controller.createNote(title, "")
-                println("Created new note \"" + note.title + "\".")
-            // Create new group
-            } else if (args.size == 3) {
-                if (args[1] == "-g") {
-                    val groupname = args[2]
-                    val group = controller.createGroup(groupname)
-                    println("Created new group \"" + group.name + "\".")
-                } else {
-                    printInvalidCommand()
-                }
+   /**
+    * Prompts user to enter commands until the quit command is entered
+    */
+   init {
+      while (true) {
+         print(COMMAND_PROMPT_MSG)
+         val input = readlnOrNull() ?: break
+         parseArgs(input)
+      }
+   }
+
+   /**
+    * Processes command passed through the console
+    */
+   private fun parseArgs(command: String) {
+      val args = command.split("\\s".toRegex())
+
+      when (args.first()) {
+         "n", "new" -> { // Create command
+            if (args.size == 2) { // Create new note
+               createNewNote(args[1])
+            } else if (args.size == 3 && args[1] == "-g") { // Create new group
+               createNewGroup(args[2])
             } else {
-                printInvalidCommand()
+               println(INVALID_COMMAND_MSG)
             }
-        }
+         }
 
-        // Delete command
-        "d", "delete" -> {
-            // Delete note
-            if (args.size == 2) {
-                val title = args[1]
-                val notes = controller.getNotesByTitle(title)
-                for (note in notes) {
-                    controller.deleteNote(note.id)
-                    println("Deleted note \"" + note.title + "\". It's gone!")
-                }
-            // Delete group
-            } else if (args.size == 3) {
-                if (args[1] == "-g") {
-                    val groupname = args[2]
-                    controller.deleteGroup(groupname)
-                    println("Deleted group \"$groupname\". It's gone!")
-                } else {
-                    printInvalidCommand()
-                }
+         "d", "delete" -> { // Delete command
+            if (args.size == 2) { // Delete note
+               deleteNote(args[1])
+            } else if (args.size == 3 && args[1] == "-g") { // Delete group
+               deleteGroup(args[2])
             } else {
-                printInvalidCommand()
+               print(INVALID_COMMAND_MSG)
             }
-        }
+         }
 
-        // Add note to group
-        "add" -> {
+         "add" -> { // Add note to group
             if (args.size == 3) {
-                // Check if group exists
-                val groupname = args[1]
-                if (controller.getGroupByName(groupname) == null) {
-                    println("Oops! The group \"$groupname\" does not exist.")
-                } else {
-                    // Check if note exists
-                    val notename = args[2]
-                    val notes = controller.getNotesByTitle(notename)
-                    if (notes.isNotEmpty()) {
-                        controller.addNotesToGroup(groupname, notes)
-                        println("Added \"$notename\" to \"$groupname\".")
-                    } else {
-                        println("Could not add \"$notename\" to \"$groupname\".")
-                    }
-                }
+               addNotesToGroup(args[1], args[2])
             } else {
-                printInvalidCommand()
+               print(INVALID_COMMAND_MSG)
             }
-        }
+         }
 
-        // Remove note from group
-        "rm" -> {
+         "rm" -> { // Remove note from group
             if (args.size == 3) {
-                // Check if group exists
-                val groupname = args[1]
-                if (controller.getGroupByName(groupname) == null) {
-                    println("Oops! The group \"$groupname\" does not exist.")
-                } else {
-                    // Check if note exists
-                    val notename = args[2]
-                    val notes = controller.getNotesByTitle(notename)
-                    if (notes.isNotEmpty()) {
-                        controller.removeNotesFromGroup(groupname, notes)
-                        println("Removed \"$notename\" from \"$groupname\".")
-                    } else {
-                        println("Could not remove \"$notename\" from \"$groupname\".")
-                    }
-                }
+               removeNotesFromGroup(args[1], args[2])
             } else {
-                printInvalidCommand()
+               print(INVALID_COMMAND_MSG)
             }
-        }
+         }
 
-        // List command
-        "ls", "list" -> {
-            // List all notes
-            if (args.size == 1) {
-                val notes = controller.getAllNotes()
-                println("You have " + notes.size + " note${if (notes.size == 1) "" else "s"}:")
-                printNotes(notes)
-            } else if (args.size == 2) {
-                val groups = controller.getAllGroups()
-
-                // List all groups
-                if (args[1] == "-g") {
-                    printGroups(groups)
-
-                // List all notes under specific group
-                } else {
-                    val groupname = args[1]
-                    val group = controller.getGroupByName(groupname)
-                    if (group != null) {
-                        val notes = group.notes.values.toList()
-                        println("You have " + notes.size + " note${if (notes.size == 1) "" else "s"} under \"$groupname\":")
-                        printNotes(notes)
-                    } else {
-                        println("Oops! The group \"$groupname\" does not exist.")
-                        printGroups(groups)
-                    }
-                }
+         "ls", "list" -> { // List command
+            if (args.size == 1) { // List all notes
+               listNotes()
+            } else if (args.size == 2 && args[1] == "-g") { // List all groups
+               listGroups()
             } else {
-                printInvalidCommand()
+               print(INVALID_COMMAND_MSG)
             }
-        }
+         }
 
-        // Print note
-        "p", "print" -> {
+         "p", "print" -> { // Print note
             if (args.size == 2) {
-                // Check if note exists
-                val name = args[1]
-                val notes = controller.getNotesByTitle(name)
-                // If it exists, print its contents
-                if (notes.isNotEmpty()) {
-                    println("$name:")
-                    print(notes[0].content)
-                } else {
-                    println("Could not find note named \"$name\".")
-                }
+               printNoteContent(args[1])
             } else {
-                printInvalidCommand()
+               print(INVALID_COMMAND_MSG)
             }
-        }
+         }
 
-        // Rename command
-        "rename" -> {
-            // Rename note
-            if (args.size == 3) {
-                // Check if note with old name exists
-                val oldname = args[1]
-                val notes = controller.getNotesByTitle(oldname)
-                // If it exists, rename with new name
-                if (notes.isNotEmpty()) {
-                    val newname = args[2]
-                    for (note in notes) {
-                        controller.editNoteTitle(note.id, newname)
-                        println("Renamed note \"$oldname\" to \"$newname\".")
-                    }
-                } else {
-                    println("Could not find note named \"$oldname\".")
-                }
-            // Rename group
-            } else if (args.size == 4) {
-                if (args[1] == "-g") {
-                    // Check if group with old name exists
-                    val oldname = args[2]
-                    val group = controller.getGroupByName(oldname)
-                    // If it exists, rename with new name
-                    if (group == null) {
-                        println("Could not find group named \"$oldname\".")
-                    } else {
-                        val newname = args[3]
-                        controller.editGroupName(oldname, newname)
-                        println("Renamed group \"$oldname\" to \"$newname\".")
-                    }
-                } else {
-                    printInvalidCommand()
-                }
+         "rename" -> { // Rename command
+            if (args.size == 3) { // Rename note
+               renameNote(args[1], args[2])
+            } else if (args.size == 4 && args[1] == "-g") { // Rename group
+               renameGroup(args[2], args[3])
             } else {
-                printInvalidCommand()
+               print(INVALID_COMMAND_MSG)
             }
-        }
+         }
 
-        // Print help message
-        "h", "help" -> printHelp()
+         // Print help message
+         "h", "help" -> println(HELP_MSG)
 
-        // Quit
-        "quit" -> kotlin.system.exitProcess(0)
+         // Quit
+         "quit" -> kotlin.system.exitProcess(0)
 
-        else -> printInvalidCommand()
-    }
-}
+         else -> println(INVALID_COMMAND_MSG)
+      }
+   }
 
-/**
- * Prints a nicely formatted list of notes to console with their titles, creation, and modification dates.
- */
-fun printNotes(notes: List<Note>) {
-    val headings = listOf("TITLE", "DATE CREATED", "DATE MODIFIED")
-    println("${headings[0].padEnd(45)} ${headings[1].padEnd(20)} ${headings[2]}")
+   /**
+    * Creates a new note titled [title]
+    *
+    * @param title is the title of the new note created
+    */
+   private fun createNewNote(title: String) {
+      controller.createNote(title, "")
+      println("Created new note \"$title\".")
+   }
 
-    for (note in notes) {
-        println("${note.title.padEnd(45)} " +
-                "${note.dateCreated.toString().split("T")[0].padEnd(20)} " +
-                note.dateModified.toString().split("T")[0]
-        )
-    }
-}
+   /**
+    * Creates a new group named [name]
+    *
+    * @param name is the name of the new group created
+    */
+   private fun createNewGroup(name: String) {
+      controller.createGroup(name)
+      println("Created new group \"$name\".")
+   }
 
-/**
- * Prints a formatted list of groups to console.
- */
-fun printGroups(groups: List<Group>) {
-    println("You have " + groups.size + " group${if (groups.size == 1) "" else "s"}:")
-    for (group in groups) println("- " + group.name)
-}
+   /**
+    * Deletes note(s) with the title [title]
+    *
+    * @param title is the title of the note(s) to be deleted
+    */
+   private fun deleteNote(title: String) {
+      val notes = controller.getNotesByTitle(title)
+      for (note in notes) {
+         controller.deleteNote(note.id)
+      }
+      println("Deleted note \"$title\".")
+   }
 
-fun printInvalidCommand() {
-    println("Invalid command. Type \"help\" for all options.")
+   /**
+    * Deletes the group named [name]
+    *
+    * @param name is the name of the group to be deleted
+    */
+   private fun deleteGroup(name: String) {
+      controller.deleteGroup(name)
+      println("Deleted group \"$name\".")
+   }
+
+   /**
+    * Adds the notes titled [noteTitle] to the group [groupName]
+    *
+    * @param noteTitle is the title of the note to be added to [groupName]
+    * @param groupName is the name of the group
+    */
+   private fun addNotesToGroup(noteTitle: String, groupName: String) {
+      // check that the note exists
+      val notes = controller.getNotesByTitle(noteTitle)
+      if (notes.isEmpty()) {
+         println("No note titled \"$noteTitle\".")
+         return
+      }
+
+      //check that the group exists
+      if (controller.getGroupByName(groupName) == null) {
+         println("The group \"$groupName\" does not exist.")
+         return
+      }
+
+      // add notes to the group
+      controller.addNotesToGroup(groupName, notes)
+      println("Added \"$noteTitle\" to \"$groupName\".")
+   }
+
+   /**
+    * Removes the notes titled [noteTitle] from the group [groupName]
+    *
+    * @param noteTitle is the title of the note to be removed from [groupName]
+    * @param groupName is the name of the group
+    */
+   private fun removeNotesFromGroup(noteTitle: String, groupName: String) {
+      // check that the note exists
+      val notes = controller.getNotesByTitle(noteTitle)
+      if (notes.isEmpty()) {
+         println("No note titled \"$noteTitle\".")
+         return
+      }
+
+      //check that the group exists
+      if (controller.getGroupByName(groupName) == null) {
+         println("The group \"$groupName\" does not exist.")
+         return
+      }
+
+      // remove notes from the group
+      controller.removeNotesFromGroup(groupName, notes)
+      println("Removed \"$noteTitle\" from \"$groupName\".")
+   }
+
+   /**
+    * Prints a nicely formatted list of notes to console with their titles, creation, and modification dates
+    */
+   private fun listNotes() {
+      val notes = controller.getAllNotes()
+
+      println("NUMBER OF NOTES: ${notes.size}")
+      // print heading
+      println(
+         "TITLE".padEnd(PAD) +
+                 "DATE CREATED".padEnd(PAD) +
+                 "DATE MODIFIED"
+      )
+      // print all existing notes
+      for (note in notes) {
+         println(
+            note.title.padEnd(PAD) +
+                    note.dateCreated.toString().split("T")[0].padEnd(PAD) +
+                    note.dateModified.toString().split("T")[0]
+         )
+      }
+   }
+
+   /**
+    * Prints a nicely formatted list of groups to console with their notes
+    */
+   private fun listGroups() {
+      val groups = controller.getAllGroups()
+
+      println("NUMBER OF GROUPS: ${groups.size}")
+      // print heading
+      println(
+         "GROUP NAME".padEnd(PAD) +
+                 "NOTES"
+      )
+      // print all existing groups and the notes in that group
+      for (group in groups) {
+         println(group.name)
+
+         // print the notes that are in the group
+         for ((_, note) in group.notes) {
+            println("".padEnd(PAD) + note.title)
+         }
+      }
+   }
+
+   /**
+    * Prints the content of the note titled [title]
+    *
+    * @property title is the title of the note
+    */
+   private fun printNoteContent(title: String) {
+      val notes = controller.getNotesByTitle(title)
+      if (notes.isEmpty()) {
+         println("Could not find note named \"$title\".")
+         return
+      }
+
+      println(notes[0].content)
+   }
+
+   /**
+    * Rename note titled [oldTitle] to [newTitle]
+    *
+    * @property oldTitle is the current name of the note
+    * @property newTitle is the new title of the note
+    */
+   private fun renameNote(oldTitle: String, newTitle: String){
+      val notes = controller.getNotesByTitle(oldTitle)
+      if (notes.isEmpty()) {
+         println("Could not find note named \"$oldTitle\".")
+         return
+      }
+
+      for (note in notes) {
+         controller.editNoteTitle(note.id, newTitle)
+      }
+      println("Renamed note \"$oldTitle\" to \"$newTitle\".")
+   }
+
+   private fun renameGroup(oldName: String, newName: String){
+      val group = controller.getGroupByName(oldName)
+      if (group == null) {
+         println("Could not find group named \"$oldName\".")
+         return
+      }
+
+      controller.editGroupName(oldName, newName)
+      println("Renamed group \"$oldName\" to \"$newName\".")
+   }
 }

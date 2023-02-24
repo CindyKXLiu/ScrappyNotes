@@ -1,8 +1,6 @@
 package cs346.application
 
-import cs346.shared.Controller
-import cs346.shared.Group
-import cs346.shared.Note
+import cs346.shared.*
 import javafx.application.Application
 import javafx.event.ActionEvent
 import javafx.geometry.Insets
