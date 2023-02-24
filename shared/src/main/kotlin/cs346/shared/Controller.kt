@@ -172,6 +172,7 @@ class Controller {
      * @param groupName is the name of the group
      * @param note is the note to be added to the group
      *
+     * @exception NonexistentGroupException is thrown if the group given does not exist
      */
     fun addNoteToGroup(groupName: String, note: Note) {
         // Check that the group given exists
@@ -220,6 +221,7 @@ class Controller {
      * @param groupName is the name of the group
      * @param notes are the notes to be removed to the group
      *
+     * @exception NonexistentGroupException is thrown if the group given does not exist
      */
     fun removeNotesFromGroup(groupName: String, notes: List<Note>) {
         // Check that the group given exists
@@ -315,7 +317,6 @@ class Controller {
      * Returns the requested note.
      *
      * @param id is the time that the note was created
-     *
      * @return the notes that were requested, null will be returned if no such note exists
      */
     fun getNoteByID(id: UUID) : Note? {
