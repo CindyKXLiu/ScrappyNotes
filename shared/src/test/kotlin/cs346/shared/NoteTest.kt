@@ -42,6 +42,8 @@ internal class NoteTest {
         assertEquals(expectedTitle, note1.title)
         assertEquals(expectedContent, note1.content)
 
+        Thread.sleep(1)
+
         note1.title = "title"
         expectedTitle = "title"
 
@@ -61,6 +63,8 @@ internal class NoteTest {
 
         assertEquals(expectedTitle, note1.title)
         assertEquals(expectedContent, note1.content)
+
+        Thread.sleep(1)
 
         note1.content = "content"
         expectedContent = "content"

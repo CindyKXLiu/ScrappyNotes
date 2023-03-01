@@ -402,6 +402,7 @@ internal class ControllerTest {
         assertEquals(expectedNotesSize, controller.getAllNotes().size)
 
         controller.createNote("title", "content")
+        Thread.sleep(1)
         var allNotes = controller.getAllNotes()
         var expectedTitle = "title"
         var expectedContent = "content"
@@ -565,9 +566,13 @@ internal class ControllerTest {
     fun getSortedNotesByModifiedDateAscending() {
         val controller = Controller()
         val note1 = controller.createNote("1")
+        Thread.sleep(1)
         controller.createNote("2")
+        Thread.sleep(1)
         controller.createNote("3")
+        Thread.sleep(1)
         controller.createNote("4")
+        Thread.sleep(1)
         val note5 = controller.createNote("5")
         var expectedSize = 5
         var sortedNote = controller.getSortedNotesByModifiedDateAscending()
@@ -578,6 +583,8 @@ internal class ControllerTest {
         assertEquals("4", sortedNote[3].title)
         assertEquals("5", sortedNote[4].title)
 
+        Thread.sleep(1)
+
         controller.editNoteContent(note5.id, "content")
         expectedSize = 5
         sortedNote = controller.getSortedNotesByModifiedDateAscending()
@@ -587,6 +594,8 @@ internal class ControllerTest {
         assertEquals("3", sortedNote[2].title)
         assertEquals("4", sortedNote[3].title)
         assertEquals("5", sortedNote[4].title)
+
+        Thread.sleep(1)
 
         controller.editNoteContent(note1.id, "content")
         expectedSize = 5
@@ -603,9 +612,13 @@ internal class ControllerTest {
     fun getSortedNotesByModifiedDateDescending() {
         val controller = Controller()
         val note1 = controller.createNote("1")
+        Thread.sleep(1)
         controller.createNote("2")
+        Thread.sleep(1)
         controller.createNote("3")
+        Thread.sleep(1)
         controller.createNote("4")
+        Thread.sleep(1)
         val note5 = controller.createNote("5")
         var expectedSize = 5
         var sortedNote = controller.getSortedNotesByModifiedDateDescending()
@@ -641,9 +654,13 @@ internal class ControllerTest {
     fun getSortedNotesByCreatedDateAscending() {
         val controller = Controller()
         val note1 = controller.createNote("1")
+        Thread.sleep(1)
         controller.createNote("2")
+        Thread.sleep(1)
         controller.createNote("3")
+        Thread.sleep(1)
         controller.createNote("4")
+        Thread.sleep(1)
         controller.createNote("5")
         var expectedSize = 5
         var sortedNote = controller.getSortedNotesByCreatedDateAscending()
@@ -653,6 +670,8 @@ internal class ControllerTest {
         assertEquals("3", sortedNote[2].title)
         assertEquals("4", sortedNote[3].title)
         assertEquals("5", sortedNote[4].title)
+
+        Thread.sleep(1)
 
         controller.editNoteContent(note1.id, "content")
         expectedSize = 5
@@ -669,9 +688,13 @@ internal class ControllerTest {
     fun getSortedNotesByCreatedDateDescending() {
         val controller = Controller()
         controller.createNote("1")
+        Thread.sleep(1)
         controller.createNote("2")
+        Thread.sleep(1)
         controller.createNote("3")
+        Thread.sleep(1)
         controller.createNote("4")
+        Thread.sleep(1)
         val note5 = controller.createNote("5")
         var expectedSize = 5
         var sortedNote = controller.getSortedNotesByCreatedDateDescending()
