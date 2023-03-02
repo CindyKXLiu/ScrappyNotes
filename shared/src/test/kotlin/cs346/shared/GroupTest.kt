@@ -82,7 +82,7 @@ internal class GroupTest {
 
         assertEquals(0, group.notes.size)
 
-        val notesMap = HashMap<Int, Note>()
+        val notesMap = HashMap<UInt, Note>()
         notesMap[note1.id] = note1
         notesMap[note2.id] = note2
         notesMap[note3.id] = note3
@@ -121,7 +121,7 @@ internal class GroupTest {
         val note2 = Note("title2", "content2")
         val note3 = Note("title3", "content3")
 
-        val notesMap = HashMap<Int, Note>()
+        val notesMap = HashMap<UInt, Note>()
         notesMap[note1.id] = note1
         notesMap[note2.id] = note2
         notesMap[note3.id] = note3
@@ -129,13 +129,13 @@ internal class GroupTest {
         group.addNotes(notesMap)
         assertEquals(3, group.notes.size)
 
-        val partialNotesMap1 = HashMap<Int, Note>()
+        val partialNotesMap1 = HashMap<UInt, Note>()
         partialNotesMap1[note1.id] = note1
         partialNotesMap1[note2.id] = note2
         group.removeNotes(partialNotesMap1)
         assertEquals(1, group.notes.size)
 
-        val partialNotesMap2 = HashMap<Int, Note>()
+        val partialNotesMap2 = HashMap<UInt, Note>()
         partialNotesMap2[note1.id] = note3
         group.removeNotes(partialNotesMap2)
         assertEquals(0, group.notes.size)

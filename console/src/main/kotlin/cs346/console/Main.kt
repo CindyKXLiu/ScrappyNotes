@@ -76,7 +76,7 @@ class Console {
          "d", "delete" -> { // Delete command
             if (args.size == 2) { // Delete note
                try {
-                  deleteNote(args[1].toInt())
+                  deleteNote(args[1].toUInt())
                } catch (e: NumberFormatException) {
                   print(INVALID_ID_MSG)
                }
@@ -90,7 +90,7 @@ class Console {
          "p", "print" -> { // Print note
             if (args.size == 2) {
                try {
-                  printNoteContent(args[1].toInt())
+                  printNoteContent(args[1].toUInt())
                } catch (e: NumberFormatException) {
                   print(INVALID_ID_MSG)
                }
@@ -102,7 +102,7 @@ class Console {
          "rename" -> { // Rename command
             if (args.size == 3) { // Rename note
                try {
-                  renameNote(args[1].toInt(), args[2])
+                  renameNote(args[1].toUInt(), args[2])
                } catch (e: NumberFormatException) {
                   print(INVALID_ID_MSG)
                }
@@ -116,7 +116,7 @@ class Console {
          "add" -> { // Add note to group
             if (args.size == 3) {
                try {
-                  addNoteToGroup(args[1].toInt(), args[2])
+                  addNoteToGroup(args[1].toUInt(), args[2])
                } catch (e: NumberFormatException) {
                   print(INVALID_ID_MSG)
                }
@@ -128,7 +128,7 @@ class Console {
          "rm" -> { // Remove note from group
             if (args.size == 3) {
                try {
-                  removeNoteFromGroup(args[1].toInt(), args[2])
+                  removeNoteFromGroup(args[1].toUInt(), args[2])
                } catch (e: NumberFormatException) {
                   print(INVALID_ID_MSG)
                }
@@ -140,7 +140,7 @@ class Console {
          "mv" -> { // Move note to new group
             if (args.size == 3) {
                try {
-                  moveNoteToGroup(args[1].toInt(), args[2])
+                  moveNoteToGroup(args[1].toUInt(), args[2])
                } catch (e: NumberFormatException) {
                   print(INVALID_ID_MSG)
                }
@@ -231,7 +231,7 @@ class Console {
     *
     * @param id is the id of the note to be deleted
     */
-   private fun deleteNote(id: Int) {
+   private fun deleteNote(id: UInt) {
       try{
          controller.deleteNote(id)
          println("Deleted note with id $id.")
@@ -259,7 +259,7 @@ class Console {
     *
     * @param id is the id of the note
     */
-   private fun printNoteContent(id: Int) {
+   private fun printNoteContent(id: UInt) {
       try {
          println(controller.getNoteByID(id).content)
       } catch (e: NonExistentNoteException) {
@@ -273,7 +273,7 @@ class Console {
     * @param id is the alias id of the note
     * @param newTitle is the new title of the note
     */
-   private fun renameNote(id: Int, newTitle: String){
+   private fun renameNote(id: UInt, newTitle: String){
       try{
          controller.editNoteTitle(id, newTitle)
          println("Renamed note with id $id to \"$newTitle\".")
@@ -304,7 +304,7 @@ class Console {
     * @param id is the id of the note to be added
     * @param groupName is the name of the group to add the note to
     */
-   private fun addNoteToGroup(id: Int, groupName: String) {
+   private fun addNoteToGroup(id: UInt, groupName: String) {
       try{
          val note = controller.getNoteByID(id)
          controller.addNoteToGroup(groupName, note)
@@ -322,7 +322,7 @@ class Console {
     * @param id is the alias id of the note to be removed from [groupName]
     * @param groupName is the name of the group
     */
-   private fun removeNoteFromGroup(id: Int, groupName: String) {
+   private fun removeNoteFromGroup(id: UInt, groupName: String) {
       try {
          val note = controller.getNoteByID(id)
          controller.removeNoteFromGroup(groupName, note)
@@ -340,7 +340,7 @@ class Console {
     * @param id is the id of the note
     * @param newGroup is the name of the group the note will be moved to
     */
-   private fun moveNoteToGroup(id: Int, newGroup: String){
+   private fun moveNoteToGroup(id: UInt, newGroup: String){
       try{
          controller.moveNoteToGroup(newGroup, controller.getNoteByID(id))
          println("Moved note with id $id to group \"$newGroup\"")

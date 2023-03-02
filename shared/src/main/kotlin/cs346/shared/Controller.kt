@@ -13,7 +13,7 @@ import kotlin.collections.HashMap
  * @constructor creates a controller with no elements in notes and groups
  */
 class Controller {
-    private var notes: HashMap<Int, Note> = HashMap()
+    private var notes: HashMap<UInt, Note> = HashMap()
     private var groups: HashMap<String, Group> = HashMap()
 
     /**
@@ -23,8 +23,8 @@ class Controller {
      *
      * @return hashmap structure containing notes indexed by date created
      */
-    private fun listToHashMapNotes(notes: List<Note>): HashMap<Int, Note> {
-        val notesHashMap = HashMap<Int, Note>()
+    private fun listToHashMapNotes(notes: List<Note>): HashMap<UInt, Note> {
+        val notesHashMap = HashMap<UInt, Note>()
         for (note in notes) {
             notesHashMap[note.id] = note
         }
@@ -88,7 +88,7 @@ class Controller {
      *
      * @exception NonExistentNoteException is thrown when no such note with id [id] exits
      */
-    fun deleteNote(id: Int) {
+    fun deleteNote(id: UInt) {
         // Check that the note given exists
         if (!notes.containsKey(id)) throw NonExistentNoteException()
 
@@ -109,7 +109,7 @@ class Controller {
      *
      * @exception NonExistentNoteException is thrown when no such note with id [id] exits
      */
-    fun editNoteTitle(id: Int, title:String = "") {
+    fun editNoteTitle(id: UInt, title:String = "") {
         // Check that the note given exists
         if (!notes.containsKey(id)) throw NonExistentNoteException()
 
@@ -125,7 +125,7 @@ class Controller {
      *
      * @exception NonExistentNoteException is thrown when no such note with id [id] exits
      */
-    fun editNoteContent(id: Int, content:String = "") {
+    fun editNoteContent(id: UInt, content:String = "") {
         // Check that the note given exists
         if (!notes.containsKey(id)) throw NonExistentNoteException()
 
@@ -154,7 +154,7 @@ class Controller {
      *
      * @return the note that was requested
      */
-    fun getNoteByID(id: Int) : Note {
+    fun getNoteByID(id: UInt) : Note {
         if (!notes.containsKey(id)) throw NonExistentNoteException()
         return notes[id]!!
     }

@@ -15,7 +15,7 @@ import java.time.Instant
  * @constructor creates a note with the given [title] and [content]
  */
 class Note(title: String = "", content: String = "") {
-    val id: Int = getID()
+    val id: UInt = getID()
     val dateCreated: Instant = Instant.now()
     var dateModified: Instant = Instant.now()
         private set
@@ -40,15 +40,11 @@ class Note(title: String = "", content: String = "") {
             dateModified = Instant.now()
         }
 
-    override fun toString(): String {
-        return this.title
-    }
-
     private companion object UniqueID {
         var noteCounter = -1
-        fun getID() : Int{
+        fun getID() : UInt{
             ++noteCounter
-            return noteCounter
+            return noteCounter.toUInt()
         }
     }
 }
