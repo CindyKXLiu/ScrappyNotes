@@ -48,4 +48,7 @@ javafx {
 // https://stackoverflow.com/questions/74453018/jlink-package-kotlin-in-both-merged-module-and-kotlin-stdlib
 jlink {
     forceMerge("kotlin")
+    launcher {
+        name= "notes"
+    }
 }
