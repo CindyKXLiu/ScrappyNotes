@@ -1,28 +1,29 @@
 package cs346.console
 
 import cs346.shared.*
+import kotlin.NumberFormatException
 
 private const val PAD = 45
+private const val PAD_SMALL = 25
 private const val HELP_MSG = "OPTIONS:\n" +
         "ls, list                   List all notes\n" +
         "ls, list -g                List all groups\n" +
-        "n, new [name]              Create new empty note with title [name]\n" +
-        "d, delete [name]           Delete note with title [name]\n" +
-        "p, print [name]            Print contents of note [name]\n" +
-        "rename [old] [new]         Rename note from [old] to [new]\n" +
-        "rename -g [old] [new]      Rename group from [old] to [new]\n" +
+        "n, new [title]             Create new empty note with title [title]\n" +
         "n, new -g [group]          Create new group named [group]\n" +
+        "d, delete [noteID]         Delete note with id [noteID]\n" +
         "d, delete -g [group]       Delete group with name [group]\n" +
-        "add [note] [group]         Add [note] to [group]\n" +
-        "rm [note] [group]          Remove [note] from [group]\n" +
+        "p, print [noteID]          Print contents of note with id [noteID]\n" +
+        "rename [noteID] [new]      Rename the title of the note with id [noteID] to [new]\n" +
+        "rename -g [old] [new]      Rename group from [old] to [new]\n" +
+        "add [noteID] [group]       Add note with id [noteID] to [group]\n" +
+        "rm [noteID] [group]        Remove note with id [noteID] from [group]\n" +
+        "mv [noteID] [newGroup]     Moves note with id [noteID] to [newGroup]\n" +
         "h, help                    Print this message\n" +
-        "quit                       Exit"
-private const val INVALID_COMMAND_MSG = "Invalid command. Type \"help\" for all options."
+        "quit                       Exit\n"
+private const val INVALID_COMMAND_MSG = "Invalid command. Type \"help\" for all options.\n"
 private const val COMMAND_PROMPT_MSG = "\nEnter your command: "
-
-fun main() {
-   Console()
-}
+private const val INVALID_ID_MSG = "No note with such id. Type \"ls\" to get the ids of the notes.\n"
+private const val INVALID_GROUP_MSG = "No such group exists. Type \"ls -g\" to get the names of the groups.\n"
 
 /**
  * This class is for the console application
@@ -52,42 +53,6 @@ class Console {
       val args = command.split("\\s".toRegex())
 
       when (args.first()) {
-         "n", "new" -> { // Create command
-            if (args.size == 2) { // Create new note
-               createNewNote(args[1])
-            } else if (args.size == 3 && args[1] == "-g") { // Create new group
-               createNewGroup(args[2])
-            } else {
-               println(INVALID_COMMAND_MSG)
-            }
-         }
-
-         "d", "delete" -> { // Delete command
-            if (args.size == 2) { // Delete note
-               deleteNote(args[1])
-            } else if (args.size == 3 && args[1] == "-g") { // Delete group
-               deleteGroup(args[2])
-            } else {
-               print(INVALID_COMMAND_MSG)
-            }
-         }
-
-         "add" -> { // Add note to group
-            if (args.size == 3) {
-               addNotesToGroup(args[1], args[2])
-            } else {
-               print(INVALID_COMMAND_MSG)
-            }
-         }
-
-         "rm" -> { // Remove note from group
-            if (args.size == 3) {
-               removeNotesFromGroup(args[1], args[2])
-            } else {
-               print(INVALID_COMMAND_MSG)
-            }
-         }
-
          "ls", "list" -> { // List command
             if (args.size == 1) { // List all notes
                listNotes()
@@ -98,9 +63,37 @@ class Console {
             }
          }
 
+         "n", "new" -> { // Create command
+            if (args.size == 2) { // Create new note
+               createNewNote(args[1])
+            } else if (args.size == 3 && args[1] == "-g") { // Create new group
+               createNewGroup(args[2])
+            } else {
+               print(INVALID_COMMAND_MSG)
+            }
+         }
+
+         "d", "delete" -> { // Delete command
+            if (args.size == 2) { // Delete note
+               try {
+                  deleteNote(args[1].toInt())
+               } catch (e: NumberFormatException) {
+                  print(INVALID_ID_MSG)
+               }
+            } else if (args.size == 3 && args[1] == "-g") { // Delete group
+               deleteGroup(args[2])
+            } else {
+               print(INVALID_COMMAND_MSG)
+            }
+         }
+
          "p", "print" -> { // Print note
             if (args.size == 2) {
-               printNoteContent(args[1])
+               try {
+                  printNoteContent(args[1].toInt())
+               } catch (e: NumberFormatException) {
+                  print(INVALID_ID_MSG)
+               }
             } else {
                print(INVALID_COMMAND_MSG)
             }
@@ -108,7 +101,11 @@ class Console {
 
          "rename" -> { // Rename command
             if (args.size == 3) { // Rename note
-               renameNote(args[1], args[2])
+               try {
+                  renameNote(args[1].toInt(), args[2])
+               } catch (e: NumberFormatException) {
+                  print(INVALID_ID_MSG)
+               }
             } else if (args.size == 4 && args[1] == "-g") { // Rename group
                renameGroup(args[2], args[3])
             } else {
@@ -116,13 +113,96 @@ class Console {
             }
          }
 
+         "add" -> { // Add note to group
+            if (args.size == 3) {
+               try {
+                  addNoteToGroup(args[1].toInt(), args[2])
+               } catch (e: NumberFormatException) {
+                  print(INVALID_ID_MSG)
+               }
+            } else {
+               print(INVALID_COMMAND_MSG)
+            }
+         }
+
+         "rm" -> { // Remove note from group
+            if (args.size == 3) {
+               try {
+                  removeNoteFromGroup(args[1].toInt(), args[2])
+               } catch (e: NumberFormatException) {
+                  print(INVALID_ID_MSG)
+               }
+            } else {
+               print(INVALID_COMMAND_MSG)
+            }
+         }
+
+         "mv" -> { // Move note to new group
+            if (args.size == 3) {
+               try {
+                  moveNoteToGroup(args[1].toInt(), args[2])
+               } catch (e: NumberFormatException) {
+                  print(INVALID_ID_MSG)
+               }
+            } else {
+               print(INVALID_COMMAND_MSG)
+            }
+         }
+
          // Print help message
-         "h", "help" -> println(HELP_MSG)
+         "h", "help" -> print(HELP_MSG)
 
          // Quit
          "quit" -> kotlin.system.exitProcess(0)
 
-         else -> println(INVALID_COMMAND_MSG)
+         else -> print(INVALID_COMMAND_MSG)
+      }
+   }
+
+   /**
+    * Prints a nicely formatted list of notes to console with their titles, creation, and modification dates
+    */
+   private fun listNotes() {
+      val notes = controller.getAllNotes()
+      // print heading
+      println("NUMBER OF NOTES: ${notes.size}")
+      println("TITLE".padEnd(PAD) + "ID".padEnd(PAD_SMALL) +
+              "DATE CREATED".padEnd(PAD_SMALL) +
+              "DATE MODIFIED"
+      )
+
+      // print all existing notes
+      for (note in notes) {
+         println(note.title.padEnd(PAD) +
+                 note.id.toString().padEnd(PAD_SMALL)+
+                 note.dateCreated.toString().split("T")[0].padEnd(PAD_SMALL) +
+                 note.dateModified.toString().split("T")[0]
+         )
+      }
+   }
+
+   /**
+    * Prints a nicely formatted list of groups to console with their notes
+    */
+   private fun listGroups() {
+      val groups = controller.getAllGroups()
+
+      // print heading
+      println("NUMBER OF GROUPS: ${groups.size}")
+      println("GROUP NAME".padEnd(PAD) +
+              "NOTE ID".padEnd(PAD_SMALL) +
+              "NOTE TITLE")
+
+      // print all existing groups and the notes in that group
+      for (group in groups) {
+         println(group.name)
+
+         // print the notes that are in the group
+         for ((_, note) in group.notes) {
+            println("".padEnd(PAD) +
+                    note.id.toString().padEnd(PAD_SMALL) +
+                    note.title)
+         }
       }
    }
 
@@ -147,16 +227,17 @@ class Console {
    }
 
    /**
-    * Deletes note(s) with the title [title]
+    * Deletes the note with the id [id]
     *
-    * @param title is the title of the note(s) to be deleted
+    * @param id is the id of the note to be deleted
     */
-   private fun deleteNote(title: String) {
-      val notes = controller.getNotesByTitle(title)
-      for (note in notes) {
-         controller.deleteNote(note.id)
+   private fun deleteNote(id: Int) {
+      try{
+         controller.deleteNote(id)
+         println("Deleted note with id $id.")
+      } catch (e: NonExistentNoteException) {
+         print(INVALID_ID_MSG)
       }
-      println("Deleted note \"$title\".")
    }
 
    /**
@@ -165,148 +246,112 @@ class Console {
     * @param name is the name of the group to be deleted
     */
    private fun deleteGroup(name: String) {
-      controller.deleteGroup(name)
-      println("Deleted group \"$name\".")
+      try{
+         controller.deleteGroup(name)
+         println("Deleted group \"$name\".")
+      } catch (e: NonExistentGroupException) {
+         print(INVALID_GROUP_MSG)
+      }
    }
 
    /**
-    * Adds the notes titled [noteTitle] to the group [groupName]
+    * Prints the content of the note with alias id [id]
     *
-    * @param noteTitle is the title of the note to be added to [groupName]
-    * @param groupName is the name of the group
+    * @param id is the id of the note
     */
-   private fun addNotesToGroup(noteTitle: String, groupName: String) {
-      // check that the note exists
-      val notes = controller.getNotesByTitle(noteTitle)
-      if (notes.isEmpty()) {
-         println("No note titled \"$noteTitle\".")
-         return
+   private fun printNoteContent(id: Int) {
+      try {
+         println(controller.getNoteByID(id).content)
+      } catch (e: NonExistentNoteException) {
+         println(INVALID_ID_MSG)
       }
-
-      //check that the group exists
-      if (controller.getGroupByName(groupName) == null) {
-         println("The group \"$groupName\" does not exist.")
-         return
-      }
-
-      // add notes to the group
-      controller.addNotesToGroup(groupName, notes)
-      println("Added \"$noteTitle\" to \"$groupName\".")
    }
 
    /**
-    * Removes the notes titled [noteTitle] from the group [groupName]
+    * Rename the title of the note with alias id [id] to [newTitle]
     *
-    * @param noteTitle is the title of the note to be removed from [groupName]
-    * @param groupName is the name of the group
+    * @param id is the alias id of the note
+    * @param newTitle is the new title of the note
     */
-   private fun removeNotesFromGroup(noteTitle: String, groupName: String) {
-      // check that the note exists
-      val notes = controller.getNotesByTitle(noteTitle)
-      if (notes.isEmpty()) {
-         println("No note titled \"$noteTitle\".")
-         return
-      }
-
-      //check that the group exists
-      if (controller.getGroupByName(groupName) == null) {
-         println("The group \"$groupName\" does not exist.")
-         return
-      }
-
-      // remove notes from the group
-      controller.removeNotesFromGroup(groupName, notes)
-      println("Removed \"$noteTitle\" from \"$groupName\".")
-   }
-
-   /**
-    * Prints a nicely formatted list of notes to console with their titles, creation, and modification dates
-    */
-   private fun listNotes() {
-      val notes = controller.getAllNotes()
-
-      println("NUMBER OF NOTES: ${notes.size}")
-      // print heading
-      println(
-         "TITLE".padEnd(PAD) +
-                 "DATE CREATED".padEnd(PAD) +
-                 "DATE MODIFIED"
-      )
-      // print all existing notes
-      for (note in notes) {
-         println(
-            note.title.padEnd(PAD) +
-                    note.dateCreated.toString().split("T")[0].padEnd(PAD) +
-                    note.dateModified.toString().split("T")[0]
-         )
+   private fun renameNote(id: Int, newTitle: String){
+      try{
+         controller.editNoteTitle(id, newTitle)
+         println("Renamed note with id $id to \"$newTitle\".")
+      } catch (e: NonExistentNoteException) {
+         println(INVALID_ID_MSG)
       }
    }
 
    /**
-    * Prints a nicely formatted list of groups to console with their notes
-    */
-   private fun listGroups() {
-      val groups = controller.getAllGroups()
-
-      println("NUMBER OF GROUPS: ${groups.size}")
-      // print heading
-      println(
-         "GROUP NAME".padEnd(PAD) +
-                 "NOTES"
-      )
-      // print all existing groups and the notes in that group
-      for (group in groups) {
-         println(group.name)
-
-         // print the notes that are in the group
-         for ((_, note) in group.notes) {
-            println("".padEnd(PAD) + note.title)
-         }
-      }
-   }
-
-   /**
-    * Prints the content of the note titled [title]
+    * Rename the group [oldName] to [newName]
     *
-    * @property title is the title of the note
+    * @param oldName is the current name of the group
+    * @param newName is the new name of the group
     */
-   private fun printNoteContent(title: String) {
-      val notes = controller.getNotesByTitle(title)
-      if (notes.isEmpty()) {
-         println("Could not find note named \"$title\".")
-         return
-      }
-
-      println(notes[0].content)
-   }
-
-   /**
-    * Rename note titled [oldTitle] to [newTitle]
-    *
-    * @property oldTitle is the current name of the note
-    * @property newTitle is the new title of the note
-    */
-   private fun renameNote(oldTitle: String, newTitle: String){
-      val notes = controller.getNotesByTitle(oldTitle)
-      if (notes.isEmpty()) {
-         println("Could not find note named \"$oldTitle\".")
-         return
-      }
-
-      for (note in notes) {
-         controller.editNoteTitle(note.id, newTitle)
-      }
-      println("Renamed note \"$oldTitle\" to \"$newTitle\".")
-   }
-
    private fun renameGroup(oldName: String, newName: String){
-      val group = controller.getGroupByName(oldName)
-      if (group == null) {
-         println("Could not find group named \"$oldName\".")
-         return
+      try{
+         controller.editGroupName(oldName, newName)
+         println("Renamed group \"$oldName\" to \"$newName\".")
+      } catch (e: NonExistentGroupException) {
+         print(INVALID_GROUP_MSG)
       }
-
-      controller.editGroupName(oldName, newName)
-      println("Renamed group \"$oldName\" to \"$newName\".")
    }
+
+
+   /**
+    * Adds the note with alias id [id] to the group [groupName]
+    *
+    * @param id is the id of the note to be added
+    * @param groupName is the name of the group to add the note to
+    */
+   private fun addNoteToGroup(id: Int, groupName: String) {
+      try{
+         val note = controller.getNoteByID(id)
+         controller.addNoteToGroup(groupName, note)
+         println("Added note with id $id to group \"$groupName\".")
+      } catch (e: NonExistentNoteException) {
+         print(INVALID_ID_MSG)
+      } catch (e: NonExistentGroupException) {
+         print(INVALID_GROUP_MSG)
+      }
+   }
+
+   /**
+    * Removes the notes with alias id [id] from the group [groupName]
+    *
+    * @param id is the alias id of the note to be removed from [groupName]
+    * @param groupName is the name of the group
+    */
+   private fun removeNoteFromGroup(id: Int, groupName: String) {
+      try {
+         val note = controller.getNoteByID(id)
+         controller.removeNoteFromGroup(groupName, note)
+         println("Removed note with id $id from group \"$groupName\".")
+      } catch (e: NonExistentNoteException) {
+         print(INVALID_ID_MSG)
+      } catch (e: NonExistentGroupException) {
+         print(INVALID_GROUP_MSG)
+      }
+   }
+
+   /**
+    * Move the note with id [id] to the group [newGroup]
+    *
+    * @param id is the id of the note
+    * @param newGroup is the name of the group the note will be moved to
+    */
+   private fun moveNoteToGroup(id: Int, newGroup: String){
+      try{
+         controller.moveNoteToGroup(newGroup, controller.getNoteByID(id))
+         println("Moved note with id $id to group \"$newGroup\"")
+      } catch (e: NonExistentNoteException) {
+         print(INVALID_ID_MSG)
+      } catch (e: NonExistentGroupException) {
+         print(INVALID_GROUP_MSG)
+      }
+   }
+}
+
+fun main() {
+   Console()
 }
