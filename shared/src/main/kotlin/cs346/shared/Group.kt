@@ -7,12 +7,12 @@ import kotlin.collections.HashMap
  * This class is for containing notes within the same group
  *
  * @property name is the name of the group
- * @property notes is a hashmap of notes belonging to the group, it is keyed by its creation date
+ * @property notes is a hashmap of notes belonging to the group, it is keyed by its id
  *
  * @constructor creates an empty group
  */
 class Group(var name: String) {
-    var notes: HashMap<UUID, Note> = HashMap()
+    var notes: HashMap<UInt, Note> = HashMap()
         private set
 
     /**
@@ -31,17 +31,16 @@ class Group(var name: String) {
      * @param addNotes is the hashmap of notes
      *
      */
-    fun addNotes(addNotes: HashMap<UUID, Note>) {
+    fun addNotes(addNotes: HashMap<UInt, Note>) {
         notes.putAll(addNotes)
     }
 
     /**
      * Remove a note from the group
      *
-     * @param dateCreated is the date the note was created for indexing purposes
-     *
+     * @param id is the id of the note to be removed
      */
-    fun removeNote(id: UUID) {
+    fun removeNote(id: UInt) {
         // Check that the note given exists
         if (!notes.containsKey(id)) return
 
@@ -54,7 +53,7 @@ class Group(var name: String) {
      * @param removeNotes is the hashmap of notes
      *
      */
-    fun removeNotes(removeNotes: HashMap<UUID, Note>) {
+    fun removeNotes(removeNotes: HashMap<UInt, Note>) {
         for ((_, note) in removeNotes) {
             removeNote(note.id)
         }

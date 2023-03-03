@@ -1,7 +1,6 @@
 package cs346.shared
 
 import java.time.Instant
-import java.util.UUID
 
 /**
  * This is the Note class, it will contain the data of a note.
@@ -16,7 +15,7 @@ import java.util.UUID
  * @constructor creates a note with the given [title] and [content]
  */
 class Note(title: String = "", content: String = "") {
-    val id: UUID = UUID.randomUUID()
+    val id: UInt = getID()
     val dateCreated: Instant = Instant.now()
     var dateModified: Instant = Instant.now()
         private set
@@ -41,7 +40,11 @@ class Note(title: String = "", content: String = "") {
             dateModified = Instant.now()
         }
 
-    override fun toString(): String {
-        return this.title
+    private companion object UniqueID {
+        var noteCounter = -1
+        fun getID() : UInt{
+            ++noteCounter
+            return noteCounter.toUInt()
+        }
     }
 }

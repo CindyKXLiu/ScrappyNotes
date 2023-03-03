@@ -1,7 +1,5 @@
 package cs346.shared
 
-import java.time.Instant
-import java.util.*
 import kotlin.collections.HashMap
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -14,7 +12,7 @@ internal class GroupTest {
         assertEquals(expectedNotesSize, group.notes.size)
 
         // Add a note to the group
-        var note = Note("note1", "content1")
+        val note = Note("note1", "content1")
         group.notes[note.id] = note
         expectedNotesSize = 1
         var expectedNoteTitle = "note1"
@@ -41,7 +39,7 @@ internal class GroupTest {
     @Test
     fun getName() {
         val group = Group("Group")
-        var expectedGroupName = "Group"
+        val expectedGroupName = "Group"
         assertEquals(expectedGroupName, group.name)
     }
 
@@ -84,7 +82,7 @@ internal class GroupTest {
 
         assertEquals(0, group.notes.size)
 
-        val notesMap = HashMap<UUID, Note>()
+        val notesMap = HashMap<UInt, Note>()
         notesMap[note1.id] = note1
         notesMap[note2.id] = note2
         notesMap[note3.id] = note3
@@ -123,7 +121,7 @@ internal class GroupTest {
         val note2 = Note("title2", "content2")
         val note3 = Note("title3", "content3")
 
-        val notesMap = HashMap<UUID, Note>()
+        val notesMap = HashMap<UInt, Note>()
         notesMap[note1.id] = note1
         notesMap[note2.id] = note2
         notesMap[note3.id] = note3
@@ -131,13 +129,13 @@ internal class GroupTest {
         group.addNotes(notesMap)
         assertEquals(3, group.notes.size)
 
-        val partialNotesMap1 = HashMap<UUID, Note>()
+        val partialNotesMap1 = HashMap<UInt, Note>()
         partialNotesMap1[note1.id] = note1
         partialNotesMap1[note2.id] = note2
         group.removeNotes(partialNotesMap1)
         assertEquals(1, group.notes.size)
 
-        val partialNotesMap2 = HashMap<UUID, Note>()
+        val partialNotesMap2 = HashMap<UInt, Note>()
         partialNotesMap2[note1.id] = note3
         group.removeNotes(partialNotesMap2)
         assertEquals(0, group.notes.size)
