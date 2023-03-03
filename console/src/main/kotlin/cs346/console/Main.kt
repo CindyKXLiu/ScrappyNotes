@@ -198,7 +198,8 @@ class Console {
          println(group.name)
 
          // print the notes that are in the group
-         for ((_, note) in group.notes) {
+         for (noteID in group.getNotes()) {
+            val note = controller.getNoteByID(noteID)
             println("".padEnd(PAD) +
                     note.id.toString().padEnd(PAD_SMALL) +
                     note.title)

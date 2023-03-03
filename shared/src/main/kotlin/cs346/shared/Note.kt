@@ -15,8 +15,10 @@ import java.time.Instant
  * @constructor creates a note with the given [title] and [content]
  */
 class Note(title: String = "", content: String = "") {
-    val id: UInt = getID()
-    val dateCreated: Instant = Instant.now()
+    var id: UInt = getID()
+        private set
+    var dateCreated: Instant = Instant.now()
+        private set
     var dateModified: Instant = Instant.now()
         private set
     var title = title
@@ -40,6 +42,15 @@ class Note(title: String = "", content: String = "") {
             dateModified = Instant.now()
         }
 
+    constructor(note: Note) : this(note.title, note.content) {
+        this.id = note.id
+        this.dateCreated = note.dateCreated
+        this.dateModified = note.dateModified
+    }
+
+    /**
+     * Static counter for generating "unique" note ids
+     */
     private companion object UniqueID {
         var noteCounter = -1
         fun getID() : UInt{
