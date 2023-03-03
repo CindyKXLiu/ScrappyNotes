@@ -25,57 +25,127 @@ class Controller {
     /**
      * This class is responsible for undoing and redoing Controller function calls
      *
-     * @property mementos is a stack containing the past states of the Controller
+     * @property undoMementos is a stack containing the past states of the Controller, used for undoing actions
+     * @property redoMementos is a stock containing the past states popped off via undo commands, used for redoing actions
      */
-    private object UndoManager {
-        private val mementos = Stack<Memento>()
+    private object UndoRedoManager {
+        private val undoMementos = Stack<Memento>()
+        private val redoMementos = Stack<Memento>()
 
         /**
-         * Saves the given state as a memento
+         * Saves the given state as a memento to undo stack and clears redo stack
          *
          * @param notes is the current state of the Controller's notes property
          * @param groups is the current state of the Controller's groups property
          */
-        fun save(notes: HashMap<UInt, Note>, groups: HashMap<String, Group>) {
-            mementos.push(Memento(notes, groups))
+        fun saveToUndo(notes: HashMap<UInt, Note>, groups: HashMap<String, Group>) {
+            undoMementos.push(Memento(notes, groups))
         }
 
         /**
-         * Returns the last memento to be stored
+         * Saves the given state as a memento to redo stack
          *
-         * @return last memento to be stored
+         * @param notes is the current state of the Controller's notes property
+         * @param groups is the current state of the Controller's groups property
+         */
+        fun saveToRedo(notes: HashMap<UInt, Note>, groups: HashMap<String, Group>) {
+            redoMementos.push(Memento(notes, groups))
+        }
+
+        /**
+         * Returns the memento representing the state of the Controller before the last function call
+         *
+         * @exception NoUndoException is thrown when there is no action to be undone
+         *
+         * @return the memento representing the state of the Controller before the last function call
          */
         fun undo(): Memento {
-            val lastMemento = mementos.peek()
-            mementos.pop()
-            return lastMemento
+            if (undoMementos.empty()) throw NoUndoException()
+            val memento = undoMementos.peek()
+            undoMementos.pop()
+            return memento
+        }
+
+        /**
+         * Returns the memento representing the state of the Controller before the undo call
+         *
+         * @exception NoRedoException is thrown when there is no action to be redone
+         * @return the memento representing the state of the Controller before the undo call
+         */
+        fun redo(): Memento {
+            if (redoMementos.empty()) throw NoRedoException()
+            val memento = redoMementos.peek()
+            redoMementos.pop()
+            return memento
+        }
+
+        /**
+         * Called to clear the redo stack.
+         * Redo stack is cleared when a chain of undo has been broken.
+         */
+        fun resetRedo() {
+            redoMementos.clear()
         }
     }
 
     /**
-     * Saves the current state of Controller.notes and Controller.groups
+     * Returns a deep copy of the notes property of Controller
+     *
+     * @return a deep copy of the notes property of Controller
      */
-    private fun save() {
-        // creates a deep copy of notes
+    private fun notesCopy(): HashMap<UInt, Note> {
         val notesCopy = HashMap<UInt, Note>()
         for ((id, note) in notes) {
             notesCopy[id] = Note(note)
         }
+        return notesCopy
+    }
 
-        // creates a deep copy of groups
+    /**
+     * Returns a deep copy of the groups property of Controller
+     *
+     * @return a deep copy of the groups property of Controller
+     */
+    private fun groupsCopy(): HashMap<String, Group> {
         val groupsCopy = HashMap<String, Group>()
         for ((name, group) in groups) {
             groupsCopy[name] = Group(group)
         }
+        return groupsCopy
+    }
 
-        UndoManager.save(notesCopy, groupsCopy)
+    /**
+     * Called by state changing functions (with exception to undo/redo) to save the current state of Controller
+     *  before performing their actions.
+     *  Redo stack is cleared as the chain of undo is broken.
+     */
+    private fun save() {
+        UndoRedoManager.resetRedo()
+        UndoRedoManager.saveToUndo(notesCopy(), groupsCopy())
     }
 
     /**
      * Undoes the previously called function
      */
     fun undo() {
-        val memento = UndoManager.undo()
+        // save current state to redo stack
+        UndoRedoManager.saveToRedo(notesCopy(), groupsCopy())
+
+        // undo actions
+        val memento = UndoRedoManager.undo()
+        notes = memento.notes
+        groups = memento.groups
+    }
+
+    /**
+     * Reverse the last called undo
+     */
+    fun redo() {
+        // Save current state to undo stack
+        UndoRedoManager.saveToUndo(notesCopy(), groupsCopy())
+
+        // redo the undo
+        val memento = UndoRedoManager.redo()
         notes = memento.notes
         groups = memento.groups
     }
