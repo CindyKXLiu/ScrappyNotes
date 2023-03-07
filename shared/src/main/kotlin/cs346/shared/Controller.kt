@@ -1,6 +1,7 @@
 package cs346.shared
 
 import java.time.Instant
+import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
@@ -17,19 +18,136 @@ class Controller {
     private var groups: HashMap<String, Group> = HashMap()
 
     /**
-     * Converts lists of notes to hashmaps of notes
-     *
-     * @param notes is a list of notes
-     *
-     * @return hashmap structure containing notes indexed by date created
+     * This class is responsible for holding a past state of the Controller
      */
-    private fun listToHashMapNotes(notes: List<Note>): HashMap<UInt, Note> {
-        val notesHashMap = HashMap<UInt, Note>()
-        for (note in notes) {
-            notesHashMap[note.id] = note
+    private data class Memento(val notes: HashMap<UInt, Note>, val groups: HashMap<String, Group>)
+
+    /**
+     * This class is responsible for undoing and redoing Controller function calls
+     *
+     * @property undoMementos is a stack containing the past states of the Controller, used for undoing actions
+     * @property redoMementos is a stock containing the past states popped off via undo commands, used for redoing actions
+     */
+    private object UndoRedoManager {
+        private val undoMementos = Stack<Memento>()
+        private val redoMementos = Stack<Memento>()
+
+        /**
+         * Saves the given state as a memento to undo stack and clears redo stack
+         *
+         * @param notes is the current state of the Controller's notes property
+         * @param groups is the current state of the Controller's groups property
+         */
+        fun saveToUndo(notes: HashMap<UInt, Note>, groups: HashMap<String, Group>) {
+            undoMementos.push(Memento(notes, groups))
         }
 
-        return notesHashMap
+        /**
+         * Saves the given state as a memento to redo stack
+         *
+         * @param notes is the current state of the Controller's notes property
+         * @param groups is the current state of the Controller's groups property
+         */
+        fun saveToRedo(notes: HashMap<UInt, Note>, groups: HashMap<String, Group>) {
+            redoMementos.push(Memento(notes, groups))
+        }
+
+        /**
+         * Returns the memento representing the state of the Controller before the last function call
+         *
+         * @exception NoUndoException is thrown when there is no action to be undone
+         *
+         * @return the memento representing the state of the Controller before the last function call
+         */
+        fun undo(): Memento {
+            if (undoMementos.empty()) throw NoUndoException()
+            val memento = undoMementos.peek()
+            undoMementos.pop()
+            return memento
+        }
+
+        /**
+         * Returns the memento representing the state of the Controller before the undo call
+         *
+         * @exception NoRedoException is thrown when there is no action to be redone
+         * @return the memento representing the state of the Controller before the undo call
+         */
+        fun redo(): Memento {
+            if (redoMementos.empty()) throw NoRedoException()
+            val memento = redoMementos.peek()
+            redoMementos.pop()
+            return memento
+        }
+
+        /**
+         * Called to clear the redo stack.
+         * Redo stack is cleared when a chain of undo has been broken.
+         */
+        fun resetRedo() {
+            redoMementos.clear()
+        }
+    }
+
+    /**
+     * Returns a deep copy of the notes property of Controller
+     *
+     * @return a deep copy of the notes property of Controller
+     */
+    private fun notesCopy(): HashMap<UInt, Note> {
+        val notesCopy = HashMap<UInt, Note>()
+        for ((id, note) in notes) {
+            notesCopy[id] = Note(note)
+        }
+        return notesCopy
+    }
+
+    /**
+     * Returns a deep copy of the groups property of Controller
+     *
+     * @return a deep copy of the groups property of Controller
+     */
+    private fun groupsCopy(): HashMap<String, Group> {
+        val groupsCopy = HashMap<String, Group>()
+        for ((name, group) in groups) {
+            groupsCopy[name] = Group(group)
+        }
+        return groupsCopy
+    }
+
+    /**
+     * Called by state changing functions (with exception to undo/redo) to save the current state of Controller
+     *  before performing their actions.
+     *  Redo stack is cleared as the chain of undo is broken.
+     */
+    private fun save() {
+        UndoRedoManager.resetRedo()
+        UndoRedoManager.saveToUndo(notesCopy(), groupsCopy())
+    }
+
+    /**
+     * Undoes the previously called function
+     */
+    fun undo() {
+        // save current state to redo stack
+        UndoRedoManager.saveToRedo(notesCopy(), groupsCopy())
+
+        // undo actions
+        val memento = UndoRedoManager.undo()
+        notes = memento.notes
+        groups = memento.groups
+    }
+
+    /**
+     * Reverse the last called undo
+     */
+    fun redo() {
+        // Save current state to undo stack
+        UndoRedoManager.saveToUndo(notesCopy(), groupsCopy())
+
+        // redo the undo
+        val memento = UndoRedoManager.redo()
+        notes = memento.notes
+        groups = memento.groups
     }
 
     /**
@@ -51,14 +169,12 @@ class Controller {
 
         for((id, note) in notes) {
             var belongToGroup = false
-
             for((_, group) in groups) {
-                if (group.notes.containsKey(id)) {
+                if (group.notes.contains(id)) {
                     belongToGroup = true
                     break
                 }
             }
-
             if (!belongToGroup) {
                 ungroupedNotes.add(note)
             }
@@ -76,6 +192,7 @@ class Controller {
      * @return the note that was created
      */
     fun createNote(title: String = "", content: String = ""): Note {
+        save()
         val newNote = Note(title, content)
         notes[newNote.id] = newNote
         return newNote
@@ -89,12 +206,13 @@ class Controller {
      * @exception NonExistentNoteException is thrown when no such note with id [id] exits
      */
     fun deleteNote(id: UInt) {
+        save()
         // Check that the note given exists
         if (!notes.containsKey(id)) throw NonExistentNoteException()
 
         // Remove note from their groups
         for ((_, group) in groups) {
-            group.removeNote(id)
+            group.notes.remove(id)
         }
 
         // Delete note from controller
@@ -110,10 +228,8 @@ class Controller {
      * @exception NonExistentNoteException is thrown when no such note with id [id] exits
      */
     fun editNoteTitle(id: UInt, title:String = "") {
-        // Check that the note given exists
+        save()
         if (!notes.containsKey(id)) throw NonExistentNoteException()
-
-        //Edit note
         notes[id]!!.title = title
     }
 
@@ -126,10 +242,8 @@ class Controller {
      * @exception NonExistentNoteException is thrown when no such note with id [id] exits
      */
     fun editNoteContent(id: UInt, content:String = "") {
-        // Check that the note given exists
+        save()
         if (!notes.containsKey(id)) throw NonExistentNoteException()
-
-        //Edit note
         notes[id]!!.content = content
     }
 
@@ -168,13 +282,11 @@ class Controller {
      */
     fun getNotesByTitle(title: String): List<Note> {
         val retNotes = ArrayList<Note>()
-
         for ((_, note) in notes) {
             if (note.title == title){
                 retNotes.add(note)
             }
         }
-
         return retNotes.toList()
     }
 
@@ -186,7 +298,6 @@ class Controller {
      */
     fun getNotesByContent(content: String): List<Note> {
         val retNotes = ArrayList<Note>()
-
         for ((_, note) in notes) {
             if (note.content.contains(content)) {
                 retNotes.add(note)
@@ -259,14 +370,13 @@ class Controller {
      * Create a group with a given name
      *
      * @param name is the name of the group
-     * @param notes is a list of notes to add to the new group
      *
      * @return the group that was created
      */
-    fun createGroup(name: String, notes: List<Note> = listOf()): Group {
+    fun createGroup(name: String): Group {
+        save()
         val newGroup = Group(name)
         groups[name] = newGroup
-        addNotesToGroup(name, notes)
         return newGroup
     }
 
@@ -280,6 +390,8 @@ class Controller {
      * @exception NonExistentGroupException is thrown if the group given does not exist
      */
     fun deleteGroup(name: String) {
+        save()
+
         // Check that the group given exists
         if (!groups.containsKey(name)) throw NonExistentGroupException()
 
@@ -296,6 +408,8 @@ class Controller {
      * @exception NonExistentGroupException is thrown if the group given does not exist
      */
     fun editGroupName(currentName: String, newName: String) {
+        save()
+
         // Check that the group given exists
         if (!groups.containsKey(currentName)) throw NonExistentGroupException()
 
@@ -342,30 +456,9 @@ class Controller {
      * @exception NonExistentGroupException is thrown if the group given does not exist
      */
     fun addNoteToGroup(groupName: String, note: Note) {
-        // Check that the group given exists
+        save()
         if (!groups.containsKey(groupName)) throw NonExistentGroupException()
-
-        // Call the addNote function
-        groups[groupName]!!.addNote(note)
-    }
-
-    /**
-     * Adds a list of notes to a given group
-     *
-     * @param groupName is the name of the group
-     * @param notes is the list of notes to be added to the group
-     *
-     * @exception NonExistentGroupException is thrown if the group given does not exist
-     */
-    fun addNotesToGroup(groupName: String, notes: List<Note>) {
-        // Check that the group given exists
-        if (!groups.containsKey(groupName)) throw NonExistentGroupException()
-
-        // Convert the list of notes to a hashmap of notes
-        val notesHashMap = listToHashMapNotes(notes)
-
-        // Call the addNote function
-        groups[groupName]!!.addNotes(notesHashMap)
+        groups[groupName]!!.notes.add(note.id)
     }
 
     /**
@@ -377,29 +470,9 @@ class Controller {
      * @exception NonExistentGroupException is thrown if the group given does not exist
      */
     fun removeNoteFromGroup(groupName: String, note: Note) {
-        // Check that the group given exists
+        save()
         if (!groups.containsKey(groupName)) throw NonExistentGroupException()
-
-        // Call the removeNote function
-        groups[groupName]!!.removeNote(note.id)
-    }
-
-    /**
-     * Removes a list of notes to a given group
-     *
-     * @param groupName is the name of the group
-     * @param notes are the notes to be removed to the group
-     *
-     * @exception NonExistentGroupException is thrown if the group given does not exist
-     */
-    fun removeNotesFromGroup(groupName: String, notes: List<Note>) {
-        // Check that the group given exists
-        if (!groups.containsKey(groupName)) throw NonExistentGroupException()
-
-        // Convert the list of notes to a hashmap of notes
-        val notesHashMap = listToHashMapNotes(notes)
-
-        groups[groupName]!!.removeNotes(notesHashMap)
+        groups[groupName]!!.notes.remove(note.id)
     }
 
     /**
@@ -411,38 +484,23 @@ class Controller {
      * @exception NonExistentGroupException is thrown if the group given does not exist
      */
     fun moveNoteToGroup(newGroupName: String, note: Note) {
+        save()
+
         // Check that the new group given exist
         if (!groups.containsKey(newGroupName)) throw NonExistentGroupException()
 
         // find the current group of the note
         var oldGroupName: String? = null
         for ((groupName, group) in groups) {
-            if (group.notes.containsKey(note.id)) oldGroupName = groupName
+            if (group.notes.contains(note.id)) oldGroupName = groupName
         }
 
         // Add the note to the new group
-        addNoteToGroup(newGroupName, note)
+        groups[newGroupName]!!.notes.add(note.id)
 
         // Remove the note from the old group, if it belonged to a group
         if (oldGroupName != null) {
-            removeNoteFromGroup(oldGroupName, note)
+            groups[oldGroupName]!!.notes.remove(note.id)
         }
-    }
-
-    /**
-     * Moves a list of notes from one group to another
-     *
-     * @param oldGroupName is the name of the group the notes is currently in
-     * @param newGroupName is tne name of the group to move the notes to
-     * @param notes is the list of notes in question
-     *
-     * @exception NonExistentGroupException is thrown if the group given does not exist
-     */
-    fun moveNotesBetweenGroups(oldGroupName: String, newGroupName: String, notes: List<Note>) {
-        // Check that the old and new groups given exist
-        if (!groups.containsKey(oldGroupName) || !groups.containsKey(newGroupName)) throw NonExistentGroupException()
-
-        addNotesToGroup(newGroupName, notes)
-        removeNotesFromGroup(oldGroupName, notes)
     }
 }

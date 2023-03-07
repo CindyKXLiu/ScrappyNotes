@@ -210,8 +210,8 @@ class Main : Application() {
             listofgroups.forEachIndexed { index, group ->
                 val newgroup = TreeItem<Any>(group)
 
-                for (note in group.notes) {
-                    newgroup.children.add(TreeItem(note.value))
+                for (note in group.getNotes()) {
+                    newgroup.children.add(TreeItem(controller.getNoteByID(note)))
                 }
                 rootitem.children.add(newgroup)
             }
