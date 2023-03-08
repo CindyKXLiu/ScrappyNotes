@@ -44,16 +44,16 @@ class Main : Application() {
         // FILE menubar manipulations /////////////////////////////////////////////////////////
         val fileMenu = Menu("File")
         val fileQuit = MenuItem("Quit")
-        fileQuit.setOnAction { event -> stage.close() }
+        fileQuit.setOnAction { _ -> stage.close() }
 
         val newNote = MenuItem("New Note (CTRL+N)")
-        newNote.setOnAction { event -> createNote() }
+        newNote.setOnAction { _ -> createNote() }
 
         val deleteObject = MenuItem("Delete")
-        deleteObject.setOnAction { event -> deleteSelectedNote() }
+        deleteObject.setOnAction { _ -> deleteSelectedNote() }
 
         val newGroup = MenuItem("New Group (CTRL+G)")
-        newGroup.setOnAction { event -> createGroup() }
+        newGroup.setOnAction { _ -> createGroup() }
 
         fileMenu.items.addAll(fileQuit, newNote, newGroup, deleteObject)
         menuBar.menus.add(fileMenu)
@@ -89,7 +89,7 @@ class Main : Application() {
         // OPTIONS menubar manipulations ///////////////////////////////////////////////////////////
         val optionsMenu = Menu("Options")
         val optionsTheme = CheckMenuItem("Select Theme")
-        optionsTheme.setOnAction { event -> }
+        optionsTheme.setOnAction { _ -> }
 
         optionsMenu.items.add(optionsTheme)
         menuBar.menus.add(optionsMenu)
@@ -105,7 +105,7 @@ class Main : Application() {
          */
         updateNoteview(null)
         noteview.setShowRoot(false)
-        noteview.selectionModel.selectedItemProperty().addListener { observable, oldValue, newValue ->
+        noteview.selectionModel.selectedItemProperty().addListener { _, _, _ ->
             val currSelection = noteview.selectionModel.selectedItem
             if (currSelection != null)
             {
@@ -148,16 +148,16 @@ class Main : Application() {
 
         val texttools = HBox()
         val boldButton = Button("Bold")
-        boldButton.setOnAction { actionEvent: ActionEvent -> }
+        boldButton.setOnAction { _: ActionEvent -> }
 
         val italicizeButton = Button("Italics")
-        italicizeButton.setOnAction { actionEvent: ActionEvent -> }
+        italicizeButton.setOnAction { _: ActionEvent -> }
 
         val underlineButton = Button("Underline")
         underlineButton.setOnAction { }
 
         val saveButton = Button("Save Note")
-        saveButton.setOnAction { actionEvent: ActionEvent -> saveSelectedNote() }
+        saveButton.setOnAction { _: ActionEvent -> saveSelectedNote() }
 
         texttools.spacing = 7.0
         texttools.padding = Insets(3.0, 5.0, 3.0, 5.0)
@@ -214,7 +214,7 @@ class Main : Application() {
         {
             noteview.selectionModel.clearSelection()
             var treeitemofnote : TreeItem<Any>? = null
-            listofnotes.forEachIndexed { index, note ->
+            listofnotes.forEachIndexed { _, note ->
                 val newitem = TreeItem<Any>(note)
                 rootitem.children.add(newitem)
                 if (selectedNote != null && selectedNote == note) {
@@ -232,7 +232,7 @@ class Main : Application() {
         }
 
         if (listofgroups != null) {
-            listofgroups.forEachIndexed { index, group ->
+            listofgroups.forEachIndexed { _, group ->
                 val newgroup = TreeItem<Any>(group)
 
                 for (note in group.getNotes()) {
