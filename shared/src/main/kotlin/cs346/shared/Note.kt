@@ -58,4 +58,11 @@ class Note(title: String = "", content: String = "") {
             return noteCounter.toUInt()
         }
     }
+
+    /**
+     * To string used for displaying notes in Treeview
+     */
+    override fun toString(): String {
+        return this.title
+    }
 }

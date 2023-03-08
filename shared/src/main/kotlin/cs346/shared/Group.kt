@@ -23,4 +23,11 @@ class Group(var name: String) {
     fun getNotes(): Set<UInt> {
         return notes.toSet()
     }
+
+    /**
+     * To string used for displaying notes in treeview
+     */
+    override fun toString(): String {
+        return this.name
+    }
 }
