@@ -1,10 +1,13 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+// https://github.com/gradle/gradle/issues/22797
+@Suppress("DSL_SCOPE_VIOLATION")
 plugins {
     application
-    kotlin("jvm") version "1.6.20"
-    id("org.openjfx.javafxplugin") version "0.0.13"
-    id("org.beryx.jlink") version "2.25.0"
+    alias(libs.plugins.kotlin.lang)
+    alias(libs.plugins.javamodularity)
+    alias(libs.plugins.javafx)
+    alias(libs.plugins.jlink)
 }
 
 group = "cs346"
@@ -20,18 +23,18 @@ repositories {
 
 dependencies {
     implementation(project(":shared"))
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
-    testImplementation(kotlin("test"))
-    testImplementation("org.testng:testng:7.1.0")
-    testImplementation("org.testng:testng:7.1.0")
+    implementation(libs.kotlin.coroutines)
+    testImplementation(libs.junit.jupiter)
 }
 
 tasks.test {
     useJUnitPlatform()
 }
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(libs.versions.jdk.get()))
+    }
 }
 
 application {
@@ -41,7 +44,7 @@ application {
 
 javafx {
     // version is determined by the plugin above
-    version = "18.0.2"
+    version = libs.versions.javafx.get()
     modules = listOf("javafx.controls", "javafx.graphics")
 }
 
