@@ -45,3 +45,9 @@ application {
 val run by tasks.getting(JavaExec::class) {
     standardInput = System.`in`
 }
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
