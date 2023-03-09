@@ -1,6 +1,6 @@
 package cs346.shared
 
-import java.time.Instant
+import java.time.LocalDateTime
 
 /**
  * This is the Note class, it will contain the data of a note.
@@ -16,20 +16,15 @@ import java.time.Instant
  */
 class Note(title: String = "", content: String = "") {
     var id: UInt = getID()
-        private set
-    var dateCreated: Instant = Instant.now()
-        private set
-    var dateModified: Instant = Instant.now()
-        private set
+        internal set
+    var dateCreated: LocalDateTime = LocalDateTime.now()
+        internal set
+    var dateModified: LocalDateTime = LocalDateTime.now()
+        internal set
     var title = title
-        /**
-         * Setter for title, will update the time the note was last modified
-         *
-         * @param value is the new title of the note
-         */
         internal set (value) {
             field = value
-            dateModified = Instant.now()
+            dateModified = LocalDateTime.now()
         }
     var content = content
         /**
@@ -39,7 +34,7 @@ class Note(title: String = "", content: String = "") {
          */
         internal set (value) {
             field = value
-            dateModified = Instant.now()
+            dateModified = LocalDateTime.now()
         }
 
     constructor(note: Note) : this(note.title, note.content) {

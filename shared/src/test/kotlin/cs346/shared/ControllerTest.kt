@@ -5,6 +5,11 @@ import org.junit.jupiter.api.Test
 
 internal class ControllerTest {
     @Test
+    fun test() {
+        val controller = Controller()
+    }
+
+    @Test
     fun createNote() {
         val controller = Controller()
         var expectedNotesSize = 0
