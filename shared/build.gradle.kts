@@ -35,3 +35,9 @@ java {
         languageVersion.set(JavaLanguageVersion.of(libs.versions.jdk.get()))
     }
 }
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}

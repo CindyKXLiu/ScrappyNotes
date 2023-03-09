@@ -39,6 +39,6 @@ val run by tasks.getting(JavaExec::class) {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(libs.versions.jdk.get()))
+        languageVersion.set(JavaLanguageVersion.of(17))
     }
 }
