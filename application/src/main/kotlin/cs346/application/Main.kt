@@ -8,7 +8,6 @@ import javafx.scene.Scene
 import javafx.scene.control.*
 import javafx.scene.control.Alert.AlertType
 import javafx.scene.input.KeyCode
-import javafx.scene.input.MouseButton
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
 import javafx.scene.layout.Priority
@@ -19,11 +18,23 @@ import java.util.*
 
 class Main : Application() {
     private val noteview = TreeView<Any>()
-    // private val notedata = FXCollections.observableArrayList<Note>()
     private val textarea = TextArea()
     private val lastmodified = HBox()
     private val layout = BorderPane()
     private val controller = Controller()
+
+    /**
+     * NoteSortType used to track what sorting option is currently
+     * used by display noteview.
+     * ALPHA = alphabetical order, CREATED = date created,
+     * MASCENDING = last modified ascending
+     * MDESCENDING = last modified descending
+     */
+    /*
+    enum class NoteSortType {
+        ALPHA, CREATED, MASCENDING, MDESCENDING, DEFAULT
+    }
+    private val currentSortType = NoteSortType.DEFAULT */
     override fun start(stage: Stage) {
         /**
          * Set up all drop down menus and functionality for top most bar
@@ -33,16 +44,16 @@ class Main : Application() {
         // FILE menubar manipulations /////////////////////////////////////////////////////////
         val fileMenu = Menu("File")
         val fileQuit = MenuItem("Quit")
-        fileQuit.setOnAction { event -> stage.close() }
+        fileQuit.setOnAction { _ -> stage.close() }
 
-        val newNote = MenuItem("New Note")
-        newNote.setOnAction { event -> createNote() }
+        val newNote = MenuItem("New Note (CTRL+N)")
+        newNote.setOnAction { _ -> createNote() }
 
         val deleteObject = MenuItem("Delete")
-        deleteObject.setOnAction { event -> deleteSelectedNote() }
+        deleteObject.setOnAction { _ -> deleteSelectedNote() }
 
-        val newGroup = MenuItem("New Group")
-        newGroup.setOnAction { event -> createGroup() }
+        val newGroup = MenuItem("New Group (CTRL+G)")
+        newGroup.setOnAction { _ -> createGroup() }
 
         fileMenu.items.addAll(fileQuit, newNote, newGroup, deleteObject)
         menuBar.menus.add(fileMenu)
@@ -51,27 +62,36 @@ class Main : Application() {
         val actionsMenu = Menu("Actions")
 
         val actionsRename = MenuItem("Rename")
-        actionsRename.setOnAction { event -> renameSelectedNote() }
+        actionsRename.setOnAction { _ -> renameSelectedNote() }
 
         val actionsGroup = MenuItem("Add to Group")
-        actionsGroup.setOnAction { event ->
+        actionsGroup.setOnAction { _ ->
             addSelectedNoteToGroup()
         }
 
         val actionsRemove = MenuItem("Remove from Group")
-        actionsRemove.setOnAction { event ->
+        actionsRemove.setOnAction { _ ->
             removeSelectedNoteFromGroup()
         }
 
-        actionsMenu.items.addAll(actionsRename, actionsGroup, actionsRemove)
+        val actionsUndo = MenuItem("Undo (CTRL+Z)")
+        actionsUndo.setOnAction { _ -> undo()
+        }
+
+        val actionsRedo = MenuItem("Redo (CTRL+Y)")
+        actionsRedo.setOnAction { _ -> redo()
+        }
+
+        actionsMenu.items.addAll(actionsRename, actionsGroup, actionsRemove, actionsUndo,
+            actionsRedo)
         menuBar.menus.add(actionsMenu)
 
         // OPTIONS menubar manipulations ///////////////////////////////////////////////////////////
         val optionsMenu = Menu("Options")
-        val optionsHide = CheckMenuItem("Select Theme")
-        optionsHide.setOnAction { event -> }
+        val optionsTheme = CheckMenuItem("Select Theme")
+        optionsTheme.setOnAction { _ -> }
 
-        optionsMenu.items.add(optionsHide)
+        optionsMenu.items.add(optionsTheme)
         menuBar.menus.add(optionsMenu)
 
         /**
@@ -83,11 +103,9 @@ class Main : Application() {
         /**
          * Set up for left side note list display
          */
-        updateNoteview(controller.getSortedNotesByModifiedDateAscending())
+        updateNoteview(null)
         noteview.setShowRoot(false)
-        noteview.selectionModel.selectedItemProperty().addListener { observable, oldValue, newValue ->
-            // val currIndex = noteview.selectionModel.selectedIndex
-            // if (currIndex != -1)
+        noteview.selectionModel.selectedItemProperty().addListener { _, _, _ ->
             val currSelection = noteview.selectionModel.selectedItem
             if (currSelection != null)
             {
@@ -97,19 +115,6 @@ class Main : Application() {
                 } else if (currSelection.value is Group) {
                     textarea.text = ""
                     textarea.disableProperty().set(true)
-                }
-            }
-        }
-
-        noteview.setOnMouseClicked { event ->
-            if (event.button.equals(MouseButton.PRIMARY)) {
-                if (event.clickCount == 1) {
-                    val currSelection = noteview.selectionModel.selectedItem
-                    if (currSelection != null)
-                        if (currSelection.value is Note) {
-                            displayNoteContents(currSelection.value as Note)
-                            textarea.disableProperty().set(false)
-                        }
                 }
             }
         }
@@ -143,22 +148,24 @@ class Main : Application() {
 
         val texttools = HBox()
         val boldButton = Button("Bold")
-        boldButton.setOnAction { actionEvent: ActionEvent -> }
+        boldButton.setOnAction { _: ActionEvent -> }
 
         val italicizeButton = Button("Italics")
-        italicizeButton.setOnAction { actionEvent: ActionEvent -> }
+        italicizeButton.setOnAction { _: ActionEvent -> }
 
         val underlineButton = Button("Underline")
         underlineButton.setOnAction { }
 
         val saveButton = Button("Save Note")
-        saveButton.setOnAction { actionEvent: ActionEvent -> saveSelectedNote() }
+        saveButton.setOnAction { _: ActionEvent -> saveSelectedNote() }
 
         texttools.spacing = 7.0
         texttools.padding = Insets(3.0, 5.0, 3.0, 5.0)
         texttools.children.addAll(boldButton, italicizeButton, underlineButton, saveButton)
         VBox.setVgrow(textarea, Priority.ALWAYS)
         textarea.focusTraversableProperty().set(false)
+        textarea.text = ""
+        textarea.disableProperty().set(true)
 
         mainarea.children.addAll(texttools, textarea)
 
@@ -171,6 +178,23 @@ class Main : Application() {
         layout.bottom = lastmodified
 
         val scene = Scene(layout)
+
+        /**
+         * Set up hotkeys for app
+         */
+        scene.setOnKeyPressed { event ->
+            if (event.isControlDown) {
+                when (event.code) {
+                    KeyCode.N -> createNote()
+                    KeyCode.Z -> undo()
+                    KeyCode.Y -> redo()
+                    KeyCode.S -> saveSelectedNote()
+                    KeyCode.G -> createGroup()
+                    else -> {}
+                }
+            }
+        }
+
         stage.minWidth = 400.0
         stage.minHeight = 300.0
         stage.width = 800.0
@@ -181,15 +205,16 @@ class Main : Application() {
         stage.show()
     }
 
-    private fun updateNoteview(listofnotes : List<Note>? = controller.getAllNotes(), selectedNote : Note? = null,
-                               listofgroups : List<Group> ? = controller.getAllGroups())
+    private fun updateNoteview(listofnotes : List<Note>? = controller.getAllUngroupedNotes(), selectedNote : Note? = null,
+                               listofgroups : List<Group>? = controller.getAllGroups())
     {
         val rootitem = TreeItem<Any>()
+
         if (listofnotes != null)
         {
             noteview.selectionModel.clearSelection()
             var treeitemofnote : TreeItem<Any>? = null
-            listofnotes.forEachIndexed { index, note ->
+            listofnotes.forEachIndexed { _, note ->
                 val newitem = TreeItem<Any>(note)
                 rootitem.children.add(newitem)
                 if (selectedNote != null && selectedNote == note) {
@@ -207,7 +232,7 @@ class Main : Application() {
         }
 
         if (listofgroups != null) {
-            listofgroups.forEachIndexed { index, group ->
+            listofgroups.forEachIndexed { _, group ->
                 val newgroup = TreeItem<Any>(group)
 
                 for (note in group.getNotes()) {
@@ -228,7 +253,7 @@ class Main : Application() {
             val newnote = controller.createNote(result.get(),"blank")
             textarea.disableProperty().set(false)
             displayNoteContents(newnote)
-            updateNoteview(controller.getSortedNotesByModifiedDateDescending(), newnote)
+            updateNoteview(controller.getAllUngroupedNotes(), newnote)
         }
     }
 
@@ -249,7 +274,7 @@ class Main : Application() {
                 textarea.text = null
                 textarea.disableProperty().set(true)
                 currSelection.parent.children.remove(currSelection)
-                updateNoteview(controller.getSortedNotesByModifiedDateDescending(), null,
+                updateNoteview(controller.getAllUngroupedNotes(), null,
                     controller.getAllGroups())
             } else {
                 alert.close()
@@ -267,7 +292,7 @@ class Main : Application() {
                 textarea.text = null
                 textarea.disableProperty().set(true)
                 currSelection.parent.children.remove(currSelection)
-                updateNoteview(controller.getSortedNotesByModifiedDateDescending(), null,
+                updateNoteview(controller.getAllUngroupedNotes(), null,
                     controller.getAllGroups())
             } else {
                 alert.close()
@@ -294,7 +319,7 @@ class Main : Application() {
             notes.addAll(controller.getNotesByContent(search))
             updateNoteview(notes, null, null)
         } else {
-            updateNoteview(controller.getSortedNotesByModifiedDateDescending(), null)
+            updateNoteview(controller.getAllUngroupedNotes(), null)
         }
     }
 
@@ -309,7 +334,7 @@ class Main : Application() {
                 controller.editNoteTitle(currNote.id, result.get())
                 textarea.disableProperty().set(false)
                 displayNoteContents(currNote)
-                updateNoteview(controller.getSortedNotesByModifiedDateDescending(), currNote)
+                updateNoteview(null, currNote)
             }
         } else if (currItem != null && currItem.value is Group) {
             val currGroup = currItem.value as Group
@@ -320,7 +345,7 @@ class Main : Application() {
                 controller.editGroupName(currGroup.name, result.get())
                 textarea.text = ""
                 textarea.disableProperty().set(true)
-                updateNoteview(controller.getSortedNotesByModifiedDateDescending())
+                updateNoteview()
             }
         }
     }
@@ -333,8 +358,7 @@ class Main : Application() {
             controller.createGroup(result.get())
             textarea.text = ""
             textarea.disableProperty().set(true)
-            updateNoteview(controller.getSortedNotesByModifiedDateDescending(), null,
-                controller.getAllGroups())
+            updateNoteview()
         }
     }
 
@@ -346,12 +370,11 @@ class Main : Application() {
                 groupList.add(group.name)
             }
             val td = ChoiceDialog<String>("Select a group", groupList)
-            td.headerText = "Add Note to Which Group"
+            td.headerText = "Add ${(currItem.value as Note).title} to which group?"
             val result: Optional<String> = td.showAndWait()
             if (result.isPresent) {
                 controller.addNoteToGroup(result.get(), currItem.value as Note)
-                updateNoteview(controller.getSortedNotesByModifiedDateDescending(), null,
-                    controller.getAllGroups())
+                updateNoteview()
             }
         } else {
             val alert = Alert(AlertType.WARNING)
@@ -365,17 +388,27 @@ class Main : Application() {
     private fun removeSelectedNoteFromGroup() {
         val currItem = noteview.selectionModel.selectedItem
         if (currItem != null && currItem.value is Note) {
-            if (currItem.parent != null) {
+            if (currItem.parent.value != null) {
                 val parentGroup = currItem.parent.value as Group
                 controller.removeNoteFromGroup(parentGroup.name, currItem.value as Note)
-                updateNoteview(controller.getSortedNotesByModifiedDateDescending(), null)
+                updateNoteview()
             } else {
                 val alert = Alert(AlertType.WARNING)
                 alert.title = "Warning"
-                alert.headerText = "Current note ${(currItem.value as Note).title} is not in a group}"
+                alert.headerText = "Current note ${(currItem.value as Note).title} is not in a group."
                 alert.showAndWait()
             }
         }
+    }
+
+    private fun undo() {
+        controller.undo()
+        updateNoteview()
+    }
+
+    private fun redo() {
+        controller.redo()
+        updateNoteview()
     }
 
 }
