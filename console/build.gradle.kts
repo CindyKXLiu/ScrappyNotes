@@ -1,9 +1,11 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+// https://github.com/gradle/gradle/issues/22797
+@Suppress("DSL_SCOPE_VIOLATION")
 plugins {
     application
-    kotlin("jvm") version "1.6.20"
-    id("org.beryx.jlink") version "2.25.0"
+    alias(libs.plugins.kotlin.lang)
+    alias(libs.plugins.javamodularity)
 }
 
 group = "cs346"
@@ -19,22 +21,11 @@ repositories {
 
 dependencies {
     implementation(project(":shared"))
-    implementation(project(":application"))
-    testImplementation(kotlin("test"))
+    testImplementation(libs.junit.jupiter)
 }
 
 tasks.test {
     useJUnitPlatform()
-}
-
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
-}
-
-tasks.withType<Jar> {
-    manifest {
-        attributes["Main-Class"] = "cs346.console.MainKt"
-    }
 }
 
 application {
