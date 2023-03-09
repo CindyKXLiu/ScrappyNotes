@@ -1,7 +1,8 @@
 package cs346.shared
 
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
+
 internal class RedoTest {
     @Test
     fun createNote() {

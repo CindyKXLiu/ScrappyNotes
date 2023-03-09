@@ -1,8 +1,10 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+@Suppress("DSL_SCOPE_VIOLATION")
 plugins {
-    kotlin("jvm") version "1.6.20"
     `java-library`
+    alias(libs.plugins.kotlin.lang)
+    alias(libs.plugins.javamodularity)
 }
 
 group = "cs346"
@@ -17,13 +19,25 @@ repositories {
 }
 
 dependencies {
-    testImplementation(kotlin("test"))
+    implementation(libs.sqlite)
+    implementation(libs.exposed.core)
+    implementation(libs.exposed.jdbc)
+    implementation(libs.log4j)
+    testImplementation(libs.junit.jupiter)
 }
 
 tasks.test {
     useJUnitPlatform()
 }
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(libs.versions.jdk.get()))
+    }
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
 }
