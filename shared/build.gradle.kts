@@ -22,6 +22,7 @@ dependencies {
     implementation(libs.sqlite)
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)
+    implementation(libs.exposed.time)
     implementation(libs.log4j)
     testImplementation(libs.junit.jupiter)
 }

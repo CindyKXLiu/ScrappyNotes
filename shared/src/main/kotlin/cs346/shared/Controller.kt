@@ -1,9 +1,17 @@
 package cs346.shared
 
+import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.javatime.datetime
+import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Instant
+import java.time.LocalDateTime
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
+
+private const val VARCHAR_LENGTH = 10000
+private const val DB_URL = "jdbc:sqlite:notes.db"
 
 /**
  * This class is responsible for the logic behind the app.
@@ -17,6 +25,132 @@ class Controller {
     private var notes: HashMap<UInt, Note> = HashMap()
     private var groups: HashMap<String, Group> = HashMap()
 
+// Database Functionalities /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    object NotesTable : Table("Notes") {
+        val noteId: Column<Int> = integer("note_id")
+        val title: Column<String> = varchar("title", VARCHAR_LENGTH)
+    val content: Column<String> = text("content")
+        val dateCreated: Column<LocalDateTime> = datetime("dateCreated")
+        val dateModified: Column<LocalDateTime> = datetime("dateModified")
+        override val primaryKey = PrimaryKey(noteId, name = "note_id")
+    }
+
+    object GroupsTable : Table("Groups") {
+        val noteId: Column<Int> = integer("note_id")
+        val groupName: Column<String> = varchar("group_name", VARCHAR_LENGTH)
+        override val primaryKey = PrimaryKey(noteId, name = "note_id")
+    }
+
+    /**
+     * Upon init Controller will connect to the database and update itself so that its states (notes and groups) match the states stored in the database
+     */
+    init {
+        Database.connect(DB_URL)
+
+        transaction {
+            addLogger(StdOutSqlLogger)
+
+            // create tables
+            SchemaUtils.create(NotesTable)
+            SchemaUtils.create(GroupsTable)
+
+            //initialize Controller.notes
+            var query = NotesTable.selectAll().orderBy(NotesTable.noteId to SortOrder.ASC) // is sorted ascending so that internal note counter used for generating id aligns with database
+            query.forEach{
+                //create note obj, Controller.creatNote() is not called since it saves to UndoStack
+                val note = Note(it[NotesTable.title], it[NotesTable.content])
+                note.dateCreated = it[NotesTable.dateCreated]
+                note.dateModified = it[NotesTable.dateModified]
+
+                //store note obj in Controller.notes
+                notes[note.id] = note
+            }
+
+            //initialize Controller.groups
+            query = GroupsTable.selectAll()
+            query.forEach{
+                if (groups.containsKey(it[GroupsTable.groupName])) { // group named it[GroupsTable.groupName] already exists in local model
+                    // add note with id it[GroupsTable.noteId] to that group
+                    groups[it[GroupsTable.groupName]]!!.notes.add(it[GroupsTable.noteId].toUInt())
+                } else { // group named it[GroupsTable.groupName] does not exist in local model
+                    // create group named it[GroupsTable.groupName] containing note with id it[GroupsTable.noteId]
+                    val group = Group(it[GroupsTable.groupName])
+                    group.notes.add(it[GroupsTable.noteId].toUInt())
+                    // add group to Controller.groups
+                    groups[it[GroupsTable.groupName]] = group
+                }
+            }
+
+            // Things I used to test
+            /**val test = NotesTable.insert{
+                it[noteId] = 0
+                it[title] = "test"
+                it[dateCreated] = LocalDateTime.now()
+                it[dateModified] = LocalDateTime.now()
+                it[content] = "test"
+            }
+
+            val test2 = NotesTable.insert{
+                it[noteId] = 1
+                it[title] = "test"
+                it[dateCreated] = LocalDateTime.now()
+                it[dateModified] = LocalDateTime.now()
+                it[content] = "test"
+            }
+
+            println("hi")
+            println("number of notes in db: " + NotesTable.selectAll().count())
+            println("number of note in controller: " + notes.size)
+             **/
+        }
+    }
+
+    /**
+     * Clears all entries in all tables in the database.
+     * Likely need this for the tests we wrote so far.
+     */
+    internal fun resetDatabase() {
+        transaction {
+            NotesTable.deleteAll()
+            GroupsTable.deleteAll()
+        }
+    }
+
+    /**
+     * Clears the database then saves the state of the Controller to the database.
+     */
+    fun saveToDatabase() {
+        resetDatabase()
+
+        transaction {
+            //save notes to NotesTable
+            for ((id, note) in notes) {
+                NotesTable.insert{
+                    it[noteId] = id.toInt()
+                    it[title] = note.title
+                    it[content] = note.content
+                    it[dateCreated] = note.dateCreated
+                    it[dateModified] = note.dateModified
+                }
+            }
+
+            //save groups to GroupsTable
+            for ((name, group) in groups) {
+                for (id in group.notes) {
+                    GroupsTable.insert{
+                        it[noteId] = id.toInt()
+                        it[groupName] = name
+                    }
+                }
+            }
+        }
+    }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+// Undo/Redo Functionalities ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /**
      * This class is responsible for holding a past state of the Controller
      */
@@ -149,7 +283,11 @@ class Controller {
         notes = memento.notes
         groups = memento.groups
     }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+// Note Functionalities /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /**
      * Returns all existing notes
      *
@@ -220,7 +358,7 @@ class Controller {
     }
 
     /**
-     * Modifies the title of the given note.
+     * Modifies the title of the given note and updates the dateModified field of the note.
      *
      * @param id is the unique id of the note
      * @param title is the new title of the note
@@ -234,7 +372,7 @@ class Controller {
     }
 
     /**
-     * Modifies the title of the given note.
+     * Modifies the title of the given note and updates the dateModified field of the note.
      *
      * @param id is the unique id of the note
      * @param content is the new content of the note
@@ -254,7 +392,7 @@ class Controller {
      *
      * @return the notes that were requested, empty list will be returned if no such notes exist
      */
-    fun getNotesByDateCreated(dateCreated: Instant): List<Note> {
+    fun getNotesByDateCreated(dateCreated: LocalDateTime): List<Note> {
         val allNotes = getAllNotes()
         return allNotes.filter{ it.dateCreated == dateCreated }
     }
@@ -365,7 +503,11 @@ class Controller {
         val unsortedNotes = getAllNotes()
         return unsortedNotes.sortedWith(compareByDescending { it.dateCreated })
     }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+// Group Functionalities ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /**
      * Create a group with a given name
      *
@@ -375,6 +517,7 @@ class Controller {
      */
     fun createGroup(name: String): Group {
         save()
+        // need to add excpetion here
         val newGroup = Group(name)
         groups[name] = newGroup
         return newGroup
@@ -503,4 +646,5 @@ class Controller {
             groups[oldGroupName]!!.notes.remove(note.id)
         }
     }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 }
