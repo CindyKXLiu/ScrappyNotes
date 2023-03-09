@@ -1,11 +1,13 @@
 package cs346.console
 
 import cs346.shared.*
+import cs346.application.*
 import kotlin.NumberFormatException
 
 private const val PAD = 45
 private const val PAD_SMALL = 25
 private const val HELP_MSG = "OPTIONS:\n" +
+        "launch                     Launch application\n" +
         "ls, list                   List all notes\n" +
         "ls, list -g                List all groups\n" +
         "n, new [title]             Create new empty note with title [title]\n" +
@@ -18,12 +20,15 @@ private const val HELP_MSG = "OPTIONS:\n" +
         "add [noteID] [group]       Add note with id [noteID] to [group]\n" +
         "rm [noteID] [group]        Remove note with id [noteID] from [group]\n" +
         "mv [noteID] [newGroup]     Moves note with id [noteID] to [newGroup]\n" +
+        "undo                       Undo previous action" +
+        "redo                       Redo previous action" +
         "h, help                    Print this message\n" +
         "quit                       Exit\n"
 private const val INVALID_COMMAND_MSG = "Invalid command. Type \"help\" for all options.\n"
 private const val COMMAND_PROMPT_MSG = "\nEnter your command: "
 private const val INVALID_ID_MSG = "No note with such id. Type \"ls\" to get the ids of the notes.\n"
 private const val INVALID_GROUP_MSG = "No such group exists. Type \"ls -g\" to get the names of the groups.\n"
+private const val INVALID_ACTION_MSG = "Invalid action.\n"
 
 /**
  * This class is for the console application
@@ -53,6 +58,14 @@ class Console {
       val args = command.split("\\s".toRegex())
 
       when (args.first()) {
+         "launch" -> { // Launch GUI application
+            if (args.size == 1) {
+               launch()
+            } else {
+               print(INVALID_COMMAND_MSG)
+            }
+         }
+
          "ls", "list" -> { // List command
             if (args.size == 1) { // List all notes
                listNotes()
@@ -144,6 +157,22 @@ class Console {
                } catch (e: NumberFormatException) {
                   print(INVALID_ID_MSG)
                }
+            } else {
+               print(INVALID_COMMAND_MSG)
+            }
+         }
+
+         "undo" -> { // Undo previous action
+            if (args.size == 1) {
+               undoAction()
+            } else {
+               print(INVALID_COMMAND_MSG)
+            }
+         }
+
+         "redo" -> { // Redo previous action
+            if (args.size == 1) {
+               redoAction()
             } else {
                print(INVALID_COMMAND_MSG)
             }
@@ -349,6 +378,30 @@ class Console {
          print(INVALID_ID_MSG)
       } catch (e: NonExistentGroupException) {
          print(INVALID_GROUP_MSG)
+      }
+   }
+
+   /**
+    * Undo previous action
+    */
+   private fun undoAction() {
+      try {
+         controller.undo()
+         println("Undid previous action")
+      } catch (e: NoUndoException) {
+         print(INVALID_ACTION_MSG)
+      }
+   }
+
+   /**
+    * Redo previous action
+    */
+   private fun redoAction() {
+      try {
+         controller.redo()
+         println("Restored previous action")
+      } catch (e: NoRedoException) {
+         print(INVALID_ACTION_MSG)
       }
    }
 }

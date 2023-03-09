@@ -412,3 +412,10 @@ class Main : Application() {
     }
 
 }
+
+/**
+ * Launches the GUI application (for use outside this module)
+ */
+fun launch() {
+    Application.launch(Main::class.java)
+}
