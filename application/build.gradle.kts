@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.javamodularity)
     alias(libs.plugins.javafx)
     alias(libs.plugins.jlink)
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.6.10"
 }
 
 group = "cs346"
@@ -24,6 +25,7 @@ repositories {
 dependencies {
     implementation(project(":shared"))
     implementation(libs.kotlin.coroutines)
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
     testImplementation(libs.junit.jupiter)
 }
 

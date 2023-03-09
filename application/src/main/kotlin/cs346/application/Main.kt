@@ -1,6 +1,8 @@
 package cs346.application
 
-import cs346.shared.*
+import cs346.shared.Controller
+import cs346.shared.Group
+import cs346.shared.Note
 import javafx.application.Application
 import javafx.event.ActionEvent
 import javafx.geometry.Insets
@@ -13,9 +15,15 @@ import javafx.scene.layout.HBox
 import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
 import javafx.stage.Stage
+import javafx.stage.WindowEvent
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import java.util.*
 
-
+@Serializable
+data class AppSizing(val posX: Double, val posY: Double, val height: Double, val width: Double)
 class Main : Application() {
     private val noteview = TreeView<Any>()
     private val textarea = TextArea()
@@ -44,7 +52,7 @@ class Main : Application() {
         // FILE menubar manipulations /////////////////////////////////////////////////////////
         val fileMenu = Menu("File")
         val fileQuit = MenuItem("Quit")
-        fileQuit.setOnAction { _ -> stage.close() }
+        fileQuit.setOnAction { _ -> stop() }
 
         val newNote = MenuItem("New Note (CTRL+N)")
         newNote.setOnAction { _ -> createNote() }
@@ -195,6 +203,8 @@ class Main : Application() {
             }
         }
 
+        // val obj = Json.decodeFromString<AppSizing>("""{"a":42, "b": "str"}""")
+
         stage.minWidth = 400.0
         stage.minHeight = 300.0
         stage.width = 800.0
@@ -202,6 +212,11 @@ class Main : Application() {
         stage.scene = scene
         stage.isResizable = true
         stage.title = "Notes Application"
+
+        stage.setOnCloseRequest { _: WindowEvent? ->
+            val json = Json.encodeToString(AppSizing(stage.x, stage.y, stage.height, stage.width))
+        }
+
         stage.show()
     }
 

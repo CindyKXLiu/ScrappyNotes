@@ -3,6 +3,16 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/CS 346.iml" filepath="$PROJECT_DIR$/.idea/CS 346.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/multi-project.iml" filepath="$PROJECT_DIR$/.idea/modules/multi-project.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/application/multi-project.application.iml" filepath="$PROJECT_DIR$/.idea/modules/application/multi-project.application.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/application/multi-project.application.main.iml" filepath="$PROJECT_DIR$/.idea/modules/application/multi-project.application.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/application/multi-project.application.test.iml" filepath="$PROJECT_DIR$/.idea/modules/application/multi-project.application.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/console/multi-project.console.iml" filepath="$PROJECT_DIR$/.idea/modules/console/multi-project.console.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/console/multi-project.console.main.iml" filepath="$PROJECT_DIR$/.idea/modules/console/multi-project.console.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/console/multi-project.console.test.iml" filepath="$PROJECT_DIR$/.idea/modules/console/multi-project.console.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/shared/multi-project.shared.iml" filepath="$PROJECT_DIR$/.idea/modules/shared/multi-project.shared.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/shared/multi-project.shared.main.iml" filepath="$PROJECT_DIR$/.idea/modules/shared/multi-project.shared.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/shared/multi-project.shared.test.iml" filepath="$PROJECT_DIR$/.idea/modules/shared/multi-project.shared.test.iml" />
     </modules>
   </component>
 </project>
