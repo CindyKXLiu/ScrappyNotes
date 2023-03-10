@@ -6,6 +6,7 @@ plugins {
     application
     alias(libs.plugins.kotlin.lang)
     alias(libs.plugins.javamodularity)
+    id("org.beryx.jlink") version "2.25.0"
 }
 
 group = "cs346"
@@ -20,6 +21,7 @@ repositories {
 }
 
 dependencies {
+    implementation(project(":application"))
     implementation(project(":shared"))
     testImplementation(libs.junit.jupiter)
 }
@@ -31,6 +33,12 @@ tasks.test {
 application {
     mainModule.set("console")
     mainClass.set("cs346.console.MainKt")
+}
+
+tasks.withType<Jar> {
+    manifest {
+        attributes["Main-Class"] = "cs346.console.MainKt"
+    }
 }
 
 val run by tasks.getting(JavaExec::class) {
