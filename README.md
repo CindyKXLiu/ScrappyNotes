@@ -23,6 +23,10 @@ How to install and launch your application.
 Optional, but often helpful to have a screenshot or demo-video for new users.
 
 ## Releases
-version 0.1: released Feb 17, 2023
-* release-notes (txt)
-* installers (linux, macos, windows)
+version 1.0.0: released Feb 17, 2023
+* release-notes ([md](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-release-1.0.0.md))
+* installers ([console](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-Console-release-1.0.0.tar), [app](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-GUI-release-1.0.0.tar))
+
+version 2.0.0: released March 10, 2023
+* release-notes ([md](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-release-2.0.0.md))
+* installers ([console](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-Console-release-2.0.0.tar), [app](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-GUI-release-2.0.0.tar))
