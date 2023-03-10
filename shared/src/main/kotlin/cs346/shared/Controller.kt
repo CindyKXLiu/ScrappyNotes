@@ -287,7 +287,7 @@ class Controller {
 
 // General Note Sorting Helpers //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    private fun getSortedNotesByTitleAscending(unsortedNotes: List<Note>): List<Note> {
+    fun getSortedNotesByTitleAscending(unsortedNotes: List<Note>): List<Note> {
         return unsortedNotes.sortedWith(compareBy { it.title })
     }
 
@@ -295,15 +295,15 @@ class Controller {
         return unsortedNotes.sortedWith(compareByDescending { it.title })
     }
 
-    private fun getSortedNotesByModifiedDateAscending(unsortedNotes: List<Note>): List<Note> {
+    fun getSortedNotesByModifiedDateAscending(unsortedNotes: List<Note>): List<Note> {
         return unsortedNotes.sortedWith(compareBy { it.dateModified })
     }
 
-    private fun getSortedNotesByModifiedDateDescending(unsortedNotes: List<Note>): List<Note> {
+    fun getSortedNotesByModifiedDateDescending(unsortedNotes: List<Note>): List<Note> {
         return unsortedNotes.sortedWith(compareByDescending { it.dateModified })
     }
 
-    private fun getSortedNotesByCreatedDateAscending(unsortedNotes: List<Note>): List<Note> {
+    fun getSortedNotesByCreatedDateAscending(unsortedNotes: List<Note>): List<Note> {
         return unsortedNotes.sortedWith(compareBy { it.dateCreated })
     }
 
