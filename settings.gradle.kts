@@ -23,7 +23,8 @@ dependencyResolutionManagement {
             library("exposed-jdbc", "org.jetbrains.exposed:exposed-jdbc:0.40.1")
             library("exposed-time", "org.jetbrains.exposed:exposed-java-time:0.40.1")
             library("junit-jupiter", "org.junit.jupiter:junit-jupiter:5.9.2")
-            library("log4j", "org.apache.logging.log4j:log4j-slf4j-impl:2.20.0")
+            library("sl4j-api", "org.slf4j:slf4j-api:2.0.6")
+            library("sl4j-simple", "org.slf4j:slf4j-simple:2.0.6")
         }
     }
 }
