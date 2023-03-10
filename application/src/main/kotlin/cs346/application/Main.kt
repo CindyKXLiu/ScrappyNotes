@@ -4,6 +4,7 @@ import cs346.shared.Controller
 import cs346.shared.Group
 import cs346.shared.Note
 import javafx.application.Application
+import javafx.collections.FXCollections
 import javafx.event.ActionEvent
 import javafx.geometry.Insets
 import javafx.scene.Scene
@@ -38,17 +39,28 @@ class Main : Application() {
     private val controller = Controller()
 
     /**
+     * NoteFilterType used to track what filtering option is currently
+     * used by display noteview.
+     * TITLE = by title, CONTENT = by content
+     */
+    enum class NoteFilterType {
+        TITLE, CONTENT, DEFAULT
+    }
+
+    /**
      * NoteSortType used to track what sorting option is currently
      * used by display noteview.
      * ALPHA = alphabetical order, CREATED = date created,
      * MASCENDING = last modified ascending
      * MDESCENDING = last modified descending
      */
-    /*
     enum class NoteSortType {
         ALPHA, CREATED, MASCENDING, MDESCENDING, DEFAULT
     }
-    private val currentSortType = NoteSortType.DEFAULT */
+
+    private var currentFilterType = NoteFilterType.DEFAULT
+    private var currentSortType = NoteSortType.DEFAULT
+
     override fun start(stage: Stage) {
         /**
          * Set up all drop down menus and functionality for top most bar
@@ -150,10 +162,52 @@ class Main : Application() {
             }
         }
 
+        /**
+         * Dropdown menus for search filtering
+         */
+        val searchfilter = ChoiceBox(FXCollections.observableArrayList("Filter results by...", "Title", "Content")).apply {
+            selectionModel.select(0)
+            // handles switch to selected filter type
+            selectionModel.selectedItemProperty().addListener {
+                    _, _, newFilter ->
+                currentFilterType = if (newFilter == "Title") {
+                    NoteFilterType.TITLE
+                } else if (newFilter == "Content") {
+                    NoteFilterType.CONTENT
+                } else {
+                    NoteFilterType.DEFAULT
+                }
+            }
+        }
+        val searchsort = ChoiceBox(FXCollections.observableArrayList("Display by...", "Title", "Date created", "Last modified asc.", "Last modified desc.")).apply {
+            selectionModel.select(0)
+            // handles switch to selected sort order
+            selectionModel.selectedItemProperty().addListener {
+                    _, _, newSort ->
+                currentSortType = if (newSort == "Title") {
+                    NoteSortType.ALPHA
+                } else if (newSort == "Date created") {
+                    NoteSortType.CREATED
+                } else if (newSort == "Last modified asc.") {
+                    NoteSortType.MASCENDING
+                } else if (newSort == "Last modified desc.") {
+                    NoteSortType.MDESCENDING
+                } else {
+                    NoteSortType.DEFAULT
+                }
+            }
+        }
+
+        // container for search filters
+        val filters = HBox()
+        HBox.setHgrow(searchfilter, Priority.ALWAYS)
+        HBox.setHgrow(searchsort, Priority.ALWAYS)
+        filters.children.addAll(searchfilter, searchsort)
+
         val leftside = VBox()
         leftside.spacing = 0.0
         VBox.setVgrow(noteview, Priority.ALWAYS)
-        leftside.children.addAll(searchbox, noteview)
+        leftside.children.addAll(searchbox, filters, noteview)
 
         /**
          * Set up for focus area text and toolbar
@@ -250,8 +304,7 @@ class Main : Application() {
     {
         val rootitem = TreeItem<Any>()
 
-        if (listofnotes != null)
-        {
+        if (listofnotes != null) {
             noteview.selectionModel.clearSelection()
             var treeitemofnote : TreeItem<Any>? = null
             listofnotes.forEachIndexed { _, note ->
@@ -353,14 +406,45 @@ class Main : Application() {
     }
 
     private fun searchNotes(search : String) {
-        val notes = mutableListOf<Note>()
+        var notes = mutableListOf<Note>()
         if (search.isNotEmpty()) {
-            notes.addAll(controller.getNotesByTitle(search))
-            notes.addAll(controller.getNotesByContent(search))
-            updateNoteview(notes, null, null)
+            // handle search filtering by title or content
+            when (currentFilterType) {
+                NoteFilterType.TITLE -> {
+                    notes.addAll(controller.getNotesByTitle(search))
+                }
+                NoteFilterType.CONTENT -> {
+                    notes.addAll(controller.getNotesByContent(search))
+                }
+                else -> {
+                    notes.addAll(controller.getNotesByTitle(search))
+                    notes.addAll(controller.getNotesByContent(search))
+                }
+            }
+            //updateNoteview(notes, null, null)
         } else {
-            updateNoteview(controller.getAllUngroupedNotes(), null)
+            notes = controller.getAllUngroupedNotes() as MutableList<Note>
+            //updateNoteview(controller.getAllUngroupedNotes(), null)
         }
+        // handle search results sorting (MESSY AND NEEDS TO BE FIXED LATER)
+        if (notes.isNotEmpty()) {
+            when (currentSortType) {
+                NoteSortType.ALPHA -> {
+                    notes = controller.getSortedNotesByTitleAscending(notes) as MutableList<Note>
+                }
+                NoteSortType.CREATED -> {
+                    notes = controller.getSortedNotesByCreatedDateAscending(notes) as MutableList<Note>
+                }
+                NoteSortType.MASCENDING -> {
+                    notes = controller.getSortedNotesByModifiedDateAscending(notes) as MutableList<Note>
+                }
+                NoteSortType.MDESCENDING -> {
+                    notes = controller.getSortedNotesByModifiedDateDescending(notes) as MutableList<Note>
+                }
+                else -> {}
+            }
+        }
+        updateNoteview(notes, null)
     }
 
     private fun renameSelectedNote() {
