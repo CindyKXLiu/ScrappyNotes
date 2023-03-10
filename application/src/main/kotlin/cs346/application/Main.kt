@@ -1,6 +1,8 @@
 package cs346.application
 
-import cs346.shared.*
+import cs346.shared.Controller
+import cs346.shared.Group
+import cs346.shared.Note
 import javafx.application.Application
 import javafx.event.ActionEvent
 import javafx.geometry.Insets
@@ -13,10 +15,22 @@ import javafx.scene.layout.HBox
 import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
 import javafx.stage.Stage
+import javafx.stage.WindowEvent
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import java.util.*
+import java.io.File
 
+private const val APP_SIZE_FILE = "appSizing.json"
 
+@Serializable
+data class AppSizing(val posX: Double, val posY: Double, val height: Double, val width: Double)
 class Main : Application() {
+    private val defaultHeight = 600.0
+    private val defaultWidth = 800.0
+
     private val noteview = TreeView<Any>()
     private val textarea = TextArea()
     private val lastmodified = HBox()
@@ -44,7 +58,7 @@ class Main : Application() {
         // FILE menubar manipulations /////////////////////////////////////////////////////////
         val fileMenu = Menu("File")
         val fileQuit = MenuItem("Quit")
-        fileQuit.setOnAction { _ -> stage.close() }
+        fileQuit.setOnAction { _ -> stop() }
 
         val newNote = MenuItem("New Note (CTRL+N)")
         newNote.setOnAction { _ -> createNote() }
@@ -169,6 +183,32 @@ class Main : Application() {
 
         mainarea.children.addAll(texttools, textarea)
 
+        // MAIN scene set up ////////////////////////////////////////////////////////////////////////
+
+        /**
+         * Check for app sizing and positioning
+         */
+
+        val appSpecifications = File(APP_SIZE_FILE)
+        if (appSpecifications.exists()) {
+            val appSpecs = appSpecifications.readText(Charsets.UTF_8)
+            val specifications = Json.decodeFromString<AppSizing>(appSpecs)
+            stage.x = specifications.posX
+            stage.y = specifications.posY
+            stage.width = specifications.width
+            stage.height = specifications.height
+        } else {
+            stage.width = defaultWidth
+            stage.height = defaultHeight
+        }
+
+        stage.setOnCloseRequest { _: WindowEvent? ->
+            val json = Json.encodeToString(AppSizing(stage.x, stage.y, stage.height, stage.width))
+            File(APP_SIZE_FILE).bufferedWriter().use { out ->
+                out.flush()
+                out.write(json)
+            }
+        }
         /**
          * Add all panels to scene and show
          */
@@ -178,9 +218,8 @@ class Main : Application() {
         layout.bottom = lastmodified
 
         val scene = Scene(layout)
-
         /**
-         * Set up hotkeys for app
+         * Set up hotkeys for scene
          */
         scene.setOnKeyPressed { event ->
             if (event.isControlDown) {
@@ -197,11 +236,10 @@ class Main : Application() {
 
         stage.minWidth = 400.0
         stage.minHeight = 300.0
-        stage.width = 800.0
-        stage.height = 600.0
         stage.scene = scene
         stage.isResizable = true
         stage.title = "Notes Application"
+
         stage.show()
     }
 
