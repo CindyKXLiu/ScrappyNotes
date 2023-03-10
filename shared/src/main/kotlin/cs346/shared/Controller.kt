@@ -30,7 +30,7 @@ class Controller {
     object NotesTable : Table("Notes") {
         val noteId: Column<Int> = integer("note_id")
         val title: Column<String> = varchar("title", VARCHAR_LENGTH)
-    val content: Column<String> = text("content")
+        val content: Column<String> = text("content")
         val dateCreated: Column<LocalDateTime> = datetime("dateCreated")
         val dateModified: Column<LocalDateTime> = datetime("dateModified")
         override val primaryKey = PrimaryKey(noteId, name = "note_id")
@@ -101,8 +101,8 @@ class Controller {
 
             println("hi")
             println("number of notes in db: " + NotesTable.selectAll().count())
-            println("number of note in controller: " + notes.size)
-             **/
+            println("number of note in controller: " + notes.size)**/
+
         }
     }
 
@@ -513,11 +513,15 @@ class Controller {
      *
      * @param name is the name of the group
      *
+     * @exception DuplicateGroupException is thrown if a group with name [name] already exists
+     *
      * @return the group that was created
      */
     fun createGroup(name: String): Group {
         save()
-        // need to add excpetion here
+
+        if (groups.containsKey(name)) throw DuplicateGroupException()
+
         val newGroup = Group(name)
         groups[name] = newGroup
         return newGroup

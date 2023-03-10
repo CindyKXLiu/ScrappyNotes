@@ -162,6 +162,14 @@ internal class ControllerTest {
         assertEquals(3, controller.getAllGroups().size)
         assertEquals("group3", group3.name)
         assertEquals(4, group3.notes.size)
+
+        val g = controller.createGroup("g")
+        try {
+            val gDuplicate = controller.createGroup("g")
+            assert(false)
+        } catch (e: DuplicateGroupException) {
+            assert(true)
+        }
     }
 
     @Test
