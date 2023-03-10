@@ -208,6 +208,7 @@ class Main : Application() {
                 out.flush()
                 out.write(json)
             }
+            controller.saveToDatabase()
         }
         /**
          * Add all panels to scene and show
@@ -240,6 +241,7 @@ class Main : Application() {
         stage.isResizable = true
         stage.title = "Notes Application"
 
+        updateNoteview()
         stage.show()
     }
 
