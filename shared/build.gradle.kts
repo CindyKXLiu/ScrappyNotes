@@ -23,7 +23,8 @@ dependencies {
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.time)
-    implementation(libs.log4j)
+    implementation(libs.sl4j.api)
+    implementation(libs.sl4j.simple)
     testImplementation(libs.junit.jupiter)
 }
 
@@ -39,6 +40,6 @@ java {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(libs.versions.jdk.get()))
     }
 }

@@ -30,7 +30,7 @@ class Controller {
     object NotesTable : Table("Notes") {
         val noteId: Column<Int> = integer("note_id")
         val title: Column<String> = varchar("title", VARCHAR_LENGTH)
-    val content: Column<String> = text("content")
+        val content: Column<String> = text("content")
         val dateCreated: Column<LocalDateTime> = datetime("dateCreated")
         val dateModified: Column<LocalDateTime> = datetime("dateModified")
         override val primaryKey = PrimaryKey(noteId, name = "note_id")
@@ -101,8 +101,8 @@ class Controller {
 
             println("hi")
             println("number of notes in db: " + NotesTable.selectAll().count())
-            println("number of note in controller: " + notes.size)
-             **/
+            println("number of note in controller: " + notes.size)**/
+
         }
     }
 
