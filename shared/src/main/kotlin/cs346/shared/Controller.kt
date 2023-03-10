@@ -513,11 +513,15 @@ class Controller {
      *
      * @param name is the name of the group
      *
+     * @exception DuplicateGroupException is thrown if a group with name [name] already exists
+     *
      * @return the group that was created
      */
     fun createGroup(name: String): Group {
         save()
-        // need to add excpetion here
+
+        if (groups.containsKey(name)) throw DuplicateGroupException()
+
         val newGroup = Group(name)
         groups[name] = newGroup
         return newGroup
