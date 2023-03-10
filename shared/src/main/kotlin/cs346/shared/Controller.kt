@@ -285,6 +285,32 @@ class Controller {
     }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// General Note Sorting Helpers //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    private fun getSortedNotesByTitleAscending(unsortedNotes: List<Note>): List<Note> {
+        return unsortedNotes.sortedWith(compareBy { it.title })
+    }
+
+    private fun getSortedNotesByTitleDescending(unsortedNotes: List<Note>): List<Note> {
+        return unsortedNotes.sortedWith(compareByDescending { it.title })
+    }
+
+    private fun getSortedNotesByModifiedDateAscending(unsortedNotes: List<Note>): List<Note> {
+        return unsortedNotes.sortedWith(compareBy { it.dateModified })
+    }
+
+    private fun getSortedNotesByModifiedDateDescending(unsortedNotes: List<Note>): List<Note> {
+        return unsortedNotes.sortedWith(compareByDescending { it.dateModified })
+    }
+
+    private fun getSortedNotesByCreatedDateAscending(unsortedNotes: List<Note>): List<Note> {
+        return unsortedNotes.sortedWith(compareBy { it.dateCreated })
+    }
+
+    private fun getSortedNotesByCreatedDateDescending(unsortedNotes: List<Note>): List<Note> {
+        return unsortedNotes.sortedWith(compareByDescending { it.dateCreated })
+    }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Note Functionalities /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -449,9 +475,9 @@ class Controller {
      *
      * @return immutable list of all notes sorted by title in ascending order
      */
-    fun getSortedNotesByTitleAscending(): List<Note> {
+    fun getAllSortedNotesByTitleAscending(): List<Note> {
         val unsortedNotes = getAllNotes()
-        return unsortedNotes.sortedWith(compareBy { it.title })
+        return getSortedNotesByTitleAscending(unsortedNotes)
     }
 
     /**
@@ -459,9 +485,9 @@ class Controller {
      *
      * @return immutable list of all notes sorted by title in descending order
      */
-    fun getSortedNotesByTitleDescending(): List<Note> {
+    fun getAllSortedNotesByTitleDescending(): List<Note> {
         val unsortedNotes = getAllNotes()
-        return unsortedNotes.sortedWith(compareByDescending { it.title })
+        return getSortedNotesByTitleDescending(unsortedNotes)
     }
 
     /**
@@ -469,9 +495,9 @@ class Controller {
      *
      * @return immutable list of all notes sorted by modified date in ascending order
      */
-    fun getSortedNotesByModifiedDateAscending(): List<Note> {
+    fun getAllSortedNotesByModifiedDateAscending(): List<Note> {
         val unsortedNotes = getAllNotes()
-        return unsortedNotes.sortedWith(compareBy { it.dateModified })
+        return getSortedNotesByModifiedDateAscending(unsortedNotes)
     }
 
     /**
@@ -479,9 +505,9 @@ class Controller {
      *
      * @return immutable list of all notes sorted by modified date in descending order
      */
-    fun getSortedNotesByModifiedDateDescending(): List<Note> {
+    fun getAllSortedNotesByModifiedDateDescending(): List<Note> {
         val unsortedNotes = getAllNotes()
-        return unsortedNotes.sortedWith(compareByDescending { it.dateModified })
+        return getSortedNotesByModifiedDateDescending(unsortedNotes)
     }
 
     /**
@@ -489,9 +515,9 @@ class Controller {
      *
      * @return immutable list of all notes sorted by creation date in ascending order
      */
-    fun getSortedNotesByCreatedDateAscending(): List<Note> {
+    fun getAllSortedNotesByCreatedDateAscending(): List<Note> {
         val unsortedNotes = getAllNotes()
-        return unsortedNotes.sortedWith(compareBy { it.dateCreated })
+        return getSortedNotesByCreatedDateAscending(unsortedNotes)
     }
 
     /**
@@ -499,9 +525,69 @@ class Controller {
      *
      * @return immutable list of all notes sorted by creation date in descending order
      */
-    fun getSortedNotesByCreatedDateDescending(): List<Note> {
+    fun getAllSortedNotesByCreatedDateDescending(): List<Note> {
         val unsortedNotes = getAllNotes()
-        return unsortedNotes.sortedWith(compareByDescending { it.dateCreated })
+        return getSortedNotesByCreatedDateDescending(unsortedNotes)
+    }
+
+    /**
+     * Returns the list of ungrouped notes sorted by title in ascending order.
+     *
+     * @return immutable list of ungrouped notes sorted by title in ascending order
+     */
+    fun getUngroupedSortedNotesByTitleAscending(): List<Note> {
+        val unsortedNotes = getAllUngroupedNotes()
+        return getSortedNotesByTitleAscending(unsortedNotes)
+    }
+
+    /**
+     * Returns the list of ungrouped notes sorted by title in descending order.
+     *
+     * @return immutable list of ungrouped notes sorted by title in descending order
+     */
+    fun getUngroupedSortedNotesByTitleDescending(): List<Note> {
+        val unsortedNotes = getAllUngroupedNotes()
+        return getSortedNotesByTitleDescending(unsortedNotes)
+    }
+
+    /**
+     * Returns the list of ungrouped notes sorted by their modified date in ascending order.
+     *
+     * @return immutable list of ungrouped notes sorted by modified date in ascending order
+     */
+    fun getUngroupedSortedNotesByModifiedDateAscending(): List<Note> {
+        val unsortedNotes = getAllUngroupedNotes()
+        return getSortedNotesByModifiedDateAscending(unsortedNotes)
+    }
+
+    /**
+     * Returns the list of ungrouped notes sorted by their modified date in descending order.
+     *
+     * @return immutable list of ungrouped notes sorted by modified date in descending order
+     */
+    fun getUngroupedSortedNotesByModifiedDateDescending(): List<Note> {
+        val unsortedNotes = getAllUngroupedNotes()
+        return getSortedNotesByModifiedDateDescending(unsortedNotes)
+    }
+
+    /**
+     * Returns the list of ungrouped notes sorted by their creation date in ascending order.
+     *
+     * @return immutable list of ungrouped notes sorted by creation date in ascending order
+     */
+    fun getUngroupedSortedNotesByCreatedDateAscending(): List<Note> {
+        val unsortedNotes = getAllUngroupedNotes()
+        return getSortedNotesByCreatedDateAscending(unsortedNotes)
+    }
+
+    /**
+     * Returns the list of ungrouped notes sorted by their creation date in descending order.
+     *
+     * @return immutable list of ungrouped notes sorted by creation date in descending order
+     */
+    fun getUngroupedSortedNotesByCreatedDateDescending(): List<Note> {
+        val unsortedNotes = getAllUngroupedNotes()
+        return getSortedNotesByCreatedDateDescending(unsortedNotes)
     }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -649,6 +735,95 @@ class Controller {
         if (oldGroupName != null) {
             groups[oldGroupName]!!.notes.remove(note.id)
         }
+    }
+
+    /**
+     * Returns a list of notes under that group
+     * 
+     * @param name is the name of the group
+     *
+     * @return immutable list of all notes under that group
+     */
+    fun getAllGroupNotes(name: String): List<Note> {
+        val groupNotes = ArrayList<Note>()
+
+        for(id in getGroupByName(name).getNotes()) {
+            notes[id]?.let { groupNotes.add(it) }
+        }
+
+        return groupNotes.toList()
+    }
+    
+    /**
+     * Returns the list of notes under a group sorted by title in ascending order.
+     * 
+     * @param groupName is the name of the group
+     *
+     * @return immutable list of notes under a group sorted by title in ascending order
+     */
+    fun getGroupSortedNotesByTitleAscending(groupName: String): List<Note> {
+        val unsortedNotes = getAllGroupNotes(groupName)
+        return getSortedNotesByTitleAscending(unsortedNotes)
+    }
+
+    /**
+     * Returns the list of notes under a group sorted by title in descending order.
+     * 
+     * @param groupName is the name of the group
+     *
+     * @return immutable list of notes under a group sorted by title in descending order
+     */
+    fun getGroupSortedNotesByTitleDescending(groupName: String): List<Note> {
+        val unsortedNotes = getAllGroupNotes(groupName)
+        return getSortedNotesByTitleDescending(unsortedNotes)
+    }
+
+    /**
+     * Returns the list of notes under a group sorted by their modified date in ascending order.
+     * 
+     * @param groupName is the name of the group
+     *
+     * @return immutable list of notes under a group sorted by modified date in ascending order
+     */
+    fun getGroupSortedNotesByModifiedDateAscending(groupName: String): List<Note> {
+        val unsortedNotes = getAllGroupNotes(groupName)
+        return getSortedNotesByModifiedDateAscending(unsortedNotes)
+    }
+
+    /**
+     * Returns the list of notes under a group sorted by their modified date in descending order.
+     * 
+     * @param groupName is the name of the group
+     *
+     * @return immutable list of notes under a group sorted by modified date in descending order
+     */
+    fun getGroupSortedNotesByModifiedDateDescending(groupName: String): List<Note> {
+        val unsortedNotes = getAllGroupNotes(groupName)
+        return getSortedNotesByModifiedDateDescending(unsortedNotes)
+    }
+
+    /**
+     * Returns the list of notes under a group sorted by their creation date in ascending order.
+     * 
+     * @param groupName is the name of the group
+     *
+     * @return immutable list of notes under a group sorted by creation date in ascending order
+     */
+    fun getGroupSortedNotesByCreatedDateAscending(groupName: String): List<Note> {
+        val unsortedNotes = getAllGroupNotes(groupName)
+        return getSortedNotesByCreatedDateAscending(unsortedNotes)
+    }
+
+    /**
+     * Returns the list of notes under a group sorted by their creation date in descending order.
+     * 
+     * @param groupName is the name of the group
+     *
+     * @return immutable list of notes under a group sorted by creation date in descending order
+     */
+    fun getGroupSortedNotesByCreatedDateDescending(groupName: String): List<Note> {
+        val unsortedNotes = getAllGroupNotes(groupName)
+        return getSortedNotesByCreatedDateDescending(unsortedNotes)
     }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 }
