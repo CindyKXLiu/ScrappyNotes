@@ -483,7 +483,7 @@ class Model {
     fun getAllNotesInGroup(name: String): List<Note> {
         val groupNotes = ArrayList<Note>()
 
-        for(id in getGroupByName(name).getNotes()) {
+        for(id in getGroupByName(name).notes) {
             notes[id]?.let { groupNotes.add(it) }
         }
 
