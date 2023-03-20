@@ -12,7 +12,7 @@ import kotlin.collections.HashMap
  * @property notes is a hashmap containing all existing notes in the app, it is keyed by its id
  * @property groups is a hashmap contains all existing groups in the app, it is keyed by its name
  *
- * @constructor creates a controller with states that reflects the stored state in the database
+ * @constructor creates a Model with states that reflects the stored state in the database
  */
 class Model {
     private val database: ModelDatabase = ModelDatabase()
@@ -35,14 +35,14 @@ class Model {
 // Undo/Redo Functionalities ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /**
-     * This class is responsible for holding a past state of the Controller
+     * This class is responsible for holding a past state of the Model
      */
     private data class Memento(val notes: HashMap<UInt, Note>, val groups: HashMap<String, Group>)
 
     /**
-     * This class is responsible for undoing and redoing Controller function calls
+     * This class is responsible for undoing and redoing Model function calls
      *
-     * @property undoMementos is a stack containing the past states of the Controller, used for undoing actions
+     * @property undoMementos is a stack containing the past states of the Model, used for undoing actions
      * @property redoMementos is a stock containing the past states popped off via undo commands, used for redoing actions
      */
     private object UndoRedoManager {
@@ -52,8 +52,8 @@ class Model {
         /**
          * Saves the given state as a memento to undo stack and clears redo stack
          *
-         * @param notes is the current state of the Controller's notes property
-         * @param groups is the current state of the Controller's groups property
+         * @param notes is the current state of the Model's notes property
+         * @param groups is the current state of the Model's groups property
          */
         fun saveToUndo(notes: HashMap<UInt, Note>, groups: HashMap<String, Group>) {
             undoMementos.push(Memento(notes, groups))
@@ -62,19 +62,19 @@ class Model {
         /**
          * Saves the given state as a memento to redo stack
          *
-         * @param notes is the current state of the Controller's notes property
-         * @param groups is the current state of the Controller's groups property
+         * @param notes is the current state of the Model's notes property
+         * @param groups is the current state of the Model's groups property
          */
         fun saveToRedo(notes: HashMap<UInt, Note>, groups: HashMap<String, Group>) {
             redoMementos.push(Memento(notes, groups))
         }
 
         /**
-         * Returns the memento representing the state of the Controller before the last function call
+         * Returns the memento representing the state of the Model before the last function call
          *
          * @exception NoUndoException is thrown when there is no action to be undone
          *
-         * @return the memento representing the state of the Controller before the last function call
+         * @return the memento representing the state of the Model before the last function call
          */
         fun undo(): Memento {
             if (undoMementos.empty()) throw NoUndoException()
@@ -84,10 +84,10 @@ class Model {
         }
 
         /**
-         * Returns the memento representing the state of the Controller before the undo call
+         * Returns the memento representing the state of the Model before the undo call
          *
          * @exception NoRedoException is thrown when there is no action to be redone
-         * @return the memento representing the state of the Controller before the undo call
+         * @return the memento representing the state of the Model before the undo call
          */
         fun redo(): Memento {
             if (redoMementos.empty()) throw NoRedoException()
@@ -106,9 +106,9 @@ class Model {
     }
 
     /**
-     * Returns a deep copy of the notes property of Controller
+     * Returns a deep copy of the notes property of Model
      *
-     * @return a deep copy of the notes property of Controller
+     * @return a deep copy of the notes property of Model
      */
     private fun notesCopy(): HashMap<UInt, Note> {
         val notesCopy = HashMap<UInt, Note>()
@@ -119,9 +119,9 @@ class Model {
     }
 
     /**
-     * Returns a deep copy of the groups property of Controller
+     * Returns a deep copy of the groups property of Model
      *
-     * @return a deep copy of the groups property of Controller
+     * @return a deep copy of the groups property of Model
      */
     private fun groupsCopy(): HashMap<String, Group> {
         val groupsCopy = HashMap<String, Group>()
@@ -132,7 +132,7 @@ class Model {
     }
 
     /**
-     * Called by state changing functions (with exception to undo/redo) to save the current state of Controller
+     * Called by state changing functions (with exception to undo/redo) to save the current state of Model
      *  before performing their actions.
      *  Redo stack is cleared as the chain of undo is broken.
      */
@@ -235,7 +235,7 @@ class Model {
             group.notes.remove(id)
         }
 
-        // Delete note from controller
+        // Delete note from Model
         notes.remove(id)
     }
 
@@ -364,7 +364,7 @@ class Model {
         // Check that the group given exists
         if (!groups.containsKey(name)) throw NonExistentGroupException()
 
-        // Delete group from controller
+        // Delete group from Model
         groups.remove(name)
     }
 
