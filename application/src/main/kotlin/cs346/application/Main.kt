@@ -434,13 +434,13 @@ class Main : Application() {
                     notes = Sort.sortByTitle(notes, Sort.Order.ASC) as MutableList<Note>
                 }
                 NoteSortType.CREATED -> {
-                    notes = Sort.sortByCreatedDate(notes, Sort.Order.ASC) as MutableList<Note>
+                    notes = Sort.sortByDateCreated(notes, Sort.Order.ASC) as MutableList<Note>
                 }
                 NoteSortType.MASCENDING -> {
-                    notes = Sort.sortByModifiedDate(notes, Sort.Order.ASC) as MutableList<Note>
+                    notes = Sort.sortByDateModified(notes, Sort.Order.ASC) as MutableList<Note>
                 }
                 NoteSortType.MDESCENDING -> {
-                    notes = Sort.sortByModifiedDate(notes, Sort.Order.DESC) as MutableList<Note>
+                    notes = Sort.sortByDateModified(notes, Sort.Order.DESC) as MutableList<Note>
                 }
                 else -> {}
             }
