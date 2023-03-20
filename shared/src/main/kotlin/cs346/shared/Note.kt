@@ -8,8 +8,7 @@ import java.time.LocalDateTime
  * @property id is the unique id of the note
  * @property title is the title of the note, this title does not have to be unique
  * @property content is the content of the note
- * @property dateCreated is the time the note is created, this will be used as a unique identifier for the note
- *  as we are assuming that notes are created at unique instantaneous points on the time-line.
+ * @property dateCreated is the time the note is created
  * @property dateModified is the time the note was last modified
  *
  * @constructor creates a note with the given [title] and [content]

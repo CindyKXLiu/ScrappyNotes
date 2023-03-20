@@ -1,8 +1,9 @@
 package cs346.application
 
-import cs346.shared.Controller
+import cs346.shared.Model
 import cs346.shared.Group
 import cs346.shared.Note
+import cs346.shared.Sort
 import javafx.application.Application
 import javafx.collections.FXCollections
 import javafx.event.ActionEvent
@@ -36,7 +37,7 @@ class Main : Application() {
     private val textarea = TextArea()
     private val lastmodified = HBox()
     private val layout = BorderPane()
-    private val controller = Controller()
+    private val controller = Model()
 
     /**
      * NoteFilterType used to track what filtering option is currently
@@ -430,16 +431,16 @@ class Main : Application() {
         if (notes.isNotEmpty()) {
             when (currentSortType) {
                 NoteSortType.ALPHA -> {
-                    notes = controller.getSortedNotesByTitleAscending(notes) as MutableList<Note>
+                    notes = Sort.sortByTitle(notes, Sort.Order.ASC) as MutableList<Note>
                 }
                 NoteSortType.CREATED -> {
-                    notes = controller.getSortedNotesByCreatedDateAscending(notes) as MutableList<Note>
+                    notes = Sort.sortByCreatedDate(notes, Sort.Order.ASC) as MutableList<Note>
                 }
                 NoteSortType.MASCENDING -> {
-                    notes = controller.getSortedNotesByModifiedDateAscending(notes) as MutableList<Note>
+                    notes = Sort.sortByModifiedDate(notes, Sort.Order.ASC) as MutableList<Note>
                 }
                 NoteSortType.MDESCENDING -> {
-                    notes = controller.getSortedNotesByModifiedDateDescending(notes) as MutableList<Note>
+                    notes = Sort.sortByModifiedDate(notes, Sort.Order.DESC) as MutableList<Note>
                 }
                 else -> {}
             }

@@ -38,7 +38,7 @@ private const val INVALID_ACTION_MSG = "Invalid action.\n"
  * @constructor creates and starts the console application
  */
 class Console {
-   private val controller = Controller()
+   private val controller = Model()
 
    /**
     * Prompts user to enter commands until the quit command is entered

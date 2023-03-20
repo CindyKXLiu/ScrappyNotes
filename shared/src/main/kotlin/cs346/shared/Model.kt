@@ -1,150 +1,33 @@
 package cs346.shared
 
-import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.javatime.datetime
-import org.jetbrains.exposed.sql.transactions.transaction
-import java.time.Instant
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
-private const val VARCHAR_LENGTH = 10000
-private const val DB_URL = "jdbc:sqlite:notes.db"
-
 /**
- * This class is responsible for the logic behind the app.
+ * This class is responsible for the logic behind the app and models the state of the app.
  *
+ * @property database is the database used for persistently storing model state
  * @property notes is a hashmap containing all existing notes in the app, it is keyed by its id
  * @property groups is a hashmap contains all existing groups in the app, it is keyed by its name
  *
- * @constructor creates a controller with no elements in notes and groups
+ * @constructor creates a controller with states that reflects the stored state in the database
  */
-class Controller {
-    private var notes: HashMap<UInt, Note> = HashMap()
-    private var groups: HashMap<String, Group> = HashMap()
+class Model {
+    private val database: ModelDatabase = ModelDatabase()
+    private var notes: HashMap<UInt, Note> = database.getNotesState()
+    private var groups: HashMap<String, Group> = database.getGroupsState()
 
 // Database Functionalities /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    object NotesTable : Table("Notes") {
-        val noteId: Column<Int> = integer("note_id")
-        val title: Column<String> = varchar("title", VARCHAR_LENGTH)
-        val content: Column<String> = text("content")
-        val dateCreated: Column<LocalDateTime> = datetime("dateCreated")
-        val dateModified: Column<LocalDateTime> = datetime("dateModified")
-        override val primaryKey = PrimaryKey(noteId, name = "note_id")
-    }
-
-    object GroupsTable : Table("Groups") {
-        val noteId: Column<Int> = integer("note_id")
-        val groupName: Column<String> = varchar("group_name", VARCHAR_LENGTH)
-        override val primaryKey = PrimaryKey(noteId, name = "note_id")
-    }
-
     /**
-     * Upon init Controller will connect to the database and update itself so that its states (notes and groups) match the states stored in the database
-     */
-    init {
-        Database.connect(DB_URL)
-
-        transaction {
-            addLogger(StdOutSqlLogger)
-
-            // create tables
-            SchemaUtils.create(NotesTable)
-            SchemaUtils.create(GroupsTable)
-
-            //initialize Controller.notes
-            var query = NotesTable.selectAll().orderBy(NotesTable.noteId to SortOrder.ASC) // is sorted ascending so that internal note counter used for generating id aligns with database
-            query.forEach{
-                //create note obj, Controller.creatNote() is not called since it saves to UndoStack
-                val note = Note(it[NotesTable.title], it[NotesTable.content])
-                note.dateCreated = it[NotesTable.dateCreated]
-                note.dateModified = it[NotesTable.dateModified]
-
-                //store note obj in Controller.notes
-                notes[note.id] = note
-            }
-
-            //initialize Controller.groups
-            query = GroupsTable.selectAll()
-            query.forEach{
-                if (groups.containsKey(it[GroupsTable.groupName])) { // group named it[GroupsTable.groupName] already exists in local model
-                    // add note with id it[GroupsTable.noteId] to that group
-                    groups[it[GroupsTable.groupName]]!!.notes.add(it[GroupsTable.noteId].toUInt())
-                } else { // group named it[GroupsTable.groupName] does not exist in local model
-                    // create group named it[GroupsTable.groupName] containing note with id it[GroupsTable.noteId]
-                    val group = Group(it[GroupsTable.groupName])
-                    group.notes.add(it[GroupsTable.noteId].toUInt())
-                    // add group to Controller.groups
-                    groups[it[GroupsTable.groupName]] = group
-                }
-            }
-
-            // Things I used to test
-            /**val test = NotesTable.insert{
-                it[noteId] = 0
-                it[title] = "test"
-                it[dateCreated] = LocalDateTime.now()
-                it[dateModified] = LocalDateTime.now()
-                it[content] = "test"
-            }
-
-            val test2 = NotesTable.insert{
-                it[noteId] = 1
-                it[title] = "test"
-                it[dateCreated] = LocalDateTime.now()
-                it[dateModified] = LocalDateTime.now()
-                it[content] = "test"
-            }
-
-            println("hi")
-            println("number of notes in db: " + NotesTable.selectAll().count())
-            println("number of note in controller: " + notes.size)**/
-
-        }
-    }
-
-    /**
-     * Clears all entries in all tables in the database.
-     * Likely need this for the tests we wrote so far.
-     */
-    internal fun resetDatabase() {
-        transaction {
-            NotesTable.deleteAll()
-            GroupsTable.deleteAll()
-        }
-    }
-
-    /**
-     * Clears the database then saves the state of the Controller to the database.
+     * Saves the current state of the Model to the database
      */
     fun saveToDatabase() {
-        resetDatabase()
-
-        transaction {
-            //save notes to NotesTable
-            for ((id, note) in notes) {
-                NotesTable.insert{
-                    it[noteId] = id.toInt()
-                    it[title] = note.title
-                    it[content] = note.content
-                    it[dateCreated] = note.dateCreated
-                    it[dateModified] = note.dateModified
-                }
-            }
-
-            //save groups to GroupsTable
-            for ((name, group) in groups) {
-                for (id in group.notes) {
-                    GroupsTable.insert{
-                        it[noteId] = id.toInt()
-                        it[groupName] = name
-                    }
-                }
-            }
-        }
+        database.clearDatabase()
+        database.saveNotes(notes)
+        database.saveGroups(groups)
     }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -282,33 +165,6 @@ class Controller {
         val memento = UndoRedoManager.redo()
         notes = memento.notes
         groups = memento.groups
-    }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// General Note Sorting Helpers //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    fun getSortedNotesByTitleAscending(unsortedNotes: List<Note>): List<Note> {
-        return unsortedNotes.sortedWith(compareBy { it.title })
-    }
-
-    private fun getSortedNotesByTitleDescending(unsortedNotes: List<Note>): List<Note> {
-        return unsortedNotes.sortedWith(compareByDescending { it.title })
-    }
-
-    fun getSortedNotesByModifiedDateAscending(unsortedNotes: List<Note>): List<Note> {
-        return unsortedNotes.sortedWith(compareBy { it.dateModified })
-    }
-
-    fun getSortedNotesByModifiedDateDescending(unsortedNotes: List<Note>): List<Note> {
-        return unsortedNotes.sortedWith(compareByDescending { it.dateModified })
-    }
-
-    fun getSortedNotesByCreatedDateAscending(unsortedNotes: List<Note>): List<Note> {
-        return unsortedNotes.sortedWith(compareBy { it.dateCreated })
-    }
-
-    private fun getSortedNotesByCreatedDateDescending(unsortedNotes: List<Note>): List<Note> {
-        return unsortedNotes.sortedWith(compareByDescending { it.dateCreated })
     }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -469,126 +325,6 @@ class Controller {
         }
         return retNotes.toList()
     }
-
-    /**
-     * Returns the list of all notes sorted by title in ascending order.
-     *
-     * @return immutable list of all notes sorted by title in ascending order
-     */
-    fun getAllSortedNotesByTitleAscending(): List<Note> {
-        val unsortedNotes = getAllNotes()
-        return getSortedNotesByTitleAscending(unsortedNotes)
-    }
-
-    /**
-     * Returns the list of all notes sorted by title in descending order.
-     *
-     * @return immutable list of all notes sorted by title in descending order
-     */
-    fun getAllSortedNotesByTitleDescending(): List<Note> {
-        val unsortedNotes = getAllNotes()
-        return getSortedNotesByTitleDescending(unsortedNotes)
-    }
-
-    /**
-     * Returns the list of all notes sorted by their modified date in ascending order.
-     *
-     * @return immutable list of all notes sorted by modified date in ascending order
-     */
-    fun getAllSortedNotesByModifiedDateAscending(): List<Note> {
-        val unsortedNotes = getAllNotes()
-        return getSortedNotesByModifiedDateAscending(unsortedNotes)
-    }
-
-    /**
-     * Returns the list of all notes sorted by their modified date in descending order.
-     *
-     * @return immutable list of all notes sorted by modified date in descending order
-     */
-    fun getAllSortedNotesByModifiedDateDescending(): List<Note> {
-        val unsortedNotes = getAllNotes()
-        return getSortedNotesByModifiedDateDescending(unsortedNotes)
-    }
-
-    /**
-     * Returns the list of all notes sorted by their creation date in ascending order.
-     *
-     * @return immutable list of all notes sorted by creation date in ascending order
-     */
-    fun getAllSortedNotesByCreatedDateAscending(): List<Note> {
-        val unsortedNotes = getAllNotes()
-        return getSortedNotesByCreatedDateAscending(unsortedNotes)
-    }
-
-    /**
-     * Returns the list of all notes sorted by their creation date in descending order.
-     *
-     * @return immutable list of all notes sorted by creation date in descending order
-     */
-    fun getAllSortedNotesByCreatedDateDescending(): List<Note> {
-        val unsortedNotes = getAllNotes()
-        return getSortedNotesByCreatedDateDescending(unsortedNotes)
-    }
-
-    /**
-     * Returns the list of ungrouped notes sorted by title in ascending order.
-     *
-     * @return immutable list of ungrouped notes sorted by title in ascending order
-     */
-    fun getUngroupedSortedNotesByTitleAscending(): List<Note> {
-        val unsortedNotes = getAllUngroupedNotes()
-        return getSortedNotesByTitleAscending(unsortedNotes)
-    }
-
-    /**
-     * Returns the list of ungrouped notes sorted by title in descending order.
-     *
-     * @return immutable list of ungrouped notes sorted by title in descending order
-     */
-    fun getUngroupedSortedNotesByTitleDescending(): List<Note> {
-        val unsortedNotes = getAllUngroupedNotes()
-        return getSortedNotesByTitleDescending(unsortedNotes)
-    }
-
-    /**
-     * Returns the list of ungrouped notes sorted by their modified date in ascending order.
-     *
-     * @return immutable list of ungrouped notes sorted by modified date in ascending order
-     */
-    fun getUngroupedSortedNotesByModifiedDateAscending(): List<Note> {
-        val unsortedNotes = getAllUngroupedNotes()
-        return getSortedNotesByModifiedDateAscending(unsortedNotes)
-    }
-
-    /**
-     * Returns the list of ungrouped notes sorted by their modified date in descending order.
-     *
-     * @return immutable list of ungrouped notes sorted by modified date in descending order
-     */
-    fun getUngroupedSortedNotesByModifiedDateDescending(): List<Note> {
-        val unsortedNotes = getAllUngroupedNotes()
-        return getSortedNotesByModifiedDateDescending(unsortedNotes)
-    }
-
-    /**
-     * Returns the list of ungrouped notes sorted by their creation date in ascending order.
-     *
-     * @return immutable list of ungrouped notes sorted by creation date in ascending order
-     */
-    fun getUngroupedSortedNotesByCreatedDateAscending(): List<Note> {
-        val unsortedNotes = getAllUngroupedNotes()
-        return getSortedNotesByCreatedDateAscending(unsortedNotes)
-    }
-
-    /**
-     * Returns the list of ungrouped notes sorted by their creation date in descending order.
-     *
-     * @return immutable list of ungrouped notes sorted by creation date in descending order
-     */
-    fun getUngroupedSortedNotesByCreatedDateDescending(): List<Note> {
-        val unsortedNotes = getAllUngroupedNotes()
-        return getSortedNotesByCreatedDateDescending(unsortedNotes)
-    }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -744,7 +480,7 @@ class Controller {
      *
      * @return immutable list of all notes under that group
      */
-    fun getAllGroupNotes(name: String): List<Note> {
+    fun getAllNotesInGroup(name: String): List<Note> {
         val groupNotes = ArrayList<Note>()
 
         for(id in getGroupByName(name).getNotes()) {
@@ -752,78 +488,6 @@ class Controller {
         }
 
         return groupNotes.toList()
-    }
-    
-    /**
-     * Returns the list of notes under a group sorted by title in ascending order.
-     * 
-     * @param groupName is the name of the group
-     *
-     * @return immutable list of notes under a group sorted by title in ascending order
-     */
-    fun getGroupSortedNotesByTitleAscending(groupName: String): List<Note> {
-        val unsortedNotes = getAllGroupNotes(groupName)
-        return getSortedNotesByTitleAscending(unsortedNotes)
-    }
-
-    /**
-     * Returns the list of notes under a group sorted by title in descending order.
-     * 
-     * @param groupName is the name of the group
-     *
-     * @return immutable list of notes under a group sorted by title in descending order
-     */
-    fun getGroupSortedNotesByTitleDescending(groupName: String): List<Note> {
-        val unsortedNotes = getAllGroupNotes(groupName)
-        return getSortedNotesByTitleDescending(unsortedNotes)
-    }
-
-    /**
-     * Returns the list of notes under a group sorted by their modified date in ascending order.
-     * 
-     * @param groupName is the name of the group
-     *
-     * @return immutable list of notes under a group sorted by modified date in ascending order
-     */
-    fun getGroupSortedNotesByModifiedDateAscending(groupName: String): List<Note> {
-        val unsortedNotes = getAllGroupNotes(groupName)
-        return getSortedNotesByModifiedDateAscending(unsortedNotes)
-    }
-
-    /**
-     * Returns the list of notes under a group sorted by their modified date in descending order.
-     * 
-     * @param groupName is the name of the group
-     *
-     * @return immutable list of notes under a group sorted by modified date in descending order
-     */
-    fun getGroupSortedNotesByModifiedDateDescending(groupName: String): List<Note> {
-        val unsortedNotes = getAllGroupNotes(groupName)
-        return getSortedNotesByModifiedDateDescending(unsortedNotes)
-    }
-
-    /**
-     * Returns the list of notes under a group sorted by their creation date in ascending order.
-     * 
-     * @param groupName is the name of the group
-     *
-     * @return immutable list of notes under a group sorted by creation date in ascending order
-     */
-    fun getGroupSortedNotesByCreatedDateAscending(groupName: String): List<Note> {
-        val unsortedNotes = getAllGroupNotes(groupName)
-        return getSortedNotesByCreatedDateAscending(unsortedNotes)
-    }
-
-    /**
-     * Returns the list of notes under a group sorted by their creation date in descending order.
-     * 
-     * @param groupName is the name of the group
-     *
-     * @return immutable list of notes under a group sorted by creation date in descending order
-     */
-    fun getGroupSortedNotesByCreatedDateDescending(groupName: String): List<Note> {
-        val unsortedNotes = getAllGroupNotes(groupName)
-        return getSortedNotesByCreatedDateDescending(unsortedNotes)
     }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 }

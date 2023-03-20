@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 internal class RedoTest {
     @Test
     fun createNote() {
-        val controller = Controller()
+        val controller = Model()
         var expectedNotesSize = 0
         assertEquals(expectedNotesSize, controller.getAllNotes().size)
 
@@ -43,7 +43,7 @@ internal class RedoTest {
 
     @Test
     fun deleteNote() {
-        val controller = Controller()
+        val controller = Model()
         var expectedNotesSize = 0
         assertEquals(expectedNotesSize, controller.getAllNotes().size)
 
@@ -70,7 +70,7 @@ internal class RedoTest {
 
     @Test
     fun editNoteTitle() {
-        val controller = Controller()
+        val controller = Model()
         val noteID = controller.createNote().id
         var expectedTitle = ""
         assertEquals(expectedTitle, controller.getNoteByID(noteID).title)
@@ -90,7 +90,7 @@ internal class RedoTest {
 
     @Test
     fun editNoteContent() {
-        val controller = Controller()
+        val controller = Model()
         val noteID = controller.createNote().id
         var expectedContent = ""
         assertEquals(expectedContent, controller.getNoteByID(noteID).content)
@@ -110,7 +110,7 @@ internal class RedoTest {
 
     @Test
     fun createGroup() {
-        val controller = Controller()
+        val controller = Model()
         var group1 = controller.createGroup("group1")
         assertEquals(1, controller.getAllGroups().size)
         assertEquals("group1", group1.name)
@@ -142,7 +142,7 @@ internal class RedoTest {
 
     @Test
     fun deleteGroup() {
-        val controller = Controller()
+        val controller = Model()
         controller.createGroup("group1")
         controller.createGroup("group2")
         assertEquals(2, controller.getAllGroups().size)
@@ -165,7 +165,7 @@ internal class RedoTest {
 
     @Test
     fun editGroupName() {
-        val controller = Controller()
+        val controller = Model()
         controller.createGroup("group1")
         controller.createGroup("group2")
         controller.editGroupName("group1", "group1modified")
@@ -202,7 +202,7 @@ internal class RedoTest {
 
     @Test
     fun addNoteToGroup() {
-        val controller = Controller()
+        val controller = Model()
         val note1 = controller.createNote("title1", "content1")
         val note2 = controller.createNote("title2", "content2")
 
@@ -225,7 +225,7 @@ internal class RedoTest {
 
     @Test
     fun removeNoteFromGroup() {
-        val controller = Controller()
+        val controller = Model()
         val note1 = controller.createNote("title1", "content1")
         controller.createNote("title2", "content2")
         controller.createNote("title3", "content3")
@@ -254,7 +254,7 @@ internal class RedoTest {
 
     @Test
     fun moveNoteToGroup() {
-        val controller = Controller()
+        val controller = Model()
         val note1 = controller.createNote("title1", "content1")
         val note2 = controller.createNote("title2", "content2")
         val note3 = controller.createNote("title3", "content3")
