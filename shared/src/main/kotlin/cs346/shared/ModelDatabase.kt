@@ -9,12 +9,12 @@ private const val DB_URL = "jdbc:sqlite:notes.db"
 private const val VARCHAR_LENGTH = 10000
 
 /**
- * This class is responsible for storing and retrieving Model states from the database.
+ * This class is responsible for storing and retrieving Model state from the database.
  *
  * @constructor creates a database at jdbc:sqlite:notes.db containing an empty state table
  */
 internal class ModelDatabase(){
-    object StateTable : Table("Model") {
+    object StateTable : Table("State") {
         val noteId: Column<Int> = integer("note_id")
         val title: Column<String> = varchar("title", VARCHAR_LENGTH)
         val content: Column<String> = text("content")

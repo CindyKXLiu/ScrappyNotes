@@ -15,9 +15,18 @@ import kotlin.collections.HashMap
  * @constructor creates a Model with states that reflects the stored state in the database
  */
 class Model {
+    /**
+     * This class is a container class for the state of the Model.
+     *
+     * @property notes is a hashmap containing all existing notes in the app, it is keyed by its id
+     * @property groups is a hashmap contains all existing groups in the app, it is keyed by its name
+     */
+    data class State(val notes: HashMap<UInt, Note>, val groups: HashMap<String, Group>)
+
     private val database: ModelDatabase = ModelDatabase()
     private var notes: HashMap<UInt, Note> = database.getState().notes
     private var groups: HashMap<String, Group> = database.getState().groups
+
 
 // Database Functionalities /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -33,14 +42,6 @@ class Model {
 
 // Undo/Redo Functionalities using Memento pattern///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /**
-     * This class is a container class for the state of the Model.
-     *
-     * @property notes s a hashmap containing all existing notes in the app, it is keyed by its id
-     * @property groups is a hashmap contains all existing groups in the app, it is keyed by its name
-     */
-    data class State(val notes: HashMap<UInt, Note>, val groups: HashMap<String, Group>)
-
     /**
      * This object is responsible for undoing and redoing Model function calls
      *
