@@ -50,12 +50,12 @@ internal class ModelDatabase(){
             val query = StateTable.selectAll().orderBy(StateTable.noteId to SortOrder.ASC) // is sorted ascending so that internal note counter used for generating id aligns with database
 
             query.forEach {
-                //create note obj, Controller.creatNote() is not called since it saves to UndoStack
+                //create note obj, model.creatNote() is not called since it saves to UndoStack
                 val note = Note(it[StateTable.title], it[StateTable.content])
                 note.dateCreated = it[StateTable.dateCreated]
                 note.dateModified = it[StateTable.dateModified]
 
-                //store note obj in Controller.notes
+                //store note obj in model.notes
                 notes[note.id] = note
 
                 // if this note belongs to a group
