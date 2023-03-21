@@ -60,3 +60,4 @@ class Note(title: String = "", content: String = "") {
         return this.title
     }
 }
+

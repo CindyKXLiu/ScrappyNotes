@@ -16,8 +16,8 @@ import kotlin.collections.HashMap
  */
 class Model {
     private val database: ModelDatabase = ModelDatabase()
-    private var notes: HashMap<UInt, Note> = database.getNotesState()
-    private var groups: HashMap<String, Group> = database.getGroupsState()
+    private var notes: HashMap<UInt, Note> = database.getState().notes
+    private var groups: HashMap<String, Group> = database.getState().groups
 
 // Database Functionalities /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -26,28 +26,30 @@ class Model {
      */
     fun saveToDatabase() {
         database.clearDatabase()
-        database.saveNotes(notes)
-        database.saveGroups(groups)
+        database.saveState(State(notes, groups))
     }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-// Undo/Redo Functionalities ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Undo/Redo Functionalities using Memento pattern///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /**
-     * This class is responsible for holding a past state of the Model
+     * This class is a container class for the state of the Model.
+     *
+     * @property notes s a hashmap containing all existing notes in the app, it is keyed by its id
+     * @property groups is a hashmap contains all existing groups in the app, it is keyed by its name
      */
-    private data class Memento(val notes: HashMap<UInt, Note>, val groups: HashMap<String, Group>)
+    data class State(val notes: HashMap<UInt, Note>, val groups: HashMap<String, Group>)
 
     /**
-     * This class is responsible for undoing and redoing Model function calls
+     * This object is responsible for undoing and redoing Model function calls
      *
-     * @property undoMementos is a stack containing the past states of the Model, used for undoing actions
-     * @property redoMementos is a stock containing the past states popped off via undo commands, used for redoing actions
+     * @property undoStates is a stack containing the past states of the Model, used for undoing actions
+     * @property redoStates is a stock containing the past states popped off via undo commands, used for redoing actions
      */
     private object UndoRedoManager {
-        private val undoMementos = Stack<Memento>()
-        private val redoMementos = Stack<Memento>()
+        private val undoStates = Stack<State>()
+        private val redoStates = Stack<State>()
 
         /**
          * Saves the given state as a memento to undo stack and clears redo stack
@@ -56,7 +58,7 @@ class Model {
          * @param groups is the current state of the Model's groups property
          */
         fun saveToUndo(notes: HashMap<UInt, Note>, groups: HashMap<String, Group>) {
-            undoMementos.push(Memento(notes, groups))
+            undoStates.push(State(notes, groups))
         }
 
         /**
@@ -66,7 +68,7 @@ class Model {
          * @param groups is the current state of the Model's groups property
          */
         fun saveToRedo(notes: HashMap<UInt, Note>, groups: HashMap<String, Group>) {
-            redoMementos.push(Memento(notes, groups))
+            redoStates.push(State(notes, groups))
         }
 
         /**
@@ -76,10 +78,10 @@ class Model {
          *
          * @return the memento representing the state of the Model before the last function call
          */
-        fun undo(): Memento {
-            if (undoMementos.empty()) throw NoUndoException()
-            val memento = undoMementos.peek()
-            undoMementos.pop()
+        fun undo(): State {
+            if (undoStates.empty()) throw NoUndoException()
+            val memento = undoStates.peek()
+            undoStates.pop()
             return memento
         }
 
@@ -89,10 +91,10 @@ class Model {
          * @exception NoRedoException is thrown when there is no action to be redone
          * @return the memento representing the state of the Model before the undo call
          */
-        fun redo(): Memento {
-            if (redoMementos.empty()) throw NoRedoException()
-            val memento = redoMementos.peek()
-            redoMementos.pop()
+        fun redo(): State {
+            if (redoStates.empty()) throw NoRedoException()
+            val memento = redoStates.peek()
+            redoStates.pop()
             return memento
         }
 
@@ -101,7 +103,7 @@ class Model {
          * Redo stack is cleared when a chain of undo has been broken.
          */
         fun resetRedo() {
-            redoMementos.clear()
+            redoStates.clear()
         }
     }
 

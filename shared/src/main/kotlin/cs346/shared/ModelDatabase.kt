@@ -11,24 +11,16 @@ private const val VARCHAR_LENGTH = 10000
 /**
  * This class is responsible for storing and retrieving Model states from the database.
  *
- * @property url is the url of the database storing Model states
- * @property varchar_length is the length for the varchar columns
- *
- * @constructor creates a database at [url] containing an empty notes table and an empty groups table
+ * @constructor creates a database at jdbc:sqlite:notes.db containing an empty notes table
  */
-internal class ModelDatabase (val url: String = DB_URL, val varchar_length: Int = VARCHAR_LENGTH){
-    object NotesTable : Table("Notes") {
+internal class ModelDatabase(){
+    object StateTable : Table("Model") {
         val noteId: Column<Int> = integer("note_id")
         val title: Column<String> = varchar("title", VARCHAR_LENGTH)
         val content: Column<String> = text("content")
         val dateCreated: Column<LocalDateTime> = datetime("dateCreated")
         val dateModified: Column<LocalDateTime> = datetime("dateModified")
-        override val primaryKey = PrimaryKey(noteId, name = "note_id")
-    }
-
-    object GroupsTable : Table("Groups") {
-        val noteId: Column<Int> = integer("note_id")
-        val groupName: Column<String> = varchar("group_name", VARCHAR_LENGTH)
+        val groupName: Column<String?> = varchar("groupName", VARCHAR_LENGTH).nullable()
         override val primaryKey = PrimaryKey(noteId, name = "note_id")
     }
 
@@ -42,10 +34,7 @@ internal class ModelDatabase (val url: String = DB_URL, val varchar_length: Int 
 
         transaction {
             addLogger(StdOutSqlLogger)
-
-            // create tables
-            SchemaUtils.create(NotesTable)
-            SchemaUtils.create(GroupsTable)
+            SchemaUtils.create(StateTable)
         }
     }
 
@@ -54,52 +43,37 @@ internal class ModelDatabase (val url: String = DB_URL, val varchar_length: Int 
      *
      * @return a hashmap of notes that are in the database
      */
-    fun getNotesState(): HashMap<UInt, Note> {
-        print("get notes")
+    fun getState(): Model.State {
         val notes = HashMap<UInt, Note>()
-
-        transaction {
-            val query = NotesTable.selectAll()
-                .orderBy(NotesTable.noteId to SortOrder.ASC) // is sorted ascending so that internal note counter used for generating id aligns with database
-            query.forEach {
-                //create note obj, Controller.creatNote() is not called since it saves to UndoStack
-                val note = Note(it[NotesTable.title], it[NotesTable.content])
-                note.dateCreated = it[NotesTable.dateCreated]
-                note.dateModified = it[NotesTable.dateModified]
-
-                //store note obj in Controller.notes
-                notes[note.id] = note
-            }
-        }
-
-        return notes
-    }
-
-    /**
-     * Retrieves the groups that are saved to database
-     *
-     * @return a hashmap of groups that are in the database
-     */
-    fun getGroupsState(): HashMap<String, Group>{
         val groups = HashMap<String, Group>()
 
         transaction {
-            val query = GroupsTable.selectAll()
+            val query = StateTable.selectAll().orderBy(StateTable.noteId to SortOrder.ASC) // is sorted ascending so that internal note counter used for generating id aligns with database
+
             query.forEach {
-                if (groups.containsKey(it[GroupsTable.groupName])) { // group named it[GroupsTable.groupName] already exists in local model
-                    // add note with id it[GroupsTable.noteId] to that group
-                    groups[it[GroupsTable.groupName]]!!.notes.add(it[GroupsTable.noteId].toUInt())
-                } else { // group named it[GroupsTable.groupName] does not exist in local model
-                    // create group named it[GroupsTable.groupName] containing note with id it[GroupsTable.noteId]
-                    val group = Group(it[GroupsTable.groupName])
-                    group.notes.add(it[GroupsTable.noteId].toUInt())
-                    // add group to Controller.groups
-                    groups[it[GroupsTable.groupName]] = group
+                //create note obj, Controller.creatNote() is not called since it saves to UndoStack
+                val note = Note(it[StateTable.title], it[StateTable.content])
+                note.dateCreated = it[StateTable.dateCreated]
+                note.dateModified = it[StateTable.dateModified]
+
+                //store note obj in Controller.notes
+                notes[note.id] = note
+
+                // if this note belongs to a group
+                if (!it[StateTable.groupName].isNullOrBlank()) {
+                    // create group obj if not already created
+                    if (!groups.containsKey(it[StateTable.groupName])) {
+                        val group = Group(it[StateTable.groupName]!!)
+                        groups[it[StateTable.groupName]!!] = group
+                    }
+
+                    // add the note to the group
+                    groups[it[StateTable.groupName]]!!.notes.add(it[StateTable.noteId].toUInt())
                 }
             }
         }
 
-        return groups
+        return Model.State(notes, groups)
     }
 
     /**
@@ -107,32 +81,21 @@ internal class ModelDatabase (val url: String = DB_URL, val varchar_length: Int 
      *
      * @param notes contains the notes to be saved in the database.
      */
-    fun saveNotes(notes: HashMap<UInt, Note>) {
+    fun saveState(state: Model.State) {
         transaction {
-            for ((id, note) in notes) {
-                NotesTable.insert {
+            for ((id, note) in state.notes) {
+                StateTable.insert {
                     it[noteId] = id.toInt()
                     it[title] = note.title
                     it[content] = note.content
                     it[dateCreated] = note.dateCreated
                     it[dateModified] = note.dateModified
-                }
-            }
-        }
-    }
 
-    /**
-     * Saves [groups] to database
-     *
-     * @param groups contains the groups to be saved in the database.
-     */
-    fun saveGroups(groups: HashMap<String, Group>) {
-        transaction {
-            for ((name, group) in groups) {
-                for (id in group.notes) {
-                    GroupsTable.insert{
-                        it[noteId] = id.toInt()
-                        it[groupName] = name
+                    // find the group the note belongs to
+                    for ((name, group) in state.groups) {
+                        if (group.notes.contains(id)) {
+                            it[groupName] = name
+                        }
                     }
                 }
             }
@@ -144,8 +107,7 @@ internal class ModelDatabase (val url: String = DB_URL, val varchar_length: Int 
      */
     fun clearDatabase() {
         transaction {
-            NotesTable.deleteAll()
-            GroupsTable.deleteAll()
+            StateTable.deleteAll()
         }
     }
 }
