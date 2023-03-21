@@ -463,13 +463,11 @@ class Model {
         if (!groups.containsKey(newGroupName)) throw NonExistentGroupException()
 
         // find the current group of the note
-        var oldGroupName: String? = null
-        for ((groupName, group) in groups) {
-            if (group.notes.contains(note.id)) oldGroupName = groupName
-        }
+        val oldGroupName: String? = note.groupName
 
         // Add the note to the new group
         groups[newGroupName]!!.notes.add(note.id)
+        note.groupName = newGroupName
 
         // Remove the note from the old group, if it belonged to a group
         if (oldGroupName != null) {

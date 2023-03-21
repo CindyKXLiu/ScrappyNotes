@@ -10,6 +10,7 @@ import java.time.LocalDateTime
  * @property content is the content of the note
  * @property dateCreated is the time the note is created
  * @property dateModified is the time the note was last modified
+ * @property groupName is the name of the group the note belongs to (if any)
  *
  * @constructor creates a note with the given [title] and [content]
  */
@@ -35,6 +36,9 @@ class Note(title: String = "", content: String = "") {
             field = value
             dateModified = LocalDateTime.now()
         }
+
+    var groupName: String? = null
+        internal set
 
     constructor(note: Note) : this(note.title, note.content) {
         this.id = note.id

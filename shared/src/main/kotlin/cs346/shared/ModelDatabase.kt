@@ -68,6 +68,9 @@ internal class ModelDatabase(){
 
                     // add the note to the group
                     groups[it[StateTable.groupName]]!!.notes.add(it[StateTable.noteId].toUInt())
+
+                    // add the group name to the note
+                    note.groupName = it[StateTable.groupName]
                 }
             }
         }

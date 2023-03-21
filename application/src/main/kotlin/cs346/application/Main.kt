@@ -91,9 +91,9 @@ class Main : Application() {
         val actionsRename = MenuItem("Rename")
         actionsRename.setOnAction { _ -> renameSelectedNote() }
 
-        val actionsGroup = MenuItem("Add to Group")
+        val actionsGroup = MenuItem("Move to Group")
         actionsGroup.setOnAction { _ ->
-            addSelectedNoteToGroup()
+            moveSelectedNoteToGroup()
         }
 
         val actionsRemove = MenuItem("Remove from Group")
@@ -487,18 +487,24 @@ class Main : Application() {
         }
     }
 
-    private fun addSelectedNoteToGroup() {
+    private fun moveSelectedNoteToGroup() {
         val currItem = noteview.selectionModel.selectedItem
         if (currItem != null && currItem.value is Note) {
+            val currNote = currItem.value as Note
             val groupList = mutableListOf<String>()
             for (group in model.getAllGroups()) {
                 groupList.add(group.name)
             }
             val td = ChoiceDialog<String>("Select a group", groupList)
-            td.headerText = "Add ${(currItem.value as Note).title} to which group?"
+
+            if (currNote.groupName == null) {
+                td.headerText = "Add ${(currItem.value as Note).title} to which group?"
+            } else {
+                td.headerText = "Move ${(currItem.value as Note).title} to which group?"
+            }
             val result: Optional<String> = td.showAndWait()
             if (result.isPresent) {
-                model.addNoteToGroup(result.get(), currItem.value as Note)
+                model.moveNoteToGroup(result.get(), currItem.value as Note)
                 updateNoteview()
             }
         } else {
@@ -535,7 +541,6 @@ class Main : Application() {
         model.redo()
         updateNoteview()
     }
-
 }
 
 /**
