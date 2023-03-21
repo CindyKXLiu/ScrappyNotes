@@ -32,12 +32,12 @@ private const val INVALID_ACTION_MSG = "Invalid action.\n"
 /**
  * This class is for the console application
  *
- * @property controller is the name of the Controller that is going to be used to interact with the backend
+ * @property model is the name of the model that is going to be used to interact with the backend
  *
  * @constructor creates and starts the console application
  */
 class Console {
-    private val controller = Model()
+    private val model = Model()
 
     /**
      * Prompts user to enter commands until the quit command is entered
@@ -191,7 +191,7 @@ class Console {
      * Prints a nicely formatted list of notes to console with their titles, creation, and modification dates
      */
     private fun listNotes() {
-        val notes = controller.getAllNotes()
+        val notes = model.getAllNotes()
         // print heading
         println("NUMBER OF NOTES: ${notes.size}")
         println("TITLE".padEnd(PAD) + "ID".padEnd(PAD_SMALL) +
@@ -213,7 +213,7 @@ class Console {
      * Prints a nicely formatted list of groups to console with their notes
      */
     private fun listGroups() {
-        val groups = controller.getAllGroups()
+        val groups = model.getAllGroups()
 
         // print heading
         println("NUMBER OF GROUPS: ${groups.size}")
@@ -227,7 +227,7 @@ class Console {
 
             // print the notes that are in the group
             for (noteID in group.getNotes()) {
-                val note = controller.getNoteByID(noteID)
+                val note = model.getNoteByID(noteID)
                 println("".padEnd(PAD) +
                         note.id.toString().padEnd(PAD_SMALL) +
                         note.title)
@@ -241,7 +241,7 @@ class Console {
      * @param title is the title of the new note created
      */
     private fun createNewNote(title: String) {
-        controller.createNote(title, "")
+        model.createNote(title, "")
         println("Created new note \"$title\".")
     }
 
@@ -251,7 +251,7 @@ class Console {
      * @param name is the name of the new group created
      */
     private fun createNewGroup(name: String) {
-        controller.createGroup(name)
+        model.createGroup(name)
         println("Created new group \"$name\".")
     }
 
@@ -262,7 +262,7 @@ class Console {
      */
     private fun deleteNote(id: UInt) {
         try{
-            controller.deleteNote(id)
+            model.deleteNote(id)
             println("Deleted note with id $id.")
         } catch (e: NonExistentNoteException) {
             print(INVALID_ID_MSG)
@@ -276,7 +276,7 @@ class Console {
      */
     private fun deleteGroup(name: String) {
         try{
-            controller.deleteGroup(name)
+            model.deleteGroup(name)
             println("Deleted group \"$name\".")
         } catch (e: NonExistentGroupException) {
             print(INVALID_GROUP_MSG)
@@ -290,7 +290,7 @@ class Console {
      */
     private fun printNoteContent(id: UInt) {
         try {
-            println(controller.getNoteByID(id).content)
+            println(model.getNoteByID(id).content)
         } catch (e: NonExistentNoteException) {
             println(INVALID_ID_MSG)
         }
@@ -304,7 +304,7 @@ class Console {
      */
     private fun renameNote(id: UInt, newTitle: String){
         try{
-            controller.editNoteTitle(id, newTitle)
+            model.editNoteTitle(id, newTitle)
             println("Renamed note with id $id to \"$newTitle\".")
         } catch (e: NonExistentNoteException) {
             println(INVALID_ID_MSG)
@@ -319,7 +319,7 @@ class Console {
      */
     private fun renameGroup(oldName: String, newName: String){
         try{
-            controller.editGroupName(oldName, newName)
+            model.editGroupName(oldName, newName)
             println("Renamed group \"$oldName\" to \"$newName\".")
         } catch (e: NonExistentGroupException) {
             print(INVALID_GROUP_MSG)
@@ -335,8 +335,8 @@ class Console {
      */
     private fun addNoteToGroup(id: UInt, groupName: String) {
         try{
-            val note = controller.getNoteByID(id)
-            controller.addNoteToGroup(groupName, note)
+            val note = model.getNoteByID(id)
+            model.addNoteToGroup(groupName, note)
             println("Added note with id $id to group \"$groupName\".")
         } catch (e: NonExistentNoteException) {
             print(INVALID_ID_MSG)
@@ -353,8 +353,8 @@ class Console {
      */
     private fun removeNoteFromGroup(id: UInt, groupName: String) {
         try {
-            val note = controller.getNoteByID(id)
-            controller.removeNoteFromGroup(groupName, note)
+            val note = model.getNoteByID(id)
+            model.removeNoteFromGroup(groupName, note)
             println("Removed note with id $id from group \"$groupName\".")
         } catch (e: NonExistentNoteException) {
             print(INVALID_ID_MSG)
@@ -371,7 +371,7 @@ class Console {
      */
     private fun moveNoteToGroup(id: UInt, newGroup: String){
         try{
-            controller.moveNoteToGroup(newGroup, controller.getNoteByID(id))
+            model.moveNoteToGroup(newGroup, model.getNoteByID(id))
             println("Moved note with id $id to group \"$newGroup\"")
         } catch (e: NonExistentNoteException) {
             print(INVALID_ID_MSG)
@@ -385,7 +385,7 @@ class Console {
      */
     private fun undoAction() {
         try {
-            controller.undo()
+            model.undo()
             println("Undid previous action")
         } catch (e: NoUndoException) {
             print(INVALID_ACTION_MSG)
@@ -397,7 +397,7 @@ class Console {
      */
     private fun redoAction() {
         try {
-            controller.redo()
+            model.redo()
             println("Restored previous action")
         } catch (e: NoRedoException) {
             print(INVALID_ACTION_MSG)
@@ -408,7 +408,7 @@ class Console {
      * Saves the data to database and closes console app
      */
     private fun quit() {
-        controller.saveToDatabase()
+        model.saveToDatabase()
         kotlin.system.exitProcess(0)
     }
 }

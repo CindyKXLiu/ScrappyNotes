@@ -37,7 +37,7 @@ class Main : Application() {
     private val textarea = TextArea()
     private val lastmodified = HBox()
     private val layout = BorderPane()
-    private val controller = Model()
+    private val model = Model()
 
     /**
      * NoteFilterType used to track what filtering option is currently
@@ -263,7 +263,7 @@ class Main : Application() {
                 out.flush()
                 out.write(json)
             }
-            controller.saveToDatabase()
+            model.saveToDatabase()
         }
         /**
          * Add all panels to scene and show
@@ -300,8 +300,8 @@ class Main : Application() {
         stage.show()
     }
 
-    private fun updateNoteview(listofnotes : List<Note>? = controller.getAllUngroupedNotes(), selectedNote : Note? = null,
-                               listofgroups : List<Group>? = controller.getAllGroups())
+    private fun updateNoteview(listofnotes : List<Note>? = model.getAllUngroupedNotes(), selectedNote : Note? = null,
+                               listofgroups : List<Group>? = model.getAllGroups())
     {
         val rootitem = TreeItem<Any>()
 
@@ -330,7 +330,7 @@ class Main : Application() {
                 val newgroup = TreeItem<Any>(group)
 
                 for (note in group.getNotes()) {
-                    newgroup.children.add(TreeItem(controller.getNoteByID(note)))
+                    newgroup.children.add(TreeItem(model.getNoteByID(note)))
                 }
                 rootitem.children.add(newgroup)
             }
@@ -344,10 +344,10 @@ class Main : Application() {
         td.headerText = "Create a new Note"
         val result: Optional<String> = td.showAndWait()
         if (result.isPresent) {
-            val newnote = controller.createNote(result.get(),"blank")
+            val newnote = model.createNote(result.get(),"blank")
             textarea.disableProperty().set(false)
             displayNoteContents(newnote)
-            updateNoteview(controller.getAllUngroupedNotes(), newnote)
+            updateNoteview(model.getAllUngroupedNotes(), newnote)
         }
     }
 
@@ -364,12 +364,12 @@ class Main : Application() {
 
             val result = alert.showAndWait()
             if (result.get() == ButtonType.OK) {
-                controller.deleteNote(currNote.id)
+                model.deleteNote(currNote.id)
                 textarea.text = null
                 textarea.disableProperty().set(true)
                 currSelection.parent.children.remove(currSelection)
-                updateNoteview(controller.getAllUngroupedNotes(), null,
-                    controller.getAllGroups())
+                updateNoteview(model.getAllUngroupedNotes(), null,
+                    model.getAllGroups())
             } else {
                 alert.close()
             }
@@ -382,12 +382,12 @@ class Main : Application() {
 
             val result = alert.showAndWait()
             if (result.get() == ButtonType.OK) {
-                controller.deleteGroup(currGroup.name)
+                model.deleteGroup(currGroup.name)
                 textarea.text = null
                 textarea.disableProperty().set(true)
                 currSelection.parent.children.remove(currSelection)
-                updateNoteview(controller.getAllUngroupedNotes(), null,
-                    controller.getAllGroups())
+                updateNoteview(model.getAllUngroupedNotes(), null,
+                    model.getAllGroups())
             } else {
                 alert.close()
             }
@@ -402,7 +402,7 @@ class Main : Application() {
     private fun saveSelectedNote() {
         val currItem = noteview.selectionModel.selectedItem
         if (currItem != null && currItem.value is Note) {
-            controller.editNoteContent((currItem.value as Note).id, textarea.text)
+            model.editNoteContent((currItem.value as Note).id, textarea.text)
         }
     }
 
@@ -412,20 +412,20 @@ class Main : Application() {
             // handle search filtering by title or content
             when (currentFilterType) {
                 NoteFilterType.TITLE -> {
-                    notes.addAll(controller.getNotesByTitle(search))
+                    notes.addAll(model.getNotesByTitle(search))
                 }
                 NoteFilterType.CONTENT -> {
-                    notes.addAll(controller.getNotesByContent(search))
+                    notes.addAll(model.getNotesByContent(search))
                 }
                 else -> {
-                    notes.addAll(controller.getNotesByTitle(search))
-                    notes.addAll(controller.getNotesByContent(search))
+                    notes.addAll(model.getNotesByTitle(search))
+                    notes.addAll(model.getNotesByContent(search))
                 }
             }
             //updateNoteview(notes, null, null)
         } else {
-            notes = controller.getAllUngroupedNotes() as MutableList<Note>
-            //updateNoteview(controller.getAllUngroupedNotes(), null)
+            notes = model.getAllUngroupedNotes() as MutableList<Note>
+            //updateNoteview(model.getAllUngroupedNotes(), null)
         }
         // handle search results sorting (MESSY AND NEEDS TO BE FIXED LATER)
         if (notes.isNotEmpty()) {
@@ -456,7 +456,7 @@ class Main : Application() {
             td.headerText = "Enter a new title for your note."
             val result: Optional<String> = td.showAndWait()
             if (result.isPresent) {
-                controller.editNoteTitle(currNote.id, result.get())
+                model.editNoteTitle(currNote.id, result.get())
                 textarea.disableProperty().set(false)
                 displayNoteContents(currNote)
                 updateNoteview(null, currNote)
@@ -467,7 +467,7 @@ class Main : Application() {
             td.headerText = "Enter a new title for your group."
             val result: Optional<String> = td.showAndWait()
             if (result.isPresent) {
-                controller.editGroupName(currGroup.name, result.get())
+                model.editGroupName(currGroup.name, result.get())
                 textarea.text = ""
                 textarea.disableProperty().set(true)
                 updateNoteview()
@@ -480,7 +480,7 @@ class Main : Application() {
         td.headerText = "Create a new Group"
         val result: Optional<String> = td.showAndWait()
         if (result.isPresent) {
-            controller.createGroup(result.get())
+            model.createGroup(result.get())
             textarea.text = ""
             textarea.disableProperty().set(true)
             updateNoteview()
@@ -491,14 +491,14 @@ class Main : Application() {
         val currItem = noteview.selectionModel.selectedItem
         if (currItem != null && currItem.value is Note) {
             val groupList = mutableListOf<String>()
-            for (group in controller.getAllGroups()) {
+            for (group in model.getAllGroups()) {
                 groupList.add(group.name)
             }
             val td = ChoiceDialog<String>("Select a group", groupList)
             td.headerText = "Add ${(currItem.value as Note).title} to which group?"
             val result: Optional<String> = td.showAndWait()
             if (result.isPresent) {
-                controller.addNoteToGroup(result.get(), currItem.value as Note)
+                model.addNoteToGroup(result.get(), currItem.value as Note)
                 updateNoteview()
             }
         } else {
@@ -515,7 +515,7 @@ class Main : Application() {
         if (currItem != null && currItem.value is Note) {
             if (currItem.parent.value != null) {
                 val parentGroup = currItem.parent.value as Group
-                controller.removeNoteFromGroup(parentGroup.name, currItem.value as Note)
+                model.removeNoteFromGroup(parentGroup.name, currItem.value as Note)
                 updateNoteview()
             } else {
                 val alert = Alert(AlertType.WARNING)
@@ -527,12 +527,12 @@ class Main : Application() {
     }
 
     private fun undo() {
-        controller.undo()
+        model.undo()
         updateNoteview()
     }
 
     private fun redo() {
-        controller.redo()
+        model.redo()
         updateNoteview()
     }
 
