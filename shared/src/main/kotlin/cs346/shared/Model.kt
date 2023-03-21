@@ -432,6 +432,7 @@ class Model {
         save()
         if (!groups.containsKey(groupName)) throw NonExistentGroupException()
         groups[groupName]!!.notes.add(note.id)
+        note.groupName = groupName
     }
 
     /**

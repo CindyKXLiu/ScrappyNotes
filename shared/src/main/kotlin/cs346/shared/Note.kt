@@ -44,6 +44,7 @@ class Note(title: String = "", content: String = "") {
         this.id = note.id
         this.dateCreated = note.dateCreated
         this.dateModified = note.dateModified
+        this.groupName = note.groupName
     }
 
     /**
