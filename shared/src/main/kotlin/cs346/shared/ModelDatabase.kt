@@ -14,16 +14,6 @@ private const val VARCHAR_LENGTH = 10000
  * @constructor creates a database at jdbc:sqlite:notes.db containing an empty state table
  */
 internal class ModelDatabase(){
-    object StateTable : Table("State") {
-        val noteId: Column<Int> = integer("note_id")
-        val title: Column<String> = varchar("title", VARCHAR_LENGTH)
-        val content: Column<String> = text("content")
-        val dateCreated: Column<LocalDateTime> = datetime("dateCreated")
-        val dateModified: Column<LocalDateTime> = datetime("dateModified")
-        val groupName: Column<String?> = varchar("groupName", VARCHAR_LENGTH).nullable()
-        override val primaryKey = PrimaryKey(noteId, name = "note_id")
-    }
-
     /**
      * Upon init ModelDatabase will connect to the database and create a StateTable
      */
@@ -35,6 +25,16 @@ internal class ModelDatabase(){
             addLogger(StdOutSqlLogger)
             SchemaUtils.create(StateTable)
         }
+    }
+
+    private object StateTable : Table("State") {
+        val noteId: Column<Int> = integer("note_id")
+        val title: Column<String> = varchar("title", VARCHAR_LENGTH)
+        val content: Column<String> = text("content")
+        val dateCreated: Column<LocalDateTime> = datetime("dateCreated")
+        val dateModified: Column<LocalDateTime> = datetime("dateModified")
+        val groupName: Column<String?> = varchar("groupName", VARCHAR_LENGTH).nullable()
+        override val primaryKey = PrimaryKey(noteId, name = "note_id")
     }
 
     /**
@@ -94,6 +94,7 @@ internal class ModelDatabase(){
                     for ((name, group) in state.groups) {
                         if (group.notes.contains(id)) {
                             it[groupName] = name
+                            break
                         }
                     }
                 }
@@ -104,7 +105,7 @@ internal class ModelDatabase(){
     /**
      * Clears all entries the database
      */
-    fun clearDatabase() {
+    fun clear() {
         transaction {
             StateTable.deleteAll()
         }

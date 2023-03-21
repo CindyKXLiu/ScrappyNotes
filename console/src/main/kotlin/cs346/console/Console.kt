@@ -181,7 +181,7 @@ class Console {
             "h", "help" -> print(HELP_MSG)
 
             // Quit
-            "quit" -> kotlin.system.exitProcess(0)
+            "quit" -> quit()
 
             else -> print(INVALID_COMMAND_MSG)
         }
@@ -402,5 +402,13 @@ class Console {
         } catch (e: NoRedoException) {
             print(INVALID_ACTION_MSG)
         }
+    }
+
+    /**
+     * Saves the data to database and closes console app
+     */
+    private fun quit() {
+        controller.saveToDatabase()
+        kotlin.system.exitProcess(0)
     }
 }
