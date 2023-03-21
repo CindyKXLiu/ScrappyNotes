@@ -5,7 +5,7 @@ import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDateTime
 
-private const val DB_URL = "jdbc:sqlite:notes.db"
+private const val DB_URL = "jdbc:sqlite:model.db"
 private const val VARCHAR_LENGTH = 10000
 
 /**
