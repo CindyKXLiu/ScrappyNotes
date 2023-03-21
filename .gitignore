@@ -13,3 +13,6 @@ out/
 .DS_Store
 www/public
 .idea/
+
+# Ignore files used for persistence data
+*.db
