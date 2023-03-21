@@ -16,3 +16,4 @@ www/public
 
 # Ignore files used for persistence data
 *.db
+*.json
