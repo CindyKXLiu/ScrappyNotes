@@ -11,7 +11,7 @@ private const val VARCHAR_LENGTH = 10000
 /**
  * This class is responsible for storing and retrieving Model states from the database.
  *
- * @constructor creates a database at jdbc:sqlite:notes.db containing an empty notes table
+ * @constructor creates a database at jdbc:sqlite:notes.db containing an empty state table
  */
 internal class ModelDatabase(){
     object StateTable : Table("Model") {
@@ -25,8 +25,7 @@ internal class ModelDatabase(){
     }
 
     /**
-     * Upon init Controller will connect to the database and update itself so that its states (notes and groups)
-     * match the states stored in the database
+     * Upon init ModelDatabase will connect to the database and create a StateTable
      */
     init {
         print("init called")
@@ -39,9 +38,9 @@ internal class ModelDatabase(){
     }
 
     /**
-     * Retrieves the notes that are saved to database
+     * Retrieves the Model's state that is saved to database
      *
-     * @return a hashmap of notes that are in the database
+     * @return the state of the Model that was previously saved to the database
      */
     fun getState(): Model.State {
         val notes = HashMap<UInt, Note>()
@@ -77,9 +76,9 @@ internal class ModelDatabase(){
     }
 
     /**
-     * Saves [notes] to database
+     * Saves [state] to database
      *
-     * @param notes contains the notes to be saved in the database.
+     * @param state contains the state of the Model
      */
     fun saveState(state: Model.State) {
         transaction {
@@ -103,7 +102,7 @@ internal class ModelDatabase(){
     }
 
     /**
-     * Clears all entries in all tables in the database
+     * Clears all entries the database
      */
     fun clearDatabase() {
         transaction {
