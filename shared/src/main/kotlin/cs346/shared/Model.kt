@@ -446,6 +446,7 @@ class Model {
         save()
         if (!groups.containsKey(groupName)) throw NonExistentGroupException()
         groups[groupName]!!.notes.remove(note.id)
+        note.groupName = null
     }
 
     /**
