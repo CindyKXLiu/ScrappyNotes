@@ -101,12 +101,10 @@ class Main : Application() {
         }
 
         val actionsUndo = MenuItem("Undo (CTRL+Z)")
-        actionsUndo.setOnAction { _ -> undo()
-        }
+        actionsUndo.setOnAction { _ -> undo() }
 
         val actionsRedo = MenuItem("Redo (CTRL+Y)")
-        actionsRedo.setOnAction { _ -> redo()
-        }
+        actionsRedo.setOnAction { _ -> redo() }
 
         actionsMenu.items.addAll(actionsRename, actionsGroup, actionsRemove, actionsUndo,
             actionsRedo)
@@ -114,9 +112,17 @@ class Main : Application() {
 
         // OPTIONS menubar manipulations ///////////////////////////////////////////////////////////
         val optionsMenu = Menu("Options")
-        val optionsTheme = CheckMenuItem("Select Theme")
-        optionsTheme.setOnAction { _ -> themeSelector()}
+        val optionsTheme = Menu("Select Theme")
+        val nordDark = MenuItem("Nord Dark")
+        nordDark.setOnAction { _ -> setUserAgentStylesheet("nord-dark.css") }
+        val nordLight = MenuItem("Nord Light")
+        nordLight.setOnAction { _ -> setUserAgentStylesheet("nord-light.css") }
+        val primerDark = MenuItem("Primer Dark")
+        primerDark.setOnAction { _ -> setUserAgentStylesheet("primer-dark.css") }
+        val primerLight = MenuItem("Primer Light")
+        primerLight.setOnAction { _ -> setUserAgentStylesheet("primer-light.css") }
 
+        optionsTheme.items.addAll(nordDark, nordLight, primerDark, primerLight)
         optionsMenu.items.add(optionsTheme)
         menuBar.menus.add(optionsMenu)
 
@@ -551,21 +557,6 @@ class Main : Application() {
     private fun redo() {
         model.redo()
         updateNoteview()
-    }
-
-    private fun themeSelector() {
-        val themeList = mutableListOf<String>("Nord Dark", "Nord Light", "Primer Dark", "Primer Light")
-        val td = ChoiceDialog<String>("Select a group", themeList)
-        val result: Optional<String> = td.showAndWait()
-        if (result.isPresent) {
-            when (result.get()) {
-                "Nord Dark" -> setUserAgentStylesheet("nord-dark.css")
-                "Nord Light" -> setUserAgentStylesheet("nord-light.css")
-                "Primer Dark" -> setUserAgentStylesheet("primer-dark.css")
-                "Primer Light" -> setUserAgentStylesheet("primer-light.css")
-                else -> {}
-            }
-        }
     }
 }
 
