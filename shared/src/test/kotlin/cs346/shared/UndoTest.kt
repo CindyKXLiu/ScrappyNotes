@@ -218,8 +218,11 @@ internal class UndoTest {
     fun moveNoteToGroup() {
         val model = Model()
         val note1 = model.createNote("title1", "content1")
+        val note1ID = note1.id
         val note2 = model.createNote("title2", "content2")
+        val note2ID = note2.id
         val note3 = model.createNote("title3", "content3")
+        val note3ID = note3.id
         val notesGroup1 = model.getAllNotes()
         model.createNote("title4", "content4")
         val notesGroup2 = model.getNotesByTitle("title4")
@@ -249,19 +252,19 @@ internal class UndoTest {
         assertEquals(3, notesInGroup1.size)
         assertEquals(1, notesInGroup2.size)
 
-        model.moveNoteToGroup("group2", note1)
+        model.moveNoteToGroup("group2", model.getNoteByID(note1ID))
         notesInGroup1 = model.getGroupByName("group1").notes
         notesInGroup2 = model.getGroupByName("group2").notes
         assertEquals(2, notesInGroup1.size)
         assertEquals(2, notesInGroup2.size)
 
-        model.moveNoteToGroup("group2", note2)
+        model.moveNoteToGroup("group2", model.getNoteByID(note2ID))
         notesInGroup1 = model.getGroupByName("group1").notes
         notesInGroup2 = model.getGroupByName("group2").notes
         assertEquals(1, notesInGroup1.size)
         assertEquals(3, notesInGroup2.size)
 
-        model.moveNoteToGroup("group2", note3)
+        model.moveNoteToGroup("group2", model.getNoteByID(note3ID))
         notesInGroup1 = model.getGroupByName("group1").notes
         notesInGroup2 = model.getGroupByName("group2").notes
         assertEquals(0, notesInGroup1.size)
