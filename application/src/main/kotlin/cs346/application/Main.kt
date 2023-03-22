@@ -12,15 +12,17 @@ import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
 import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
+import javafx.scene.text.Text
 import javafx.scene.web.HTMLEditor
 import javafx.stage.Stage
 import javafx.stage.WindowEvent
+import java.time.format.DateTimeFormatter
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import java.util.*
 import java.io.File
+import java.util.*
 
 private const val APP_SIZE_FILE = "appSizing.json"
 
@@ -32,7 +34,7 @@ class Main : Application() {
 
     private val noteview = TreeView<Any>()
     private val textarea = HTMLEditor()
-    private val lastmodified = HBox()
+    private val lastmodified = Text()
     private val layout = BorderPane()
     private val model = Model()
 
@@ -118,11 +120,6 @@ class Main : Application() {
         optionsMenu.items.add(optionsTheme)
         menuBar.menus.add(optionsMenu)
 
-        /**
-         * Set up Bottom Panel displaying last modification date of current file
-         */
-        lastmodified.padding = Insets(3.0, 5.0, 3.0, 5.0)
-        lastmodified.children.add(Label(""))
 
         /**
          * Set up for left side note list display
@@ -140,6 +137,7 @@ class Main : Application() {
                     textarea.htmlText = ""
                     textarea.disableProperty().set(true)
                 }
+                updateTime()
             }
         }
 
@@ -159,6 +157,13 @@ class Main : Application() {
                 searchNotes(searchbox.text)
             }
         }
+
+        /**
+         * Set up for text fields for last modified and time
+         */
+        val bottomLine = BorderPane()
+        bottomLine.left = lastmodified
+        bottomLine.padding = Insets(3.0, 5.0, 3.0, 5.0)
 
         /**
          * Dropdown menus for search filtering
@@ -210,6 +215,10 @@ class Main : Application() {
         textarea.focusTraversableProperty().set(false)
         textarea.htmlText = ""
         textarea.disableProperty().set(true)
+        textarea.setOnMouseExited { _ ->
+            saveSelectedNote()
+            updateTime()
+        }
 
         // MAIN scene set up ////////////////////////////////////////////////////////////////////////
 
@@ -315,7 +324,7 @@ class Main : Application() {
         td.headerText = "Create a new Note"
         val result: Optional<String> = td.showAndWait()
         if (result.isPresent) {
-            val newnote = model.createNote(result.get(),"blank")
+            val newnote = model.createNote(result.get(),"")
             textarea.disableProperty().set(false)
             displayNoteContents(newnote)
             updateNoteview(model.getAllUngroupedNotes(), newnote)
@@ -507,6 +516,19 @@ class Main : Application() {
                 alert.headerText = "Current note ${(currItem.value as Note).title} is not in a group."
                 alert.showAndWait()
             }
+        }
+    }
+
+    private fun updateTime() {
+        val currItem = noteview.selectionModel.selectedItem
+        if (currItem != null && currItem.value is Note) {
+            lastmodified.isVisible = true
+            val currNote = currItem.value as Note
+            val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd / MM / yyyy HH:mm")
+            val output = "Last Modified: " + formatter.format(currNote.dateModified)
+            lastmodified.text = output
+        } else {
+            lastmodified.isVisible = false
         }
     }
 
