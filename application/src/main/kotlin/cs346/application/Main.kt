@@ -1,9 +1,6 @@
 package cs346.application
 
-import cs346.shared.Model
-import cs346.shared.Group
-import cs346.shared.Note
-import cs346.shared.Sort
+import cs346.shared.*
 import javafx.application.Application
 import javafx.collections.FXCollections
 import javafx.event.ActionEvent
@@ -504,8 +501,15 @@ class Main : Application() {
             }
             val result: Optional<String> = td.showAndWait()
             if (result.isPresent) {
-                model.moveNoteToGroup(result.get(), currItem.value as Note)
-                updateNoteview()
+                try {
+                    model.moveNoteToGroup(result.get(), (currItem.value as Note).id)
+                    updateNoteview()
+                } catch (exception : NonExistentGroupException) {
+                    val alert = Alert(AlertType.WARNING)
+                    alert.title = "Warning"
+                    alert.headerText = "Cannot add selected item to group"
+                    alert.showAndWait()
+                }
             }
         } else {
             val alert = Alert(AlertType.WARNING)
@@ -521,7 +525,7 @@ class Main : Application() {
         if (currItem != null && currItem.value is Note) {
             if (currItem.parent.value != null) {
                 val parentGroup = currItem.parent.value as Group
-                model.removeNoteFromGroup(parentGroup.name, currItem.value as Note)
+                model.removeNoteFromGroup(parentGroup.name, (currItem.value as Note).id)
                 updateNoteview()
             } else {
                 val alert = Alert(AlertType.WARNING)
