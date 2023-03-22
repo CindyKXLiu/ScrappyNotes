@@ -90,7 +90,7 @@ class Console {
                 }
             }
 
-            "o", "Open" -> { // Open note
+            "o", "open" -> { // Open note
                 if (args.size == 2) {
                     try {
                         openNote(args[1].toUInt())
