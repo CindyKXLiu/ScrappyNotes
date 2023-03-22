@@ -424,56 +424,57 @@ class Model {
      * Adds a note to a given group
      *
      * @param groupName is the name of the group
-     * @param note is the note to be added to the group
+     * @param noteID is the id of the note to be added to the group
      *
      * @exception NonExistentGroupException is thrown if the group given does not exist
      */
-    fun addNoteToGroup(groupName: String, note: Note) {
+    fun addNoteToGroup(groupName: String, noteID: UInt) {
         save()
         if (!groups.containsKey(groupName)) throw NonExistentGroupException()
-        groups[groupName]!!.notes.add(note.id)
+        groups[groupName]!!.notes.add(noteID)
+        getNoteByID(noteID).groupName = groupName
     }
 
     /**
      * Removes a note from a given group
      *
      * @param groupName is the name of the group
-     * @param note is the note to be removed from the group
+     * @param noteID is the id of the note to be removed from the group
      *
      * @exception NonExistentGroupException is thrown if the group given does not exist
      */
-    fun removeNoteFromGroup(groupName: String, note: Note) {
+    fun removeNoteFromGroup(groupName: String, noteID: UInt) {
         save()
         if (!groups.containsKey(groupName)) throw NonExistentGroupException()
-        groups[groupName]!!.notes.remove(note.id)
+        groups[groupName]!!.notes.remove(noteID)
+        getNoteByID(noteID).groupName = null
     }
 
     /**
      * Moves a note from one group to another
      *
      * @param newGroupName is tne name of the group to move the note to
-     * @param note is the note in question
+     * @param noteID is the id of the note in question
      *
      * @exception NonExistentGroupException is thrown if the group given does not exist
      */
-    fun moveNoteToGroup(newGroupName: String, note: Note) {
+    fun moveNoteToGroup(newGroupName: String, noteID: UInt) {
         save()
+        val currentNote = getNoteByID(noteID)
 
         // Check that the new group given exist
         if (!groups.containsKey(newGroupName)) throw NonExistentGroupException()
 
         // find the current group of the note
-        var oldGroupName: String? = null
-        for ((groupName, group) in groups) {
-            if (group.notes.contains(note.id)) oldGroupName = groupName
-        }
+        val oldGroupName: String? = currentNote.groupName
 
         // Add the note to the new group
-        groups[newGroupName]!!.notes.add(note.id)
+        groups[newGroupName]!!.notes.add(noteID)
+        currentNote.groupName = newGroupName
 
         // Remove the note from the old group, if it belonged to a group
         if (oldGroupName != null) {
-            groups[oldGroupName]!!.notes.remove(note.id)
+            groups[oldGroupName]!!.notes.remove(noteID)
         }
     }
 

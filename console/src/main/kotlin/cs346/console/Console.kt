@@ -335,8 +335,7 @@ class Console {
      */
     private fun addNoteToGroup(id: UInt, groupName: String) {
         try{
-            val note = model.getNoteByID(id)
-            model.addNoteToGroup(groupName, note)
+            model.addNoteToGroup(groupName, id)
             println("Added note with id $id to group \"$groupName\".")
         } catch (e: NonExistentNoteException) {
             print(INVALID_ID_MSG)
@@ -353,8 +352,7 @@ class Console {
      */
     private fun removeNoteFromGroup(id: UInt, groupName: String) {
         try {
-            val note = model.getNoteByID(id)
-            model.removeNoteFromGroup(groupName, note)
+            model.removeNoteFromGroup(groupName, id)
             println("Removed note with id $id from group \"$groupName\".")
         } catch (e: NonExistentNoteException) {
             print(INVALID_ID_MSG)
@@ -371,7 +369,7 @@ class Console {
      */
     private fun moveNoteToGroup(id: UInt, newGroup: String){
         try{
-            model.moveNoteToGroup(newGroup, model.getNoteByID(id))
+            model.moveNoteToGroup(newGroup, id)
             println("Moved note with id $id to group \"$newGroup\"")
         } catch (e: NonExistentNoteException) {
             print(INVALID_ID_MSG)
