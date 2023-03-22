@@ -1,26 +1,24 @@
 package cs346.console
 
-import cs346.application.launch
 import cs346.shared.*
 
 private const val PAD = 45
 private const val PAD_SMALL = 25
 private const val HELP_MSG = "OPTIONS:\n" +
-        "launch                     Launch application\n" +
         "ls, list                   List all notes\n" +
         "ls, list -g                List all groups\n" +
         "n, new [title]             Create new empty note with title [title]\n" +
         "n, new -g [group]          Create new group named [group]\n" +
         "d, delete [noteID]         Delete note with id [noteID]\n" +
         "d, delete -g [group]       Delete group with name [group]\n" +
-        "p, print [noteID]          Print contents of note with id [noteID]\n" +
+        "o, open [noteID]           Opens the note with id [noteID] for viewing and editing\n" +
         "rename [noteID] [new]      Rename the title of the note with id [noteID] to [new]\n" +
         "rename -g [old] [new]      Rename group from [old] to [new]\n" +
         "add [noteID] [group]       Add note with id [noteID] to [group]\n" +
         "rm [noteID] [group]        Remove note with id [noteID] from [group]\n" +
         "mv [noteID] [newGroup]     Moves note with id [noteID] to [newGroup]\n" +
-        "undo                       Undo previous action" +
-        "redo                       Redo previous action" +
+        "undo                       Undo previous action\n" +
+        "redo                       Redo previous action\n" +
         "h, help                    Print this message\n" +
         "quit                       Exit\n"
 private const val INVALID_COMMAND_MSG = "Invalid command. Type \"help\" for all options.\n"
@@ -38,6 +36,7 @@ private const val INVALID_ACTION_MSG = "Invalid action.\n"
  */
 class Console {
     private val model = Model()
+    private val noteEditorlauncher = NoteEditorLauncher()
 
     /**
      * Prompts user to enter commands until the quit command is entered
@@ -57,14 +56,6 @@ class Console {
         val args = command.split("\\s".toRegex())
 
         when (args.first()) {
-            "launch" -> { // Launch GUI application
-                if (args.size == 1) {
-                    launch()
-                } else {
-                    print(INVALID_COMMAND_MSG)
-                }
-            }
-
             "ls", "list" -> { // List command
                 if (args.size == 1) { // List all notes
                     listNotes()
@@ -99,10 +90,10 @@ class Console {
                 }
             }
 
-            "p", "print" -> { // Print note
+            "o", "open" -> { // Open note
                 if (args.size == 2) {
                     try {
-                        printNoteContent(args[1].toUInt())
+                        openNote(args[1].toUInt())
                     } catch (e: NumberFormatException) {
                         print(INVALID_ID_MSG)
                     }
@@ -235,13 +226,31 @@ class Console {
         }
     }
 
+    private fun launchNoteEditor(noteId: UInt) {
+        val note = model.getNoteByID(noteId)
+
+        // Set editor settings
+        NoteEditorLauncher.Setting.active = true
+        NoteEditorLauncher.Setting.noteTitle = note.title
+        NoteEditorLauncher.Setting.noteContent = note.content
+
+        noteEditorlauncher.launch()
+
+        // wait until user finishes editing note/close editor
+        while (NoteEditorLauncher.Setting.active) Thread.sleep(1000)
+
+        // apply changes to model
+        model.editNoteContent(note.id, NoteEditorLauncher.Setting.noteContent)
+    }
+
     /**
      * Creates a new note titled [title]
      *
      * @param title is the title of the new note created
      */
     private fun createNewNote(title: String) {
-        model.createNote(title, "")
+        val note = model.createNote(title, "")
+        launchNoteEditor(note.id)
         println("Created new note \"$title\".")
     }
 
@@ -284,20 +293,21 @@ class Console {
     }
 
     /**
-     * Prints the content of the note with alias id [id]
+     * Opens an editor containing the content of the note with id [id]
      *
      * @param id is the id of the note
      */
-    private fun printNoteContent(id: UInt) {
+    private fun openNote(id: UInt) {
         try {
-            println(model.getNoteByID(id).content)
+            val note = model.getNoteByID(id)
+            launchNoteEditor(note.id)
         } catch (e: NonExistentNoteException) {
             println(INVALID_ID_MSG)
         }
     }
 
     /**
-     * Rename the title of the note with alias id [id] to [newTitle]
+     * Rename the title of the note with id [id] to [newTitle]
      *
      * @param id is the alias id of the note
      * @param newTitle is the new title of the note

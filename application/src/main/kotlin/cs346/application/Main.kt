@@ -2,6 +2,7 @@ package cs346.application
 
 import cs346.shared.*
 import javafx.application.Application
+import javafx.application.Platform
 import javafx.collections.FXCollections
 import javafx.geometry.Insets
 import javafx.scene.Scene
@@ -28,6 +29,7 @@ private const val APP_SIZE_FILE = "appSizing.json"
 
 @Serializable
 data class AppSizing(val posX: Double, val posY: Double, val height: Double, val width: Double)
+
 class Main : Application() {
     private val defaultHeight = 600.0
     private val defaultWidth = 900.0
@@ -541,11 +543,4 @@ class Main : Application() {
         model.redo()
         updateNoteview()
     }
-}
-
-/**
- * Launches the GUI application (for use outside this module)
- */
-fun launch() {
-    Application.launch(Main::class.java)
 }

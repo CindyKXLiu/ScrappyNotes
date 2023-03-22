@@ -18,7 +18,6 @@ internal class ModelDatabase(){
      * Upon init ModelDatabase will connect to the database and create a NotesTable
      */
     init {
-        print("init called")
         Database.connect(DB_URL)
 
         transaction {
