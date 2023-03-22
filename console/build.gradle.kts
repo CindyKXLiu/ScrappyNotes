@@ -6,6 +6,7 @@ plugins {
     application
     alias(libs.plugins.kotlin.lang)
     alias(libs.plugins.javamodularity)
+    alias(libs.plugins.javafx)
     id("org.beryx.jlink") version "2.25.0"
 }
 
@@ -23,6 +24,7 @@ repositories {
 dependencies {
     implementation(project(":application"))
     implementation(project(":shared"))
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.3")
     testImplementation(libs.junit.jupiter)
 }
 
@@ -49,4 +51,10 @@ java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(libs.versions.jdk.get()))
     }
+}
+
+javafx {
+    // version is determined by the plugin above
+    version = libs.versions.javafx.get()
+    modules = listOf("javafx.controls", "javafx.graphics", "javafx.web")
 }

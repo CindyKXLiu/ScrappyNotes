@@ -2,6 +2,7 @@ package cs346.application
 
 import cs346.shared.*
 import javafx.application.Application
+import javafx.application.Platform
 import javafx.collections.FXCollections
 import javafx.geometry.Insets
 import javafx.scene.Scene
@@ -541,11 +542,4 @@ class Main : Application() {
         model.redo()
         updateNoteview()
     }
-}
-
-/**
- * Launches the GUI application (for use outside this module)
- */
-fun launch() {
-    Application.launch(Main::class.java)
 }
