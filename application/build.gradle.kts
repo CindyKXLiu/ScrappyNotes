@@ -47,7 +47,7 @@ application {
 javafx {
     // version is determined by the plugin above
     version = libs.versions.javafx.get()
-    modules = listOf("javafx.controls", "javafx.graphics")
+    modules = listOf("javafx.controls", "javafx.graphics", "javafx.web")
 }
 
 // https://stackoverflow.com/questions/74453018/jlink-package-kotlin-in-both-merged-module-and-kotlin-stdlib

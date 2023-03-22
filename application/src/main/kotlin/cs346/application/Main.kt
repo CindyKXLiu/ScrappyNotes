@@ -3,7 +3,6 @@ package cs346.application
 import cs346.shared.*
 import javafx.application.Application
 import javafx.collections.FXCollections
-import javafx.event.ActionEvent
 import javafx.geometry.Insets
 import javafx.scene.Scene
 import javafx.scene.control.*
@@ -13,14 +12,17 @@ import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
 import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
+import javafx.scene.text.Text
+import javafx.scene.web.HTMLEditor
 import javafx.stage.Stage
 import javafx.stage.WindowEvent
+import java.time.format.DateTimeFormatter
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import java.util.*
 import java.io.File
+import java.util.*
 
 private const val APP_SIZE_FILE = "appSizing.json"
 
@@ -28,11 +30,11 @@ private const val APP_SIZE_FILE = "appSizing.json"
 data class AppSizing(val posX: Double, val posY: Double, val height: Double, val width: Double)
 class Main : Application() {
     private val defaultHeight = 600.0
-    private val defaultWidth = 800.0
+    private val defaultWidth = 900.0
 
     private val noteview = TreeView<Any>()
-    private val textarea = TextArea()
-    private val lastmodified = HBox()
+    private val textarea = HTMLEditor()
+    private val lastmodified = Text()
     private val layout = BorderPane()
     private val model = Model()
 
@@ -118,17 +120,12 @@ class Main : Application() {
         optionsMenu.items.add(optionsTheme)
         menuBar.menus.add(optionsMenu)
 
-        /**
-         * Set up Bottom Panel displaying last modification date of current file
-         */
-        lastmodified.padding = Insets(3.0, 5.0, 3.0, 5.0)
-        lastmodified.children.add(Label(""))
 
         /**
          * Set up for left side note list display
          */
         updateNoteview(null)
-        noteview.setShowRoot(false)
+        noteview.isShowRoot = false
         noteview.selectionModel.selectedItemProperty().addListener { _, _, _ ->
             val currSelection = noteview.selectionModel.selectedItem
             if (currSelection != null)
@@ -137,9 +134,10 @@ class Main : Application() {
                     displayNoteContents(currSelection.value as Note)
                     textarea.disableProperty().set(false)
                 } else if (currSelection.value is Group) {
-                    textarea.text = ""
+                    textarea.htmlText = ""
                     textarea.disableProperty().set(true)
                 }
+                updateTime()
             }
         }
 
@@ -159,6 +157,13 @@ class Main : Application() {
                 searchNotes(searchbox.text)
             }
         }
+
+        /**
+         * Set up for text fields for last modified and time
+         */
+        val bottomLine = BorderPane()
+        bottomLine.left = lastmodified
+        bottomLine.padding = Insets(3.0, 5.0, 3.0, 5.0)
 
         /**
          * Dropdown menus for search filtering
@@ -207,33 +212,13 @@ class Main : Application() {
         VBox.setVgrow(noteview, Priority.ALWAYS)
         leftside.children.addAll(searchbox, filters, noteview)
 
-        /**
-         * Set up for focus area text and toolbar
-         */
-        val mainarea = VBox()
-
-        val texttools = HBox()
-        val boldButton = Button("Bold")
-        boldButton.setOnAction { _: ActionEvent -> }
-
-        val italicizeButton = Button("Italics")
-        italicizeButton.setOnAction { _: ActionEvent -> }
-
-        val underlineButton = Button("Underline")
-        underlineButton.setOnAction { }
-
-        val saveButton = Button("Save Note")
-        saveButton.setOnAction { _: ActionEvent -> saveSelectedNote() }
-
-        texttools.spacing = 7.0
-        texttools.padding = Insets(3.0, 5.0, 3.0, 5.0)
-        texttools.children.addAll(boldButton, italicizeButton, underlineButton, saveButton)
-        VBox.setVgrow(textarea, Priority.ALWAYS)
         textarea.focusTraversableProperty().set(false)
-        textarea.text = ""
+        textarea.htmlText = ""
         textarea.disableProperty().set(true)
-
-        mainarea.children.addAll(texttools, textarea)
+        textarea.setOnMouseExited { _ ->
+            saveSelectedNote()
+            updateTime()
+        }
 
         // MAIN scene set up ////////////////////////////////////////////////////////////////////////
 
@@ -267,7 +252,7 @@ class Main : Application() {
          */
         layout.top = menuBar
         layout.left = leftside
-        layout.center = mainarea
+        layout.center = textarea
         layout.bottom = lastmodified
 
         val scene = Scene(layout)
@@ -317,20 +302,18 @@ class Main : Application() {
                     noteview.selectionModel.select(treeitemofnote)
                 }
             } else {
-                textarea.text = null
+                textarea.htmlText = ""
                 textarea.disableProperty().set(true)
             }
         }
 
-        if (listofgroups != null) {
-            listofgroups.forEachIndexed { _, group ->
-                val newgroup = TreeItem<Any>(group)
+        listofgroups?.forEachIndexed { _, group ->
+            val newgroup = TreeItem<Any>(group)
 
-                for (note in group.getNotes()) {
-                    newgroup.children.add(TreeItem(model.getNoteByID(note)))
-                }
-                rootitem.children.add(newgroup)
+            for (note in group.getNotes()) {
+                newgroup.children.add(TreeItem(model.getNoteByID(note)))
             }
+            rootitem.children.add(newgroup)
         }
         noteview.root = rootitem
     }
@@ -341,7 +324,7 @@ class Main : Application() {
         td.headerText = "Create a new Note"
         val result: Optional<String> = td.showAndWait()
         if (result.isPresent) {
-            val newnote = model.createNote(result.get(),"blank")
+            val newnote = model.createNote(result.get(),"")
             textarea.disableProperty().set(false)
             displayNoteContents(newnote)
             updateNoteview(model.getAllUngroupedNotes(), newnote)
@@ -362,7 +345,7 @@ class Main : Application() {
             val result = alert.showAndWait()
             if (result.get() == ButtonType.OK) {
                 model.deleteNote(currNote.id)
-                textarea.text = null
+                textarea.htmlText = ""
                 textarea.disableProperty().set(true)
                 currSelection.parent.children.remove(currSelection)
                 updateNoteview(model.getAllUngroupedNotes(), null,
@@ -380,7 +363,7 @@ class Main : Application() {
             val result = alert.showAndWait()
             if (result.get() == ButtonType.OK) {
                 model.deleteGroup(currGroup.name)
-                textarea.text = null
+                textarea.htmlText = ""
                 textarea.disableProperty().set(true)
                 currSelection.parent.children.remove(currSelection)
                 updateNoteview(model.getAllUngroupedNotes(), null,
@@ -393,13 +376,13 @@ class Main : Application() {
 
     private fun displayNoteContents(note: Note) {
         textarea.disableProperty().set(false)
-        textarea.text = note.content
+        textarea.htmlText = note.content
     }
 
     private fun saveSelectedNote() {
         val currItem = noteview.selectionModel.selectedItem
         if (currItem != null && currItem.value is Note) {
-            model.editNoteContent((currItem.value as Note).id, textarea.text)
+            model.editNoteContent((currItem.value as Note).id, textarea.htmlText)
         }
     }
 
@@ -465,7 +448,7 @@ class Main : Application() {
             val result: Optional<String> = td.showAndWait()
             if (result.isPresent) {
                 model.editGroupName(currGroup.name, result.get())
-                textarea.text = ""
+                textarea.htmlText = ""
                 textarea.disableProperty().set(true)
                 updateNoteview()
             }
@@ -478,7 +461,7 @@ class Main : Application() {
         val result: Optional<String> = td.showAndWait()
         if (result.isPresent) {
             model.createGroup(result.get())
-            textarea.text = ""
+            textarea.htmlText = ""
             textarea.disableProperty().set(true)
             updateNoteview()
         }
@@ -533,6 +516,19 @@ class Main : Application() {
                 alert.headerText = "Current note ${(currItem.value as Note).title} is not in a group."
                 alert.showAndWait()
             }
+        }
+    }
+
+    private fun updateTime() {
+        val currItem = noteview.selectionModel.selectedItem
+        if (currItem != null && currItem.value is Note) {
+            lastmodified.isVisible = true
+            val currNote = currItem.value as Note
+            val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd / MM / yyyy HH:mm")
+            val output = "Last Modified: " + formatter.format(currNote.dateModified)
+            lastmodified.text = output
+        } else {
+            lastmodified.isVisible = false
         }
     }
 
