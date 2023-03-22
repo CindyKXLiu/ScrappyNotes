@@ -15,7 +15,7 @@ private const val VARCHAR_LENGTH = 10000
  */
 internal class ModelDatabase(){
     /**
-     * Upon init ModelDatabase will connect to the database and create a StateTable
+     * Upon init ModelDatabase will connect to the database and create a NotesTable
      */
     init {
         print("init called")
@@ -23,18 +23,24 @@ internal class ModelDatabase(){
 
         transaction {
             addLogger(StdOutSqlLogger)
-            SchemaUtils.create(StateTable)
+            SchemaUtils.create(NotesTable)
+            SchemaUtils.create(GroupsTable)
         }
     }
 
-    private object StateTable : Table("State") {
-        val noteId: Column<Int> = integer("note_id")
+    private object NotesTable : Table("Notes") {
+        val noteId: Column<Int> = integer("noteId")
         val title: Column<String> = varchar("title", VARCHAR_LENGTH)
         val content: Column<String> = text("content")
         val dateCreated: Column<LocalDateTime> = datetime("dateCreated")
         val dateModified: Column<LocalDateTime> = datetime("dateModified")
         val groupName: Column<String?> = varchar("groupName", VARCHAR_LENGTH).nullable()
-        override val primaryKey = PrimaryKey(noteId, name = "note_id")
+        override val primaryKey = PrimaryKey(noteId, name = "noteId")
+    }
+
+    private object GroupsTable : Table("Groups") {
+        val groupName: Column<String> = varchar("groupName", VARCHAR_LENGTH)
+        override val primaryKey = PrimaryKey(groupName, name = "groupName")
     }
 
     /**
@@ -47,31 +53,29 @@ internal class ModelDatabase(){
         val groups = HashMap<String, Group>()
 
         transaction {
-            val query = StateTable.selectAll().orderBy(StateTable.noteId to SortOrder.ASC) // is sorted ascending so that internal note counter used for generating id aligns with database
+            // create groups
+            var query = GroupsTable.selectAll()
+            query.forEach{
+                val group = Group(it[GroupsTable.groupName])
+                groups[it[GroupsTable.groupName]] = group
+            }
 
+            // create notes and put them in their corresponding groups (if they belong to a group)
+            query = NotesTable.selectAll().orderBy(NotesTable.noteId to SortOrder.ASC) // is sorted ascending so that internal note counter used for generating id aligns with database
             query.forEach {
-                //create note obj, model.creatNote() is not called since it saves to UndoStack
-                val note = Note(it[StateTable.title], it[StateTable.content])
-                note.dateCreated = it[StateTable.dateCreated]
-                note.dateModified = it[StateTable.dateModified]
-
-                //store note obj in model.notes
-                notes[note.id] = note
-
-                // if this note belongs to a group
-                if (!it[StateTable.groupName].isNullOrBlank()) {
-                    // create group obj if not already created
-                    if (!groups.containsKey(it[StateTable.groupName])) {
-                        val group = Group(it[StateTable.groupName]!!)
-                        groups[it[StateTable.groupName]!!] = group
-                    }
+                //create note obj
+                val note = Note(it[NotesTable.title], it[NotesTable.content])
+                note.dateCreated = it[NotesTable.dateCreated]
+                note.dateModified = it[NotesTable.dateModified]
+                if (!it[NotesTable.groupName].isNullOrBlank()) {
+                    note.groupName = it[NotesTable.groupName]
 
                     // add the note to the group
-                    groups[it[StateTable.groupName]]!!.notes.add(it[StateTable.noteId].toUInt())
-
-                    // add the group name to the note
-                    note.groupName = it[StateTable.groupName]
+                    groups[it[NotesTable.groupName]]!!.notes.add(it[NotesTable.noteId].toUInt())
                 }
+
+                //store note obj in notes
+                notes[note.id] = note
             }
         }
 
@@ -85,21 +89,24 @@ internal class ModelDatabase(){
      */
     fun saveState(state: Model.State) {
         transaction {
+            // save notes to NotesTable
             for ((id, note) in state.notes) {
-                StateTable.insert {
+                NotesTable.insert {
                     it[noteId] = id.toInt()
                     it[title] = note.title
                     it[content] = note.content
                     it[dateCreated] = note.dateCreated
                     it[dateModified] = note.dateModified
-
-                    // find the group the note belongs to
-                    for ((name, group) in state.groups) {
-                        if (group.notes.contains(id)) {
-                            it[groupName] = name
-                            break
-                        }
+                    if (!note.groupName.isNullOrBlank()) {
+                        it[groupName] = note.groupName
                     }
+                }
+            }
+
+            // save groups to GroupsTable
+            for ((name, _) in state.groups) {
+                GroupsTable.insert {
+                    it[groupName] = name
                 }
             }
         }
@@ -110,7 +117,8 @@ internal class ModelDatabase(){
      */
     fun clear() {
         transaction {
-            StateTable.deleteAll()
+            NotesTable.deleteAll()
+            GroupsTable.deleteAll()
         }
     }
 }
