@@ -16,12 +16,12 @@ import javafx.scene.text.Text
 import javafx.scene.web.HTMLEditor
 import javafx.stage.Stage
 import javafx.stage.WindowEvent
-import java.time.format.DateTimeFormatter
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 private const val APP_SIZE_FILE = "appSizing.json"
@@ -115,7 +115,7 @@ class Main : Application() {
         // OPTIONS menubar manipulations ///////////////////////////////////////////////////////////
         val optionsMenu = Menu("Options")
         val optionsTheme = CheckMenuItem("Select Theme")
-        optionsTheme.setOnAction { _ -> }
+        optionsTheme.setOnAction { _ -> themeSelector()}
 
         optionsMenu.items.add(optionsTheme)
         menuBar.menus.add(optionsMenu)
@@ -210,6 +210,7 @@ class Main : Application() {
         val leftside = VBox()
         leftside.spacing = 0.0
         VBox.setVgrow(noteview, Priority.ALWAYS)
+        leftside.prefWidth = 250.0
         leftside.children.addAll(searchbox, filters, noteview)
 
         textarea.focusTraversableProperty().set(false)
@@ -256,6 +257,12 @@ class Main : Application() {
         layout.bottom = lastmodified
 
         val scene = Scene(layout)
+
+        /**
+         * Set up themes and stylesheet for scene
+         */
+        setUserAgentStylesheet("nord-light.css")
+
         /**
          * Set up hotkeys for scene
          */
@@ -540,6 +547,21 @@ class Main : Application() {
     private fun redo() {
         model.redo()
         updateNoteview()
+    }
+
+    private fun themeSelector() {
+        val themeList = mutableListOf<String>("Nord Dark", "Nord Light", "Primer Dark", "Primer Light")
+        val td = ChoiceDialog<String>("Select a group", themeList)
+        val result: Optional<String> = td.showAndWait()
+        if (result.isPresent) {
+            when (result.get()) {
+                "Nord Dark" -> setUserAgentStylesheet("nord-dark.css")
+                "Nord Light" -> setUserAgentStylesheet("nord-light.css")
+                "Primer Dark" -> setUserAgentStylesheet("primer-dark.css")
+                "Primer Light" -> setUserAgentStylesheet("primer-light.css")
+                else -> {}
+            }
+        }
     }
 }
 

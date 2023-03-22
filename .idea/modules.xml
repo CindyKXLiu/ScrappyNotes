@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/CS 346.iml" filepath="$PROJECT_DIR$/.idea/CS 346.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/application/cs346.application.main.iml" filepath="$PROJECT_DIR$/.idea/modules/application/cs346.application.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/multi-project.iml" filepath="$PROJECT_DIR$/.idea/modules/multi-project.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/application/multi-project.application.iml" filepath="$PROJECT_DIR$/.idea/modules/application/multi-project.application.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/application/multi-project.application.main.iml" filepath="$PROJECT_DIR$/.idea/modules/application/multi-project.application.main.iml" />
