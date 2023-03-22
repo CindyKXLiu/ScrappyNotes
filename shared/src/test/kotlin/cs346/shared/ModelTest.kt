@@ -86,8 +86,8 @@ internal class ModelTest {
         assertEquals(expectedNotesSize, model.getAllNotes().size)
 
         model.createGroup("group1")
-        model.addNoteToGroup("group1", note2)
-        model.addNoteToGroup("group1", note3)
+        model.addNoteToGroup("group1", note2.id)
+        model.addNoteToGroup("group1", note3.id)
         var expectedGroupSize = 2
         try {
             assertEquals(expectedGroupSize, model.getAllNotesInGroup("group1").size)
@@ -149,7 +149,7 @@ internal class ModelTest {
 
         val group2 = model.createGroup("group2")
         for (note in notes1) {
-            model.addNoteToGroup("group2", note)
+            model.addNoteToGroup("group2", note.id)
         }
         assertEquals(2, model.getAllGroups().size)
         assertEquals("group2", group2.name)
@@ -157,7 +157,7 @@ internal class ModelTest {
 
         val group3 = model.createGroup("group3")
         for (note in notes2) {
-            model.addNoteToGroup("group3", note)
+            model.addNoteToGroup("group3", note.id)
         }
         assertEquals(3, model.getAllGroups().size)
         assertEquals("group3", group3.name)
@@ -185,11 +185,11 @@ internal class ModelTest {
         model.createGroup("group1")
         model.createGroup("group2")
         for (note in notes1) {
-            model.addNoteToGroup("group2", note)
+            model.addNoteToGroup("group2", note.id)
         }
         model.createGroup("group3")
         for (note in notes2) {
-            model.addNoteToGroup("group3", note)
+            model.addNoteToGroup("group3", note.id)
         }
         assertEquals(3, model.getAllGroups().size)
 
@@ -224,14 +224,14 @@ internal class ModelTest {
 
         model.createGroup("group2")
         for (note in notes1) {
-            model.addNoteToGroup("group2", note)
+            model.addNoteToGroup("group2", note.id)
         }
         groups = model.getAllGroups()
         assertEquals(2, groups.size)
 
         model.createGroup("group3")
         for (note in notes2) {
-            model.addNoteToGroup("group3", note)
+            model.addNoteToGroup("group3", note.id)
         }
         groups = model.getAllGroups()
         assertEquals(3, groups.size)
@@ -262,11 +262,11 @@ internal class ModelTest {
         val group1 = model.createGroup("group1")
         val group2 = model.createGroup("group2")
         for (note in notes1) {
-            model.addNoteToGroup("group2", note)
+            model.addNoteToGroup("group2", note.id)
         }
         val group3 = model.createGroup("group3")
         for (note in notes2) {
-            model.addNoteToGroup("group3", note)
+            model.addNoteToGroup("group3", note.id)
         }
 
         try{
@@ -299,11 +299,11 @@ internal class ModelTest {
         model.createGroup("group1")
         model.createGroup("group2")
         for (note in notes1) {
-            model.addNoteToGroup("group2", note)
+            model.addNoteToGroup("group2", note.id)
         }
         model.createGroup("group3")
         for (note in notes2) {
-            model.addNoteToGroup("group3", note)
+            model.addNoteToGroup("group3", note.id)
         }
 
         model.editGroupName("group1", "group1modified")
@@ -335,19 +335,19 @@ internal class ModelTest {
         var notes = model.getAllNotesInGroup("group1")
         assertEquals(0, notes.size)
 
-        model.addNoteToGroup("group1", note1)
+        model.addNoteToGroup("group1", note1.id)
         notes = model.getAllNotesInGroup("group1")
         assertEquals(1, notes.size)
 
-        model.addNoteToGroup("group1", note2)
+        model.addNoteToGroup("group1", note2.id)
         notes = model.getAllNotesInGroup("group1")
         assertEquals(2, notes.size)
 
-        model.addNoteToGroup("group1", note3)
+        model.addNoteToGroup("group1", note3.id)
         notes = model.getAllNotesInGroup("group1")
         assertEquals(3, notes.size)
 
-        model.addNoteToGroup("group1", note4)
+        model.addNoteToGroup("group1", note4.id)
         notes = model.getAllNotesInGroup("group1")
         assertEquals(4, notes.size)
     }
@@ -363,24 +363,24 @@ internal class ModelTest {
 
         model.createGroup("group1")
         for (note in notes) {
-            model.addNoteToGroup("group1", note)
+            model.addNoteToGroup("group1", note.id)
         }
         var notesInGroup = model.getAllNotesInGroup("group1")
         assertEquals(4, notesInGroup.size)
 
-        model.removeNoteFromGroup("group1", note1)
+        model.removeNoteFromGroup("group1", note1.id)
         notesInGroup = model.getAllNotesInGroup("group1")
         assertEquals(3, notesInGroup.size)
 
-        model.removeNoteFromGroup("group1", note2)
+        model.removeNoteFromGroup("group1", note2.id)
         notesInGroup = model.getAllNotesInGroup("group1")
         assertEquals(2, notesInGroup.size)
 
-        model.removeNoteFromGroup("group1", note3)
+        model.removeNoteFromGroup("group1", note3.id)
         notesInGroup = model.getAllNotesInGroup("group1")
         assertEquals(1, notesInGroup.size)
 
-        model.removeNoteFromGroup("group1", note4)
+        model.removeNoteFromGroup("group1", note4.id)
         notesInGroup = model.getAllNotesInGroup("group1")
         assertEquals(0, notesInGroup.size)
     }
@@ -397,30 +397,30 @@ internal class ModelTest {
 
         model.createGroup("group1")
         for (note in notesGroup1) {
-            model.addNoteToGroup("group1", note)
+            model.addNoteToGroup("group1", note.id)
         }
         model.createGroup("group2")
         for (note in notesGroup2) {
-            model.addNoteToGroup("group2", note)
+            model.addNoteToGroup("group2", note.id)
         }
         var notesInGroup1 = model.getAllNotesInGroup("group1")
         var notesInGroup2 = model.getAllNotesInGroup("group2")
         assertEquals(3, notesInGroup1.size)
         assertEquals(1, notesInGroup2.size)
 
-        model.moveNoteToGroup("group2", note1)
+        model.moveNoteToGroup("group2", note1.id)
         notesInGroup1 = model.getAllNotesInGroup("group1")
         notesInGroup2 = model.getAllNotesInGroup("group2")
         assertEquals(2, notesInGroup1.size)
         assertEquals(2, notesInGroup2.size)
 
-        model.moveNoteToGroup("group2", note2)
+        model.moveNoteToGroup("group2", note2.id)
         notesInGroup1 = model.getAllNotesInGroup("group1")
         notesInGroup2 = model.getAllNotesInGroup("group2")
         assertEquals(1, notesInGroup1.size)
         assertEquals(3, notesInGroup2.size)
 
-        model.moveNoteToGroup("group2", note3)
+        model.moveNoteToGroup("group2", note3.id)
         notesInGroup1 = model.getAllNotesInGroup("group1")
         notesInGroup2 = model.getAllNotesInGroup("group2")
         assertEquals(0, notesInGroup1.size)
@@ -439,11 +439,11 @@ internal class ModelTest {
 
         model.createGroup("group1")
         for (note in notesGroup1) {
-            model.addNoteToGroup("group1", note)
+            model.addNoteToGroup("group1", note.id)
         }
         model.createGroup("group2")
         for (note in notesGroup2) {
-            model.addNoteToGroup("group2", note)
+            model.addNoteToGroup("group2", note.id)
         }
 
         val notesInGroup1 = model.getAllNotesInGroup("group1")
@@ -503,12 +503,12 @@ internal class ModelTest {
         assert(model.getAllUngroupedNotes().contains(note1))
         assert(model.getAllUngroupedNotes().contains(note2))
 
-        model.addNoteToGroup("g", note1)
+        model.addNoteToGroup("g", note1.id)
         expectedSize = 1
         assertEquals(expectedSize, model.getAllUngroupedNotes().size)
         assert(model.getAllUngroupedNotes().contains(note2))
 
-        model.addNoteToGroup("g", note2)
+        model.addNoteToGroup("g", note2.id)
         expectedSize = 0
         assertEquals(expectedSize, model.getAllUngroupedNotes().size)
     }

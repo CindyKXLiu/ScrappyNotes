@@ -148,7 +148,7 @@ internal class UndoTest {
         var notes = model.getGroupByName("group1").notes
         assertEquals(0, notes.size)
 
-        model.addNoteToGroup("group1", note1)
+        model.addNoteToGroup("group1", note1.id)
         notes = model.getGroupByName("group1").notes
         assertEquals(1, notes.size)
 
@@ -156,11 +156,11 @@ internal class UndoTest {
         notes = model.getGroupByName("group1").notes
         assertEquals(0, notes.size)
 
-        model.addNoteToGroup("group1", note1)
+        model.addNoteToGroup("group1", note1.id)
         notes = model.getGroupByName("group1").notes
         assertEquals(1, notes.size)
 
-        model.addNoteToGroup("group1", note2)
+        model.addNoteToGroup("group1", note2.id)
         notes = model.getGroupByName("group1").notes
         assertEquals(2, notes.size)
 
@@ -180,12 +180,12 @@ internal class UndoTest {
 
         model.createGroup("group1")
         for (note in notes) {
-            model.addNoteToGroup("group1", note)
+            model.addNoteToGroup("group1", note.id)
         }
         var notesInGroup = model.getGroupByName("group1").notes
         assertEquals(4, notesInGroup.size)
 
-        model.removeNoteFromGroup("group1", note1)
+        model.removeNoteFromGroup("group1", note1.id)
         notesInGroup = model.getGroupByName("group1").notes
         assertEquals(3, notesInGroup.size)
 
@@ -193,19 +193,19 @@ internal class UndoTest {
         notesInGroup = model.getGroupByName("group1").notes
         assertEquals(4, notesInGroup.size)
 
-        model.removeNoteFromGroup("group1", note1)
+        model.removeNoteFromGroup("group1", note1.id)
         notesInGroup = model.getGroupByName("group1").notes
         assertEquals(3, notesInGroup.size)
 
-        model.removeNoteFromGroup("group1", note2)
+        model.removeNoteFromGroup("group1", note2.id)
         notesInGroup = model.getGroupByName("group1").notes
         assertEquals(2, notesInGroup.size)
 
-        model.removeNoteFromGroup("group1", note3)
+        model.removeNoteFromGroup("group1", note3.id)
         notesInGroup = model.getGroupByName("group1").notes
         assertEquals(1, notesInGroup.size)
 
-        model.removeNoteFromGroup("group1", note4)
+        model.removeNoteFromGroup("group1", note4.id)
         notesInGroup = model.getGroupByName("group1").notes
         assertEquals(0, notesInGroup.size)
 
@@ -229,18 +229,18 @@ internal class UndoTest {
 
         model.createGroup("group1")
         for (note in notesGroup1) {
-            model.addNoteToGroup("group1", note)
+            model.addNoteToGroup("group1", note.id)
         }
         model.createGroup("group2")
         for (note in notesGroup2) {
-            model.addNoteToGroup("group2", note)
+            model.addNoteToGroup("group2", note.id)
         }
         var notesInGroup1 = model.getGroupByName("group1").notes
         var notesInGroup2 = model.getGroupByName("group2").notes
         assertEquals(3, notesInGroup1.size)
         assertEquals(1, notesInGroup2.size)
 
-        model.moveNoteToGroup("group2", note1)
+        model.moveNoteToGroup("group2", note1.id)
         notesInGroup1 = model.getGroupByName("group1").notes
         notesInGroup2 = model.getGroupByName("group2").notes
         assertEquals(2, notesInGroup1.size)
@@ -252,19 +252,19 @@ internal class UndoTest {
         assertEquals(3, notesInGroup1.size)
         assertEquals(1, notesInGroup2.size)
 
-        model.moveNoteToGroup("group2", model.getNoteByID(note1ID))
+        model.moveNoteToGroup("group2", note1ID)
         notesInGroup1 = model.getGroupByName("group1").notes
         notesInGroup2 = model.getGroupByName("group2").notes
         assertEquals(2, notesInGroup1.size)
         assertEquals(2, notesInGroup2.size)
 
-        model.moveNoteToGroup("group2", model.getNoteByID(note2ID))
+        model.moveNoteToGroup("group2", note2ID)
         notesInGroup1 = model.getGroupByName("group1").notes
         notesInGroup2 = model.getGroupByName("group2").notes
         assertEquals(1, notesInGroup1.size)
         assertEquals(3, notesInGroup2.size)
 
-        model.moveNoteToGroup("group2", model.getNoteByID(note3ID))
+        model.moveNoteToGroup("group2", note3ID)
         notesInGroup1 = model.getGroupByName("group1").notes
         notesInGroup2 = model.getGroupByName("group2").notes
         assertEquals(0, notesInGroup1.size)

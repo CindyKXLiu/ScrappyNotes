@@ -210,7 +210,7 @@ internal class RedoTest {
         var notes = model.getGroupByName("group1").notes
         assertEquals(0, notes.size)
 
-        model.addNoteToGroup("group1", note1)
+        model.addNoteToGroup("group1", note1.id)
         notes = model.getGroupByName("group1").notes
         assertEquals(1, notes.size)
 
@@ -234,12 +234,12 @@ internal class RedoTest {
 
         model.createGroup("group1")
         for (note in notes) {
-            model.addNoteToGroup("group1", note)
+            model.addNoteToGroup("group1", note.id)
         }
         var notesInGroup = model.getGroupByName("group1").notes
         assertEquals(4, notesInGroup.size)
 
-        model.removeNoteFromGroup("group1", note1)
+        model.removeNoteFromGroup("group1", note1.id)
         notesInGroup = model.getGroupByName("group1").notes
         assertEquals(3, notesInGroup.size)
 
@@ -264,18 +264,18 @@ internal class RedoTest {
 
         model.createGroup("group1")
         for (note in notesGroup1) {
-            model.addNoteToGroup("group1", note)
+            model.addNoteToGroup("group1", note.id)
         }
         model.createGroup("group2")
         for (note in notesGroup2) {
-            model.addNoteToGroup("group2", note)
+            model.addNoteToGroup("group2", note.id)
         }
         var notesInGroup1 = model.getGroupByName("group1").notes
         var notesInGroup2 = model.getGroupByName("group2").notes
         assertEquals(3, notesInGroup1.size)
         assertEquals(1, notesInGroup2.size)
 
-        model.moveNoteToGroup("group2", note1)
+        model.moveNoteToGroup("group2", note1.id)
         notesInGroup1 = model.getGroupByName("group1").notes
         notesInGroup2 = model.getGroupByName("group2").notes
         assertEquals(2, notesInGroup1.size)
