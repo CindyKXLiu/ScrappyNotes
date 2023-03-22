@@ -30,7 +30,7 @@ private const val APP_SIZE_FILE = "appSizing.json"
 data class AppSizing(val posX: Double, val posY: Double, val height: Double, val width: Double)
 class Main : Application() {
     private val defaultHeight = 600.0
-    private val defaultWidth = 900.0
+    private val defaultWidth = 1000.0
 
     private val noteview = TreeView<Any>()
     private val textarea = HTMLEditor()
@@ -124,7 +124,7 @@ class Main : Application() {
         /**
          * Set up for left side note list display
          */
-        updateNoteview(null)
+        updateNoteview()
         noteview.isShowRoot = false
         noteview.selectionModel.selectedItemProperty().addListener { _, _, _ ->
             val currSelection = noteview.selectionModel.selectedItem
@@ -318,7 +318,11 @@ class Main : Application() {
             val newgroup = TreeItem<Any>(group)
 
             for (note in group.getNotes()) {
-                newgroup.children.add(TreeItem(model.getNoteByID(note)))
+                try {
+                    newgroup.children.add(TreeItem(model.getNoteByID(note)))
+                } catch (error : NonExistentNoteException) {
+                    print("Failed to add note id: " + note + " to group " + group.name)
+                }
             }
             rootitem.children.add(newgroup)
         }
