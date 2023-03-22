@@ -29,6 +29,7 @@ private const val APP_SIZE_FILE = "appSizing.json"
 
 @Serializable
 data class AppSizing(val posX: Double, val posY: Double, val height: Double, val width: Double)
+
 class Main : Application() {
     private val defaultHeight = 600.0
     private val defaultWidth = 900.0

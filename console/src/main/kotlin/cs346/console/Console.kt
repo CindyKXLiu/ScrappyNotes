@@ -1,12 +1,10 @@
 package cs346.console
 
-import cs346.application.Main
 import cs346.shared.*
 
 private const val PAD = 45
 private const val PAD_SMALL = 25
 private const val HELP_MSG = "OPTIONS:\n" +
-        "launch                     Launch application\n" +
         "ls, list                   List all notes\n" +
         "ls, list -g                List all groups\n" +
         "n, new [title]             Create new empty note with title [title]\n" +
@@ -38,7 +36,7 @@ private const val INVALID_ACTION_MSG = "Invalid action.\n"
  */
 class Console {
     private val model = Model()
-    private val launcher = Launcher()
+    private val noteEditorlauncher = NoteEditorLauncher()
 
     /**
      * Prompts user to enter commands until the quit command is entered
@@ -58,15 +56,6 @@ class Console {
         val args = command.split("\\s".toRegex())
 
         when (args.first()) {
-            "launch" -> { // Launch GUI application
-                if (args.size == 1) {
-                    LauncherSetting.applicationClass = Main::class.java
-                    launcher.launch()
-                } else {
-                    print(INVALID_COMMAND_MSG)
-                }
-            }
-
             "ls", "list" -> { // List command
                 if (args.size == 1) { // List all notes
                     listNotes()
@@ -237,9 +226,21 @@ class Console {
         }
     }
 
-    private fun launchEditor() {
-        LauncherSetting.applicationClass = NoteEditor::class.java
-        launcher.launch()
+    private fun launchNoteEditor(noteId: UInt) {
+        val note = model.getNoteByID(noteId)
+
+        // Set editor settings
+        NoteEditorLauncher.Setting.active = true
+        NoteEditorLauncher.Setting.noteTitle = note.title
+        NoteEditorLauncher.Setting.noteContent = note.content
+
+        noteEditorlauncher.launch()
+
+        // wait until user finishes editing note/close editor
+        while (NoteEditorLauncher.Setting.active) Thread.sleep(1000)
+
+        // apply changes to model
+        model.editNoteContent(note.id, NoteEditorLauncher.Setting.noteContent)
     }
 
     /**
@@ -249,20 +250,7 @@ class Console {
      */
     private fun createNewNote(title: String) {
         val note = model.createNote(title, "")
-
-        // Set editor settings
-        NoteEditorSetting.active = true
-        NoteEditorSetting.noteTitle = title
-        NoteEditorSetting.noteContent = ""
-
-        launchEditor()
-
-        // wait until user finishes editing note/close editor
-        while (NoteEditorSetting.active) Thread.sleep(1000)
-
-        // apply changes to model
-        model.editNoteContent(note.id, NoteEditorSetting.noteContent)
-
+        launchNoteEditor(note.id)
         println("Created new note \"$title\".")
     }
 
@@ -312,19 +300,7 @@ class Console {
     private fun openNote(id: UInt) {
         try {
             val note = model.getNoteByID(id)
-
-            // Set editor settings
-            NoteEditorSetting.active = true
-            NoteEditorSetting.noteTitle = note.title
-            NoteEditorSetting.noteContent = note.content
-
-            launchEditor()
-
-            // wait until user finishes editing note/close editor
-            while (NoteEditorSetting.active) Thread.sleep(1000)
-
-            // apply changes to model
-            model.editNoteContent(note.id, NoteEditorSetting.noteContent)
+            launchNoteEditor(note.id)
         } catch (e: NonExistentNoteException) {
             println(INVALID_ID_MSG)
         }
