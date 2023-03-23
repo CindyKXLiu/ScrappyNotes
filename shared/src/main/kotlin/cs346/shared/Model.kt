@@ -386,6 +386,9 @@ class Model {
         // Check that the group given exists
         if (!groups.containsKey(currentName)) throw NonExistentGroupException()
 
+        // Check that the new name given is unique
+        if (groups.containsKey(newName)) throw DuplicateGroupException()
+
         // Save the content of the group
         val groupContent = groups[currentName]!!
         groupContent.name = newName
@@ -465,17 +468,17 @@ class Model {
         // Check that the new group given exist
         if (!groups.containsKey(newGroupName)) throw NonExistentGroupException()
 
-        // find the current group of the note
+        // Find the current group of the note
         val oldGroupName: String? = currentNote.groupName
-
-        // Add the note to the new group
-        groups[newGroupName]!!.notes.add(noteID)
-        currentNote.groupName = newGroupName
 
         // Remove the note from the old group, if it belonged to a group
         if (oldGroupName != null) {
             groups[oldGroupName]!!.notes.remove(noteID)
         }
+
+        // Add the note to the new group
+        groups[newGroupName]!!.notes.add(noteID)
+        currentNote.groupName = newGroupName
     }
 
     /**
@@ -488,7 +491,7 @@ class Model {
     fun getAllNotesInGroup(name: String): List<Note> {
         val groupNotes = ArrayList<Note>()
 
-        for(id in getGroupByName(name).notes) {
+        for (id in getGroupByName(name).notes) {
             notes[id]?.let { groupNotes.add(it) }
         }
 
