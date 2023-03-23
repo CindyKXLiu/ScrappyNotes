@@ -17,12 +17,12 @@ import javafx.scene.text.Text
 import javafx.scene.web.HTMLEditor
 import javafx.stage.Stage
 import javafx.stage.WindowEvent
-import java.time.format.DateTimeFormatter
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 private const val APP_SIZE_FILE = "appSizing.json"
@@ -32,7 +32,7 @@ data class AppSizing(val posX: Double, val posY: Double, val height: Double, val
 
 class Main : Application() {
     private val defaultHeight = 600.0
-    private val defaultWidth = 900.0
+    private val defaultWidth = 1000.0
 
     private val noteview = TreeView<Any>()
     private val textarea = HTMLEditor()
@@ -103,12 +103,10 @@ class Main : Application() {
         }
 
         val actionsUndo = MenuItem("Undo (CTRL+Z)")
-        actionsUndo.setOnAction { _ -> undo()
-        }
+        actionsUndo.setOnAction { _ -> undo() }
 
         val actionsRedo = MenuItem("Redo (CTRL+Y)")
-        actionsRedo.setOnAction { _ -> redo()
-        }
+        actionsRedo.setOnAction { _ -> redo() }
 
         actionsMenu.items.addAll(actionsRename, actionsGroup, actionsRemove, actionsUndo,
             actionsRedo)
@@ -116,9 +114,17 @@ class Main : Application() {
 
         // OPTIONS menubar manipulations ///////////////////////////////////////////////////////////
         val optionsMenu = Menu("Options")
-        val optionsTheme = CheckMenuItem("Select Theme")
-        optionsTheme.setOnAction { _ -> }
+        val optionsTheme = Menu("Select Theme")
+        val nordDark = MenuItem("Nord Dark")
+        nordDark.setOnAction { _ -> setUserAgentStylesheet("nord-dark.css") }
+        val nordLight = MenuItem("Nord Light")
+        nordLight.setOnAction { _ -> setUserAgentStylesheet("nord-light.css") }
+        val primerDark = MenuItem("Primer Dark")
+        primerDark.setOnAction { _ -> setUserAgentStylesheet("primer-dark.css") }
+        val primerLight = MenuItem("Primer Light")
+        primerLight.setOnAction { _ -> setUserAgentStylesheet("primer-light.css") }
 
+        optionsTheme.items.addAll(nordDark, nordLight, primerDark, primerLight)
         optionsMenu.items.add(optionsTheme)
         menuBar.menus.add(optionsMenu)
 
@@ -126,7 +132,7 @@ class Main : Application() {
         /**
          * Set up for left side note list display
          */
-        updateNoteview(null)
+        updateNoteview()
         noteview.isShowRoot = false
         noteview.selectionModel.selectedItemProperty().addListener { _, _, _ ->
             val currSelection = noteview.selectionModel.selectedItem
@@ -212,6 +218,7 @@ class Main : Application() {
         val leftside = VBox()
         leftside.spacing = 0.0
         VBox.setVgrow(noteview, Priority.ALWAYS)
+        leftside.prefWidth = 250.0
         leftside.children.addAll(searchbox, filters, noteview)
 
         textarea.focusTraversableProperty().set(false)
@@ -258,6 +265,12 @@ class Main : Application() {
         layout.bottom = lastmodified
 
         val scene = Scene(layout)
+
+        /**
+         * Set up themes and stylesheet for scene
+         */
+        setUserAgentStylesheet("nord-light.css")
+
         /**
          * Set up hotkeys for scene
          */
@@ -313,7 +326,11 @@ class Main : Application() {
             val newgroup = TreeItem<Any>(group)
 
             for (note in group.getNotes()) {
-                newgroup.children.add(TreeItem(model.getNoteByID(note)))
+                try {
+                    newgroup.children.add(TreeItem(model.getNoteByID(note)))
+                } catch (error : NonExistentNoteException) {
+                    print("Failed to add note id: " + note + " to group " + group.name)
+                }
             }
             rootitem.children.add(newgroup)
         }
