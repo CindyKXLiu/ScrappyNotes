@@ -43,25 +43,98 @@ fun main(args: Array<String>) {
 }
 
 @RestController
-@RequestMapping("/messages")
-class MessageResource(val service: MessageService) {
+@RequestMapping("/model")
+class ModelResource(val service: ModelService) {
     @GetMapping
-    fun index(): List<Message> = service.findMessages()
+    fun getState(): State = service.getState()
 
     @PostMapping
-    fun post(@RequestBody message: Message) {
-        service.post(message)
-    }
+    fun saveState(@RequestBody state: State) = service.saveState(state)
+
+    @DeleteMapping
+    fun clear() = service.clear()
 }
 
-data class Message(val id: String, val text: String)
+data class State(val notes: HashMap<UInt, Note>, val groups: HashMap<String, Group>)
 
 @Service
-class MessageService {
-    var messages: MutableList<Message> = mutableListOf()
+class ModelService {
+    /**
+     * Retrieves the Model's state that is saved to database
+     *
+     * @return the state of the Model that was previously saved to the database
+     */
+    fun getState(): State {
+        val notes = HashMap<UInt, Note>()
+        val groups = HashMap<String, Group>()
 
-    fun findMessages() = messages
-    fun post(message: Message) {
-        messages.add(message)
+        transaction {
+            // create groups
+            var query = GroupsTable.selectAll()
+            query.forEach{
+                val group = Group(it[GroupsTable.groupName])
+                groups[it[GroupsTable.groupName]] = group
+            }
+
+            // create notes and put them in their corresponding groups (if they belong to a group)
+            query = NotesTable.selectAll().orderBy(NotesTable.noteId to SortOrder.ASC) // is sorted ascending so that internal note counter used for generating id aligns with database
+            query.forEach {
+                //create note obj
+                val note = Note(it[NotesTable.title], it[NotesTable.content])
+                note.dateCreated = it[NotesTable.dateCreated]
+                note.dateModified = it[NotesTable.dateModified]
+                if (!it[NotesTable.groupName].isNullOrBlank()) {
+                    note.groupName = it[NotesTable.groupName]
+
+                    // add the note to the group
+                    groups[it[NotesTable.groupName]]!!.notes.add(it[NotesTable.noteId].toUInt())
+                }
+
+                //store note obj in notes
+                notes[note.id] = note
+            }
+        }
+
+        return State(notes, groups)
+    }
+
+    /**
+     * Saves [state] to database
+     *
+     * @param state contains the state of the Model
+     */
+    fun saveState(state: State) {
+        transaction {
+            // save notes to NotesTable
+            for ((id, note) in state.notes) {
+                NotesTable.insert {
+                    it[noteId] = id.toInt()
+                    it[title] = note.title
+                    it[content] = note.content
+                    it[dateCreated] = note.dateCreated
+                    it[dateModified] = note.dateModified
+                    if (!note.groupName.isNullOrBlank()) {
+                        it[groupName] = note.groupName
+                    }
+                }
+            }
+
+            // save groups to GroupsTable
+            for ((name, _) in state.groups) {
+                GroupsTable.insert {
+                    it[groupName] = name
+                }
+            }
+        }
+    }
+
+    /**
+     * Clears all entries the database
+     */
+    fun clear() {
+        transaction {
+            NotesTable.deleteAll()
+            GroupsTable.deleteAll()
+        }
     }
 }
