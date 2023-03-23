@@ -23,8 +23,9 @@ private const val HELP_MSG = "OPTIONS:\n" +
         "quit                       Exit\n"
 private const val INVALID_COMMAND_MSG = "Invalid command. Type \"help\" for all options.\n"
 private const val COMMAND_PROMPT_MSG = "\nEnter your command: "
-private const val INVALID_ID_MSG = "No note with such id. Type \"ls\" to get the ids of the notes.\n"
-private const val INVALID_GROUP_MSG = "No such group exists. Type \"ls -g\" to get the names of the groups.\n"
+private const val INVALID_ID_MSG = "No note with such id. Type \"ls\" to get the ids of all notes.\n"
+private const val INVALID_GROUP_MSG = "No such group exists. Type \"ls -g\" to get the names of all groups.\n"
+private const val DUPLICATE_GROUP_MSG = "A group with that name already exists. Type \"ls -g\" to get the names of all groups.\n"
 private const val INVALID_ACTION_MSG = "Invalid action.\n"
 
 /**
@@ -52,7 +53,7 @@ class Console {
     /**
      * Processes command passed through the console
      */
-    private fun parseArgs(command: String) {
+    fun parseArgs(command: String) {
         val args = command.split("\\s".toRegex())
 
         when (args.first()) {
@@ -67,7 +68,7 @@ class Console {
             }
 
             "n", "new" -> { // Create command
-                if (args.size == 2) { // Create new note
+                if (args.size == 2 && !Regex("^-").containsMatchIn(args[1])) { // Create new note
                     createNewNote(args[1])
                 } else if (args.size == 3 && args[1] == "-g") { // Create new group
                     createNewGroup(args[2])
@@ -260,8 +261,13 @@ class Console {
      * @param name is the name of the new group created
      */
     private fun createNewGroup(name: String) {
-        model.createGroup(name)
-        println("Created new group \"$name\".")
+        try {
+            model.createGroup(name)
+            println("Created new group \"$name\".")
+        } catch (e: DuplicateGroupException) {
+            print(DUPLICATE_GROUP_MSG)
+        }
+
     }
 
     /**
@@ -333,6 +339,8 @@ class Console {
             println("Renamed group \"$oldName\" to \"$newName\".")
         } catch (e: NonExistentGroupException) {
             print(INVALID_GROUP_MSG)
+        } catch (e: DuplicateGroupException) {
+            print(DUPLICATE_GROUP_MSG)
         }
     }
 
