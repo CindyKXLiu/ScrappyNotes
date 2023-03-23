@@ -2,7 +2,6 @@ package cs346.application
 
 import cs346.shared.*
 import javafx.application.Application
-import javafx.application.Platform
 import javafx.collections.FXCollections
 import javafx.geometry.Insets
 import javafx.scene.Scene
@@ -28,11 +27,12 @@ import java.util.*
 private const val APP_SIZE_FILE = "appSizing.json"
 
 @Serializable
-data class AppSizing(val posX: Double, val posY: Double, val height: Double, val width: Double)
+data class AppSizing(val posX: Double, val posY: Double, val height: Double, val width: Double, val theme: String)
 
 class Main : Application() {
     private val defaultHeight = 600.0
     private val defaultWidth = 1000.0
+    private var currentTheme = "nord-light"
 
     private val noteview = TreeView<Any>()
     private val textarea = HTMLEditor()
@@ -116,18 +116,29 @@ class Main : Application() {
         val optionsMenu = Menu("Options")
         val optionsTheme = Menu("Select Theme")
         val nordDark = MenuItem("Nord Dark")
-        nordDark.setOnAction { _ -> setUserAgentStylesheet("nord-dark.css") }
+        nordDark.setOnAction { _ ->
+            setUserAgentStylesheet("nord-dark.css")
+            currentTheme = "nord-dark"
+        }
         val nordLight = MenuItem("Nord Light")
-        nordLight.setOnAction { _ -> setUserAgentStylesheet("nord-light.css") }
+        nordLight.setOnAction { _ ->
+            setUserAgentStylesheet("nord-light.css")
+            currentTheme = "nord-light"
+        }
         val primerDark = MenuItem("Primer Dark")
-        primerDark.setOnAction { _ -> setUserAgentStylesheet("primer-dark.css") }
+        primerDark.setOnAction { _ ->
+            setUserAgentStylesheet("primer-dark.css")
+            currentTheme = "primer-dark"
+        }
         val primerLight = MenuItem("Primer Light")
-        primerLight.setOnAction { _ -> setUserAgentStylesheet("primer-light.css") }
+        primerLight.setOnAction { _ ->
+            setUserAgentStylesheet("primer-light.css")
+            currentTheme = "primer-light"
+        }
 
         optionsTheme.items.addAll(nordDark, nordLight, primerDark, primerLight)
         optionsMenu.items.add(optionsTheme)
         menuBar.menus.add(optionsMenu)
-
 
         /**
          * Set up for left side note list display
@@ -243,13 +254,15 @@ class Main : Application() {
             stage.y = specifications.posY
             stage.width = specifications.width
             stage.height = specifications.height
+            setUserAgentStylesheet(specifications.theme + ".css")
         } else {
             stage.width = defaultWidth
             stage.height = defaultHeight
+            setUserAgentStylesheet("nord-light.css")
         }
 
         stage.setOnCloseRequest { _: WindowEvent? ->
-            val json = Json.encodeToString(AppSizing(stage.x, stage.y, stage.height, stage.width))
+            val json = Json.encodeToString(AppSizing(stage.x, stage.y, stage.height, stage.width, currentTheme))
             File(APP_SIZE_FILE).bufferedWriter().use { out ->
                 out.flush()
                 out.write(json)
@@ -265,11 +278,6 @@ class Main : Application() {
         layout.bottom = lastmodified
 
         val scene = Scene(layout)
-
-        /**
-         * Set up themes and stylesheet for scene
-         */
-        setUserAgentStylesheet("nord-light.css")
 
         /**
          * Set up hotkeys for scene
