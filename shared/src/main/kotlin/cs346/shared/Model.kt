@@ -307,7 +307,7 @@ class Model {
     fun getNotesByTitle(title: String): List<Note> {
         val retNotes = ArrayList<Note>()
         for ((_, note) in notes) {
-            if (note.title == title){
+            if (note.title.contains(title)){
                 retNotes.add(note)
             }
         }
