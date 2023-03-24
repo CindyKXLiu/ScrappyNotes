@@ -45,12 +45,25 @@ fun main(args: Array<String>) {
 @RestController
 @RequestMapping("/model")
 class ModelResource(val service: ModelService) {
+    /**
+     * Creates a GET mapping that retrieves the state of the Model.
+     *
+     * @return the state of the Model that was previously saved to the database
+     */
     @GetMapping
     fun getState(): State = service.getState()
 
+    /**
+     * Creates a POST mapping that saves [state] to the database
+     *
+     * @param state contains the state of the Model
+     */
     @PostMapping
     fun saveState(@RequestBody state: State) = service.saveState(state)
 
+    /**
+     * Creates a DELETE mapping that clears all entries in the database
+     */
     @DeleteMapping
     fun clear() = service.clear()
 }

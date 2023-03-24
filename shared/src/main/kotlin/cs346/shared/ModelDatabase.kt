@@ -4,7 +4,7 @@ import com.google.gson.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.lang.reflect.Type
+import jacva.lang.reflect.Type
 import java.net.ConnectException
 import java.net.URI
 import java.net.http.HttpClient
@@ -75,6 +75,15 @@ internal class ModelDatabase(){
         override val primaryKey = PrimaryKey(groupName, name = "groupName")
     }
 
+    /**
+     * Merge the states of the web service and local databases. If there are duplicate
+     * notes, take the note with the newest dateModified.
+     *
+     * @param stateWebService contains the state retrieved from the web service database
+     * @param stateLocal contains the state retrieved from the local database
+     *
+     * @return a combined state object
+     */
     private fun syncStates(stateWebService: Model.State, stateLocal: Model.State): Model.State {
         var notes = stateWebService.notes
         var groups = stateWebService.groups
@@ -98,7 +107,7 @@ internal class ModelDatabase(){
     }
 
     // Gson UInt serializer and deserializer
-    internal class UintJson : JsonSerializer<UInt>, JsonDeserializer<UInt> {
+    private class UintJson : JsonSerializer<UInt>, JsonDeserializer<UInt> {
         override fun serialize(src: UInt, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
             return JsonPrimitive(src.toLong())
         }
@@ -110,7 +119,7 @@ internal class ModelDatabase(){
     }
 
     // Gson LocalDateTime serializer and deserializer
-    internal class LocalDateTimeJson : JsonSerializer<LocalDateTime>, JsonDeserializer<LocalDateTime> {
+    private class LocalDateTimeJson : JsonSerializer<LocalDateTime>, JsonDeserializer<LocalDateTime> {
         override fun serialize(src: LocalDateTime, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
             return JsonPrimitive(src.toString());
         }
@@ -121,6 +130,11 @@ internal class ModelDatabase(){
         }
     }
 
+    /**
+     * Retrieve the state object from the web service database via HTTP
+     *
+     * @return a pair containing the state of the model from the web service and the response status code
+     */
     private fun getStateWebService(): Pair<Model.State, Int> {
         val client = HttpClient.newBuilder().build()
         val request = HttpRequest.newBuilder()
@@ -140,6 +154,11 @@ internal class ModelDatabase(){
         return Pair<Model.State, Int>(gson.fromJson(responseBody, Model.State::class.java), response.statusCode())
     }
 
+    /**
+     * Retrieve the state object from the local database
+     *
+     * @return the state of the model from the local database
+     */
     private fun getStateLocal(): Model.State {
         val notes = HashMap<UInt, Note>()
         val groups = HashMap<String, Group>()
@@ -176,11 +195,11 @@ internal class ModelDatabase(){
     }
 
     /**
-     * Retrieves the Model's state that is saved to database
+     * Retrieve the Model's state from the web service if it is accessible. Otherwise,
+     * retrieve the Model's state from the local database
      *
-     * @return the state of the Model that was previously saved to the database
-     */
-    fun getState(): Model.State {
+     * @return the state of the Model that was previously saved
+     */    fun getState(): Model.State {
         // try getting state from web service
         try {
             val response = getStateWebService()
@@ -196,6 +215,13 @@ internal class ModelDatabase(){
         return getStateLocal()
     }
 
+    /**
+     * Saves [state] to the web service database
+     *
+     * @param state contains the state of the Model
+     *
+     * @return the status code of the HTTP request
+     */
     private fun saveStateWebService(state: Model.State): Int {
         val gson = GsonBuilder().registerTypeAdapter(UInt::class.java, UintJson())
             .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeJson()).create()
@@ -215,6 +241,11 @@ internal class ModelDatabase(){
         return response.statusCode()
     }
 
+    /**
+     * Saves [state] to the local database
+     *
+     * @param state contains the state of the model
+     */
     private fun saveStateLocal(state: Model.State) {
         transaction {
             // save notes to NotesTable
@@ -241,7 +272,8 @@ internal class ModelDatabase(){
     }
 
     /**
-     * Saves [state] to database
+     * Saves [state] to both the web service and local databases if possible. Otherwise,
+     * [state] is saved only to the local database.
      *
      * @param state contains the state of the Model
      */
@@ -257,6 +289,11 @@ internal class ModelDatabase(){
         saveStateLocal(state)
     }
 
+    /**
+     * Deletes all notes and groups in the web service database state
+     *
+     * @return the status code of the HTTP request
+     */
     private fun clearWebService(): Int {
         val client = HttpClient.newBuilder().build()
         val request = HttpRequest.newBuilder()
@@ -271,6 +308,9 @@ internal class ModelDatabase(){
         return response.statusCode()
     }
 
+    /**
+     * Deletes all notes and groups in the local database state
+     */
     private fun clearLocal() {
         transaction {
             NotesTable.deleteAll()
@@ -279,7 +319,8 @@ internal class ModelDatabase(){
     }
 
     /**
-     * Clears all entries the database
+     * Clears all entries the web service and local databases if possible. Otherwise,
+     * clears all entries in the local database only.
      */
     fun clear() {
         // update both web service and local if possible
