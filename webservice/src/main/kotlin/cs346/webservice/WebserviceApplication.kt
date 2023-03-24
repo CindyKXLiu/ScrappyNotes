@@ -32,7 +32,7 @@ private object GroupsTable : Table("Groups") {
 
 fun main(args: Array<String>) {
     runApplication<WebserviceApplication>(*args)
-    print("init called")
+    print("webservice init called")
     Database.connect(DB_URL)
 
     transaction {
@@ -80,7 +80,7 @@ class ModelService {
             query = NotesTable.selectAll().orderBy(NotesTable.noteId to SortOrder.ASC) // is sorted ascending so that internal note counter used for generating id aligns with database
             query.forEach {
                 //create note obj
-                val note = Note(it[NotesTable.title], it[NotesTable.content])
+                val note = Note(it[NotesTable.title], it[NotesTable.content], it[NotesTable.noteId].toUInt())
                 note.dateCreated = it[NotesTable.dateCreated]
                 note.dateModified = it[NotesTable.dateModified]
                 if (!it[NotesTable.groupName].isNullOrBlank()) {

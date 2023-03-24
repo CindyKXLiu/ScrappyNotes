@@ -14,7 +14,7 @@ import java.time.LocalDateTime
  *
  * @constructor creates a note with the given [title] and [content]
  */
-class Note(title: String = "", content: String = "") {
+class Note(title: String = "", content: String = "", id: UInt = 0u) {
     var id: UInt = getID()
         internal set
     var dateCreated: LocalDateTime = LocalDateTime.now()
@@ -40,7 +40,7 @@ class Note(title: String = "", content: String = "") {
     var groupName: String? = null
         internal set
 
-    constructor(note: Note) : this(note.title, note.content) {
+    constructor(note: Note) : this(note.title, note.content, note.id) {
         this.id = note.id
         this.dateCreated = note.dateCreated
         this.dateModified = note.dateModified

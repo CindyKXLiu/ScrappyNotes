@@ -14,9 +14,8 @@ import java.time.LocalDateTime
  *
  * @constructor creates a note with the given [title] and [content]
  */
-class Note(title: String = "", content: String = "") {
-    var id: UInt = getID()
-        internal set
+class Note(title: String = "", content: String = "", id: UInt = 0u) {
+    var id = id
     var dateCreated: LocalDateTime = LocalDateTime.now()
         internal set
     var dateModified: LocalDateTime = LocalDateTime.now()
@@ -40,22 +39,10 @@ class Note(title: String = "", content: String = "") {
     var groupName: String? = null
         internal set
 
-    constructor(note: Note) : this(note.title, note.content) {
-        this.id = note.id
+    constructor(note: Note) : this(note.title, note.content, note.id) {
         this.dateCreated = note.dateCreated
         this.dateModified = note.dateModified
         this.groupName = note.groupName
-    }
-
-    /**
-     * Static counter for generating "unique" note ids
-     */
-    private companion object UniqueID {
-        var noteCounter = -1
-        fun getID() : UInt{
-            ++noteCounter
-            return noteCounter.toUInt()
-        }
     }
 
     /**

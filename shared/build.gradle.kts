@@ -25,6 +25,7 @@ dependencies {
     implementation(libs.exposed.time)
     implementation(libs.sl4j.api)
     implementation(libs.sl4j.simple)
+    implementation("com.google.code.gson:gson:2.10.1")
     testImplementation(libs.junit.jupiter)
 }
 
