@@ -4,6 +4,7 @@ import cs346.shared.*
 import javafx.application.Application
 import javafx.collections.FXCollections
 import javafx.geometry.Insets
+import javafx.geometry.Orientation
 import javafx.scene.Scene
 import javafx.scene.control.*
 import javafx.scene.control.Alert.AlertType
@@ -14,6 +15,7 @@ import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
 import javafx.scene.text.Text
 import javafx.scene.web.HTMLEditor
+import javafx.stage.FileChooser
 import javafx.stage.Stage
 import javafx.stage.WindowEvent
 import kotlinx.serialization.Serializable
@@ -240,6 +242,15 @@ class Main : Application() {
             saveSelectedNote()
             updateTime()
         }
+
+        // Custom insert image button for textarea toolbar
+        val textareaBar = textarea.lookup(".top-toolbar") as ToolBar
+        val imageButton = Button("Insert Image")
+        imageButton.setOnMouseClicked {
+            onImageButtonClick()
+        }
+        textareaBar.items.addAll(imageButton, Separator(Orientation.VERTICAL))
+
 
         // MAIN scene set up ////////////////////////////////////////////////////////////////////////
 
@@ -559,6 +570,53 @@ class Main : Application() {
         } else {
             lastmodified.isVisible = false
         }
+    }
+
+    /**
+     * Opens file explorer that allows user to choose an image file from user's local computer
+     * Appends image to the end of current content in textarea
+     */
+    private fun onImageButtonClick() {
+        // Open file explorer dialog
+        val fileChooser = FileChooser()
+        val imageFilter = FileChooser.ExtensionFilter("All Image Files", "*.png", "*.jpg", "*.jpeg")
+        fileChooser.title = "Select image to import"
+        fileChooser.extensionFilters.add(imageFilter)
+        val selectedFile = fileChooser.showOpenDialog(textarea.scene.window)
+
+        // If file is selected and successfully converted, add to textarea content
+        if (selectedFile != null) {
+            val html = convertFile(selectedFile)
+            if (html != "") {
+                val oldText = textarea.htmlText
+                textarea.htmlText = "$oldText<img src=\"$html\" width=\"100%\">"
+            }
+        }
+    }
+
+    /**
+     * Convert a file [file] to a string representing its data URI
+     * Returns an empty string if [file] cannot be converted
+     *
+     * @param file is the File object to be converted
+     */
+    private fun convertFile(file: File): String {
+        // check size of file
+        if (file.length() > 524288) {
+            val alert = Alert(AlertType.WARNING)
+            alert.title = "Warning"
+            alert.headerText = "Warning: File size limit"
+            alert.contentText = "\"$file\" is too large and cannot be opened.\nFiles larger than 0.5 MB are not currently supported."
+            alert.showAndWait()
+            return ""
+        }
+        // get file type
+        val type = java.nio.file.Files.probeContentType(file.toPath())
+        // get html content
+        val data = java.nio.file.Files.readAllBytes(file.toPath())
+        val base64data = Base64.getEncoder().encodeToString(data)
+        // return full data uri
+        return "data:$type;base64,$base64data"
     }
 
     private fun undo() {
