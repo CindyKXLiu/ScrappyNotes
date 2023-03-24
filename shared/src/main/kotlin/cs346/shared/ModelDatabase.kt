@@ -4,7 +4,7 @@ import com.google.gson.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.transactions.transaction
-import jacva.lang.reflect.Type
+import java.lang.reflect.Type
 import java.net.ConnectException
 import java.net.URI
 import java.net.http.HttpClient
