@@ -217,6 +217,7 @@ class Main : Application() {
                 } else {
                     NoteSortType.DEFAULT
                 }
+                searchNotes(searchbox.text)
             }
         }
 
@@ -311,9 +312,30 @@ class Main : Application() {
         val rootitem = TreeItem<Any>()
 
         if (listofnotes != null) {
+            // Display notes by current filters
+            var notes = listofnotes
+
+            if (listofnotes.isNotEmpty()) {
+                when (currentSortType) {
+                    NoteSortType.ALPHA -> {
+                        notes = Sort.sortByTitle(listofnotes, Sort.Order.ASC) as MutableList<Note>
+                    }
+                    NoteSortType.CREATED -> {
+                        notes = Sort.sortByDateCreated(listofnotes, Sort.Order.ASC) as MutableList<Note>
+                    }
+                    NoteSortType.MASCENDING -> {
+                        notes = Sort.sortByDateModified(listofnotes, Sort.Order.ASC) as MutableList<Note>
+                    }
+                    NoteSortType.MDESCENDING -> {
+                        notes = Sort.sortByDateModified(listofnotes, Sort.Order.DESC) as MutableList<Note>
+                    }
+                    else -> {}
+                }
+            }
+
             noteview.selectionModel.clearSelection()
             var treeitemofnote : TreeItem<Any>? = null
-            listofnotes.forEachIndexed { _, note ->
+            notes.forEachIndexed { _, note ->
                 val newitem = TreeItem<Any>(note)
                 rootitem.children.add(newitem)
                 if (selectedNote != null && selectedNote == note) {
@@ -414,7 +436,7 @@ class Main : Application() {
     }
 
     private fun searchNotes(search : String) {
-        var notes = mutableListOf<Note>()
+        val notes = mutableListOf<Note>()
         if (search.isNotEmpty()) {
             // handle search filtering by title or content
             when (currentFilterType) {
@@ -429,30 +451,10 @@ class Main : Application() {
                     notes.addAll(model.getNotesByContent(search))
                 }
             }
-            //updateNoteview(notes, null, null)
+            updateNoteview(notes, null, listOf<Group>())
         } else {
-            notes = model.getAllUngroupedNotes() as MutableList<Note>
-            //updateNoteview(model.getAllUngroupedNotes(), null)
+            updateNoteview()
         }
-        // handle search results sorting (MESSY AND NEEDS TO BE FIXED LATER)
-        if (notes.isNotEmpty()) {
-            when (currentSortType) {
-                NoteSortType.ALPHA -> {
-                    notes = Sort.sortByTitle(notes, Sort.Order.ASC) as MutableList<Note>
-                }
-                NoteSortType.CREATED -> {
-                    notes = Sort.sortByDateCreated(notes, Sort.Order.ASC) as MutableList<Note>
-                }
-                NoteSortType.MASCENDING -> {
-                    notes = Sort.sortByDateModified(notes, Sort.Order.ASC) as MutableList<Note>
-                }
-                NoteSortType.MDESCENDING -> {
-                    notes = Sort.sortByDateModified(notes, Sort.Order.DESC) as MutableList<Note>
-                }
-                else -> {}
-            }
-        }
-        updateNoteview(notes, null)
     }
 
     private fun renameSelectedNote() {
