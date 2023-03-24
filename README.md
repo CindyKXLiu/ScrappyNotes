@@ -30,3 +30,7 @@ version 1.0.0: released Feb 17, 2023
 version 2.0.0: released March 10, 2023
 * release-notes ([md](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-release-2.0.0.md))
 * installers ([console](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-Console-release-2.0.0.tar), [app](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-GUI-release-2.0.0.tar))
+
+
+## Other
+CSS themes are from the [atalantafx library](https://mkpaz.github.io/atlantafx)
