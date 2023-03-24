@@ -30,7 +30,7 @@ internal class ModelDatabase(){
      * Upon init ModelDatabase will connect to the database and create a NotesTable
      */
     init {
-        println("local init called")
+        // println("local init called")
         Database.connect(DB_URL)
 
         transaction {
@@ -130,7 +130,7 @@ internal class ModelDatabase(){
 
         val response = client.send(request, HttpResponse.BodyHandlers.ofString())
 
-        println("GET state status code: " + response.statusCode())
+        // println("GET state status code: " + response.statusCode())
 
         val responseBody: String = response.body()
 
@@ -210,7 +210,7 @@ internal class ModelDatabase(){
 
         val response = client.send(request, HttpResponse.BodyHandlers.ofString())
 
-        println("POST state status code: " + response.statusCode())
+        // println("POST state status code: " + response.statusCode())
 
         return response.statusCode()
     }
@@ -266,7 +266,7 @@ internal class ModelDatabase(){
 
         val response = client.send(request, HttpResponse.BodyHandlers.ofString())
 
-        println("DELETE state status code: " + response.statusCode())
+        // println("DELETE state status code: " + response.statusCode())
 
         return response.statusCode()
     }
