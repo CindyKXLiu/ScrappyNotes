@@ -1,4 +1,4 @@
-package cs346.shared
+package cs346.webservice
 
 import java.time.LocalDateTime
 
@@ -15,8 +15,7 @@ import java.time.LocalDateTime
  * @constructor creates a note with the given [title] and [content]
  */
 class Note(title: String = "", content: String = "", id: UInt = 0u) {
-    var id: UInt = getID()
-        internal set
+    var id = id
     var dateCreated: LocalDateTime = LocalDateTime.now()
         internal set
     var dateModified: LocalDateTime = LocalDateTime.now()
@@ -41,21 +40,9 @@ class Note(title: String = "", content: String = "", id: UInt = 0u) {
         internal set
 
     constructor(note: Note) : this(note.title, note.content, note.id) {
-        this.id = note.id
         this.dateCreated = note.dateCreated
         this.dateModified = note.dateModified
         this.groupName = note.groupName
-    }
-
-    /**
-     * Static counter for generating "unique" note ids
-     */
-    private companion object UniqueID {
-        var noteCounter = -1
-        fun getID() : UInt{
-            ++noteCounter
-            return noteCounter.toUInt()
-        }
     }
 
     /**
