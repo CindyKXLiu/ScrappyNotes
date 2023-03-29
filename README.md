@@ -13,7 +13,7 @@ Amanda Tang: a54tang@uwaterloo.ca
 
 Joanne Wu: j545wu1@uwaterloo.ca
 
-Reyna Lu: r55lu@uwaterloo.ca
+Reyna Lu (Rerenah): r55lu@uwaterloo.ca
 
 
 ## Quick-start
