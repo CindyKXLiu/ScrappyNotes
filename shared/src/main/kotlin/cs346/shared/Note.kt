@@ -12,10 +12,11 @@ import java.time.LocalDateTime
  * @property dateModified is the time the note was last modified
  * @property groupName is the name of the group the note belongs to (if any)
  *
- * @constructor creates a note with the given [title] and [content]
+ * @constructor creates a note with the given [title] and [content],
+ *      if [newID] is set to true the note will be assigned a new UniqueID and UniqueID counter is incremented
  */
-class Note(title: String = "", content: String = "", id: UInt = 0u) {
-    var id: UInt = getID()
+class Note(title: String = "", content: String = "", newID: Boolean = true) {
+    var id: UInt = getID(newID)
         internal set
     var dateCreated: LocalDateTime = LocalDateTime.now()
         internal set
@@ -40,7 +41,7 @@ class Note(title: String = "", content: String = "", id: UInt = 0u) {
     var groupName: String? = null
         internal set
 
-    constructor(note: Note) : this(note.title, note.content, note.id) {
+    constructor(note: Note) : this(note.title, note.content, false) {
         this.id = note.id
         this.dateCreated = note.dateCreated
         this.dateModified = note.dateModified
@@ -50,9 +51,11 @@ class Note(title: String = "", content: String = "", id: UInt = 0u) {
     /**
      * Static counter for generating "unique" note ids
      */
-    private companion object UniqueID {
+    companion object UniqueID {
         var noteCounter = -1
-        fun getID() : UInt{
+        fun getID(newID: Boolean) : UInt{
+            if (!newID) return 0u
+
             ++noteCounter
             return noteCounter.toUInt()
         }

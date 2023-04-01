@@ -24,9 +24,16 @@ class Model {
     data class State(val notes: HashMap<UInt, Note>, val groups: HashMap<String, Group>)
 
     private val database: ModelDatabase = ModelDatabase()
-    private var notes: HashMap<UInt, Note> = database.getState().notes
-    private var groups: HashMap<String, Group> = database.getState().groups
+    private var notes: HashMap<UInt, Note> = HashMap()
+    private var groups: HashMap<String, Group> = HashMap()
 
+    // Update notes and groups with the database state
+    init {
+        database.getState().let { state ->
+            notes = state.notes
+            groups = state.groups
+        }
+    }
 
 // Database Functionalities /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

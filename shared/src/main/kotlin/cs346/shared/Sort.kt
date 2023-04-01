@@ -57,4 +57,19 @@ object Sort {
             Order.DESC -> notes.sortedWith(compareByDescending { it.dateCreated })
         }
     }
+
+    /**
+     * Sorts [notes] by id in the [order] order
+     *
+     * @param notes is the list of notes to be sorted
+     * @param order is the order the notes should be sorted by
+     *
+     * @return an immutable sorted list of notes
+     */
+    fun sortByID(notes: List<Note>, order: Order): List<Note> {
+        return when (order) {
+            Order.ASC -> notes.sortedWith(compareBy { it.id })
+            Order.DESC -> notes.sortedWith(compareByDescending { it.id })
+        }
+    }
 }

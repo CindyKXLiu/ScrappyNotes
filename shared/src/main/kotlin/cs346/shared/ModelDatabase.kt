@@ -14,10 +14,8 @@ import java.time.LocalDateTime
 import java.util.*
 import kotlin.collections.HashMap
 
-
 private const val DB_URL = "jdbc:sqlite:model.db"
 private const val VARCHAR_LENGTH = 10000
-
 private const val BASE_URL = "http://localhost:8080"
 
 /**
@@ -30,7 +28,6 @@ internal class ModelDatabase(){
      * Upon init ModelDatabase will connect to the database and create a NotesTable
      */
     init {
-        // println("local init called")
         Database.connect(DB_URL)
 
         transaction {
@@ -144,8 +141,6 @@ internal class ModelDatabase(){
 
         val response = client.send(request, HttpResponse.BodyHandlers.ofString())
 
-        // println("GET state status code: " + response.statusCode())
-
         val responseBody: String = response.body()
 
         val gson = GsonBuilder().registerTypeAdapter(UInt::class.java, UintJson())
@@ -176,7 +171,7 @@ internal class ModelDatabase(){
                 .orderBy(NotesTable.noteId to SortOrder.ASC) // is sorted ascending so that internal note counter used for generating id aligns with database
             query.forEach {
                 //create note obj
-                val note = Note(it[NotesTable.title], it[NotesTable.content], it[NotesTable.noteId].toUInt())
+                val note = Note(it[NotesTable.title], it[NotesTable.content])
                 note.dateCreated = it[NotesTable.dateCreated]
                 note.dateModified = it[NotesTable.dateModified]
                 if (!it[NotesTable.groupName].isNullOrBlank()) {
@@ -199,7 +194,8 @@ internal class ModelDatabase(){
      * retrieve the Model's state from the local database
      *
      * @return the state of the Model that was previously saved
-     */    fun getState(): Model.State {
+     */
+    fun getState(): Model.State {
         // try getting state from web service
         try {
             val response = getStateWebService()
@@ -235,8 +231,6 @@ internal class ModelDatabase(){
             .build()
 
         val response = client.send(request, HttpResponse.BodyHandlers.ofString())
-
-        // println("POST state status code: " + response.statusCode())
 
         return response.statusCode()
     }
@@ -302,8 +296,6 @@ internal class ModelDatabase(){
             .build()
 
         val response = client.send(request, HttpResponse.BodyHandlers.ofString())
-
-        // println("DELETE state status code: " + response.statusCode())
 
         return response.statusCode()
     }

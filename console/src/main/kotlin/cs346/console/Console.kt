@@ -183,7 +183,8 @@ class Console {
      * Prints a nicely formatted list of notes to console with their titles, creation, and modification dates
      */
     private fun listNotes() {
-        val notes = model.getAllNotes()
+        val notes = Sort.sortByID(model.getAllNotes(), Sort.Order.ASC)
+
         // print heading
         println("NUMBER OF NOTES: ${notes.size}")
         println("TITLE".padEnd(PAD) + "ID".padEnd(PAD_SMALL) +
