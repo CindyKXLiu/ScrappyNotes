@@ -400,6 +400,12 @@ class Model {
         val groupContent = groups[currentName]!!
         groupContent.name = newName
 
+        // update all notes with new group name
+        val notesInGroup = getAllNotesInGroup(currentName)
+        for (note in notesInGroup) {
+            note.groupName = newName
+        }
+
         // Delete the group
         deleteGroup(currentName)
 
