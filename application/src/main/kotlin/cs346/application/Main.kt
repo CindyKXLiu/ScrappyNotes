@@ -479,7 +479,7 @@ class Main : Application() {
                 model.editNoteTitle(currNote.id, result.get())
                 textarea.disableProperty().set(false)
                 displayNoteContents(currNote)
-                updateNoteview(null, currNote)
+                updateNoteview(model.getAllUngroupedNotes(), currNote)
             }
         } else if (currItem != null && currItem.value is Group) {
             val currGroup = currItem.value as Group
