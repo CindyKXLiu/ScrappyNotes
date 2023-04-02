@@ -58,7 +58,7 @@ internal class ModelDatabase(){
     }
 
     private object NotesTable : Table("Notes") {
-        val noteId: Column<Int> = integer("noteId")
+        val noteId: Column<UUID> = uuid("noteId")
         val title: Column<String> = varchar("title", VARCHAR_LENGTH)
         val content: Column<String> = text("content")
         val dateCreated: Column<LocalDateTime> = datetime("dateCreated")
@@ -103,7 +103,7 @@ internal class ModelDatabase(){
         return Model.State(notes, groups)
     }
 
-    // Gson UInt serializer and deserializer
+    // Gson UUID serializer and deserializer
     private class UintJson : JsonSerializer<UInt>, JsonDeserializer<UInt> {
         override fun serialize(src: UInt, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
             return JsonPrimitive(src.toLong())
@@ -155,7 +155,7 @@ internal class ModelDatabase(){
      * @return the state of the model from the local database
      */
     private fun getStateLocal(): Model.State {
-        val notes = HashMap<UInt, Note>()
+        val notes = HashMap<UUID, Note>()
         val groups = HashMap<String, Group>()
 
         transaction {
@@ -178,7 +178,7 @@ internal class ModelDatabase(){
                     note.groupName = it[NotesTable.groupName]
 
                     // add the note to the group
-                    groups[it[NotesTable.groupName]]!!.notes.add(it[NotesTable.noteId].toUInt())
+                    groups[it[NotesTable.groupName]]!!.notes.add(it[NotesTable.noteId])
                 }
 
                 //store note obj in notes
@@ -245,7 +245,7 @@ internal class ModelDatabase(){
             // save notes to NotesTable
             for ((id, note) in state.notes) {
                 NotesTable.insert {
-                    it[noteId] = id.toInt()
+                    it[noteId] = id
                     it[title] = note.title
                     it[content] = note.content
                     it[dateCreated] = note.dateCreated

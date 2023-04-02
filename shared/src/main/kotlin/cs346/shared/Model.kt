@@ -21,10 +21,10 @@ class Model {
      * @property notes is a hashmap containing all existing notes in the app, it is keyed by its id
      * @property groups is a hashmap contains all existing groups in the app, it is keyed by its name
      */
-    data class State(val notes: HashMap<UInt, Note>, val groups: HashMap<String, Group>)
+    data class State(val notes: HashMap<UUID, Note>, val groups: HashMap<String, Group>)
 
     private val database: ModelDatabase = ModelDatabase()
-    private var notes: HashMap<UInt, Note> = HashMap()
+    private var notes: HashMap<UUID, Note> = HashMap()
     private var groups: HashMap<String, Group> = HashMap()
 
     // Update notes and groups with the database state
@@ -65,7 +65,7 @@ class Model {
          * @param notes is the current state of the Model's notes property
          * @param groups is the current state of the Model's groups property
          */
-        fun saveToUndo(notes: HashMap<UInt, Note>, groups: HashMap<String, Group>) {
+        fun saveToUndo(notes: HashMap<UUID, Note>, groups: HashMap<String, Group>) {
             undoStates.push(State(notes, groups))
         }
 
@@ -75,7 +75,7 @@ class Model {
          * @param notes is the current state of the Model's notes property
          * @param groups is the current state of the Model's groups property
          */
-        fun saveToRedo(notes: HashMap<UInt, Note>, groups: HashMap<String, Group>) {
+        fun saveToRedo(notes: HashMap<UUID, Note>, groups: HashMap<String, Group>) {
             redoStates.push(State(notes, groups))
         }
 
@@ -120,8 +120,8 @@ class Model {
      *
      * @return a deep copy of the notes property of Model
      */
-    private fun notesCopy(): HashMap<UInt, Note> {
-        val notesCopy = HashMap<UInt, Note>()
+    private fun notesCopy(): HashMap<UUID, Note> {
+        val notesCopy = HashMap<UUID, Note>()
         for ((id, note) in notes) {
             notesCopy[id] = Note(note)
         }
@@ -236,7 +236,7 @@ class Model {
      *
      * @exception NonExistentNoteException is thrown when no such note with id [id] exits
      */
-    fun deleteNote(id: UInt) {
+    fun deleteNote(id: UUID) {
         save()
         // Check that the note given exists
         if (!notes.containsKey(id)) throw NonExistentNoteException()
@@ -258,7 +258,7 @@ class Model {
      *
      * @exception NonExistentNoteException is thrown when no such note with id [id] exits
      */
-    fun editNoteTitle(id: UInt, title:String = "") {
+    fun editNoteTitle(id: UUID, title:String = "") {
         save()
         if (!notes.containsKey(id)) throw NonExistentNoteException()
         notes[id]!!.title = title
@@ -272,7 +272,7 @@ class Model {
      *
      * @exception NonExistentNoteException is thrown when no such note with id [id] exits
      */
-    fun editNoteContent(id: UInt, content:String = "") {
+    fun editNoteContent(id: UUID, content:String = "") {
         save()
         if (!notes.containsKey(id)) throw NonExistentNoteException()
         notes[id]!!.content = content
@@ -299,7 +299,7 @@ class Model {
      *
      * @return the note that was requested
      */
-    fun getNoteByID(id: UInt) : Note {
+    fun getNoteByID(id: UUID) : Note {
         if (!notes.containsKey(id)) throw NonExistentNoteException()
         return notes[id]!!
     }
@@ -444,7 +444,7 @@ class Model {
      *
      * @exception NonExistentGroupException is thrown if the group given does not exist
      */
-    fun addNoteToGroup(groupName: String, noteID: UInt) {
+    fun addNoteToGroup(groupName: String, noteID: UUID) {
         save()
         if (!groups.containsKey(groupName)) throw NonExistentGroupException()
         groups[groupName]!!.notes.add(noteID)
@@ -459,7 +459,7 @@ class Model {
      *
      * @exception NonExistentGroupException is thrown if the group given does not exist
      */
-    fun removeNoteFromGroup(groupName: String, noteID: UInt) {
+    fun removeNoteFromGroup(groupName: String, noteID: UUID) {
         save()
         if (!groups.containsKey(groupName)) throw NonExistentGroupException()
         groups[groupName]!!.notes.remove(noteID)
@@ -474,7 +474,7 @@ class Model {
      *
      * @exception NonExistentGroupException is thrown if the group given does not exist
      */
-    fun moveNoteToGroup(newGroupName: String, noteID: UInt) {
+    fun moveNoteToGroup(newGroupName: String, noteID: UUID) {
         save()
         val currentNote = getNoteByID(noteID)
 

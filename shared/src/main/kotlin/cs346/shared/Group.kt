@@ -1,5 +1,7 @@
 package cs346.shared
 
+import java.util.*
+
 /**
  * This class is for containing notes within the same group
  *
@@ -9,7 +11,7 @@ package cs346.shared
  * @constructor creates an empty group
  */
 class Group(var name: String) {
-    internal val notes: MutableSet<UInt> = mutableSetOf()
+    internal val notes: MutableSet<UUID> = mutableSetOf()
 
     constructor(group: Group): this(group.name) {
         this.notes.addAll(group.notes)
@@ -20,7 +22,7 @@ class Group(var name: String) {
      *
      * @return immutable list of note ids belonging to the group
      */
-    fun getNotes(): Set<UInt> {
+    fun getNotes(): Set<UUID> {
         return notes.toSet()
     }
 
