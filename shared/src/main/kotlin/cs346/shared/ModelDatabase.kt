@@ -59,7 +59,7 @@ internal class ModelDatabase(){
                 val stateLocal: Model.State = getStateLocal()
 
                 // sync web service and local states
-                var newState: Model.State = syncStates(response.first, stateLocal)
+                val newState: Model.State = syncStates(response.first, stateLocal)
 
                 // clear local and web service dbs
                 clear()
@@ -80,9 +80,9 @@ internal class ModelDatabase(){
      *
      * @return a combined state object
      */
-    private fun syncStates(stateWebService: Model.State, stateLocal: Model.State): Model.State {
-        var notes = stateWebService.notes
-        var groups = stateWebService.groups
+    fun syncStates(stateWebService: Model.State, stateLocal: Model.State): Model.State {
+        val notes = stateWebService.notes
+        val groups = stateWebService.groups
 
         for ((id, note) in stateLocal.notes) {
             if (!notes.containsKey(id) || (notes.containsKey(id) && note.dateModified > notes[id]?.dateModified)) {
@@ -117,7 +117,7 @@ internal class ModelDatabase(){
     // Gson LocalDateTime serializer and deserializer
     private class LocalDateTimeAdapter : JsonSerializer<LocalDateTime>, JsonDeserializer<LocalDateTime> {
         override fun serialize(src: LocalDateTime, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
-            return JsonPrimitive(src.toString());
+            return JsonPrimitive(src.toString())
         }
 
         @Throws(JsonParseException::class)
@@ -131,7 +131,7 @@ internal class ModelDatabase(){
      *
      * @return a pair containing the state of the model from the web service and the response status code
      */
-    private fun getStateWebService(): Pair<Model.State, Int> {
+    fun getStateWebService(): Pair<Model.State, Int> {
         val client = HttpClient.newBuilder().build()
         val request = HttpRequest.newBuilder()
             .uri(URI.create("$BASE_URL/model"))
@@ -170,7 +170,7 @@ internal class ModelDatabase(){
                 .orderBy(NotesTable.noteId to SortOrder.ASC) // is sorted ascending so that internal note counter used for generating id aligns with database
             query.forEach {
                 //create note obj
-                val note = Note(it[NotesTable.title], it[NotesTable.content])
+                val note = Note(it[NotesTable.title], it[NotesTable.content], false)
                 note.dateCreated = it[NotesTable.dateCreated]
                 note.dateModified = it[NotesTable.dateModified]
                 if (!it[NotesTable.groupName].isNullOrBlank()) {
