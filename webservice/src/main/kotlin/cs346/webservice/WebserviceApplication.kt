@@ -8,6 +8,8 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDateTime
+import java.util.*
+import kotlin.collections.HashMap
 
 @SpringBootApplication
 class WebserviceApplication
@@ -16,7 +18,7 @@ private const val DB_URL = "jdbc:sqlite:model.db"
 private const val VARCHAR_LENGTH = 10000
 
 private object NotesTable : Table("Notes") {
-    val noteId: Column<Int> = integer("noteId")
+    val noteId: Column<UUID> = uuid("noteId")
     val title: Column<String> = varchar("title", VARCHAR_LENGTH)
     val content: Column<String> = text("content")
     val dateCreated: Column<LocalDateTime> = datetime("dateCreated")
@@ -68,7 +70,7 @@ class ModelResource(val service: ModelService) {
     fun clear() = service.clear()
 }
 
-data class State(val notes: HashMap<UInt, Note>, val groups: HashMap<String, Group>)
+data class State(val notes: HashMap<UUID, Note>, val groups: HashMap<String, Group>)
 
 @Service
 class ModelService {
@@ -78,7 +80,7 @@ class ModelService {
      * @return the state of the Model that was previously saved to the database
      */
     fun getState(): State {
-        val notes = HashMap<UInt, Note>()
+        val notes = HashMap<UUID, Note>()
         val groups = HashMap<String, Group>()
 
         transaction {
@@ -93,14 +95,15 @@ class ModelService {
             query = NotesTable.selectAll().orderBy(NotesTable.noteId to SortOrder.ASC) // is sorted ascending so that internal note counter used for generating id aligns with database
             query.forEach {
                 //create note obj
-                val note = Note(it[NotesTable.title], it[NotesTable.content], it[NotesTable.noteId].toUInt())
+                val note = Note(it[NotesTable.title], it[NotesTable.content])
                 note.dateCreated = it[NotesTable.dateCreated]
                 note.dateModified = it[NotesTable.dateModified]
+                note.id = it[NotesTable.noteId]
                 if (!it[NotesTable.groupName].isNullOrBlank()) {
                     note.groupName = it[NotesTable.groupName]
 
                     // add the note to the group
-                    groups[it[NotesTable.groupName]]!!.notes.add(it[NotesTable.noteId].toUInt())
+                    groups[it[NotesTable.groupName]]!!.notes.add(it[NotesTable.noteId])
                 }
 
                 //store note obj in notes
@@ -121,7 +124,7 @@ class ModelService {
             // save notes to NotesTable
             for ((id, note) in state.notes) {
                 NotesTable.insert {
-                    it[noteId] = id.toInt()
+                    it[noteId] = id
                     it[title] = note.title
                     it[content] = note.content
                     it[dateCreated] = note.dateCreated
