@@ -170,7 +170,8 @@ internal class ModelDatabase(){
                 .orderBy(NotesTable.noteId to SortOrder.ASC) // is sorted ascending so that internal note counter used for generating id aligns with database
             query.forEach {
                 //create note obj
-                val note = Note(it[NotesTable.title], it[NotesTable.content], false)
+                val note = Note(it[NotesTable.title], it[NotesTable.content])
+                note.id = it[NotesTable.noteId]
                 note.dateCreated = it[NotesTable.dateCreated]
                 note.dateModified = it[NotesTable.dateModified]
                 if (!it[NotesTable.groupName].isNullOrBlank()) {
