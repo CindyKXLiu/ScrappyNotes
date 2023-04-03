@@ -12,7 +12,6 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.LocalDateTime
 import java.util.*
-import kotlin.collections.HashMap
 
 private const val DB_URL = "jdbc:sqlite:model.db"
 private const val VARCHAR_LENGTH = 10000
@@ -24,6 +23,21 @@ private const val BASE_URL = "http://localhost:8080"
  * @constructor creates a database at jdbc:sqlite:notes.db containing an empty state table
  */
 internal class ModelDatabase(){
+    private object NotesTable : Table("Notes") {
+        val noteId: Column<UUID> = uuid("noteId")
+        val title: Column<String> = varchar("title", VARCHAR_LENGTH)
+        val content: Column<String> = text("content")
+        val dateCreated: Column<LocalDateTime> = datetime("dateCreated")
+        val dateModified: Column<LocalDateTime> = datetime("dateModified")
+        val groupName: Column<String?> = varchar("groupName", VARCHAR_LENGTH).nullable()
+        override val primaryKey = PrimaryKey(noteId, name = "noteId")
+    }
+
+    private object GroupsTable : Table("Groups") {
+        val groupName: Column<String> = varchar("groupName", VARCHAR_LENGTH)
+        override val primaryKey = PrimaryKey(groupName, name = "groupName")
+    }
+
     /**
      * Upon init ModelDatabase will connect to the database and create a NotesTable
      */
@@ -57,21 +71,6 @@ internal class ModelDatabase(){
         }
     }
 
-    private object NotesTable : Table("Notes") {
-        val noteId: Column<Int> = integer("noteId")
-        val title: Column<String> = varchar("title", VARCHAR_LENGTH)
-        val content: Column<String> = text("content")
-        val dateCreated: Column<LocalDateTime> = datetime("dateCreated")
-        val dateModified: Column<LocalDateTime> = datetime("dateModified")
-        val groupName: Column<String?> = varchar("groupName", VARCHAR_LENGTH).nullable()
-        override val primaryKey = PrimaryKey(noteId, name = "noteId")
-    }
-
-    private object GroupsTable : Table("Groups") {
-        val groupName: Column<String> = varchar("groupName", VARCHAR_LENGTH)
-        override val primaryKey = PrimaryKey(groupName, name = "groupName")
-    }
-
     /**
      * Merge the states of the web service and local databases. If there are duplicate
      * notes, take the note with the newest dateModified.
@@ -103,20 +102,20 @@ internal class ModelDatabase(){
         return Model.State(notes, groups)
     }
 
-    // Gson UInt serializer and deserializer
-    private class UintJson : JsonSerializer<UInt>, JsonDeserializer<UInt> {
-        override fun serialize(src: UInt, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
-            return JsonPrimitive(src.toLong())
+    // Gson UUID serializer and deserializer
+    private class UUIDAdapter : JsonSerializer<UUID>, JsonDeserializer<UUID> {
+        override fun serialize(src: UUID, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement? {
+            return JsonPrimitive(src.toString())
         }
 
         @Throws(JsonParseException::class)
-        override fun deserialize(json: JsonElement, type: Type, context: JsonDeserializationContext): UInt {
-            return json.asLong.toUInt()
+        override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?): UUID? {
+            return UUID.fromString(json.asString)
         }
     }
 
     // Gson LocalDateTime serializer and deserializer
-    private class LocalDateTimeJson : JsonSerializer<LocalDateTime>, JsonDeserializer<LocalDateTime> {
+    private class LocalDateTimeAdapter : JsonSerializer<LocalDateTime>, JsonDeserializer<LocalDateTime> {
         override fun serialize(src: LocalDateTime, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
             return JsonPrimitive(src.toString());
         }
@@ -143,8 +142,8 @@ internal class ModelDatabase(){
 
         val responseBody: String = response.body()
 
-        val gson = GsonBuilder().registerTypeAdapter(UInt::class.java, UintJson())
-            .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeJson()).create()
+        val gson = GsonBuilder().registerTypeAdapter(UUID::class.java, UUIDAdapter())
+            .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeAdapter()).create()
 
         return Pair<Model.State, Int>(gson.fromJson(responseBody, Model.State::class.java), response.statusCode())
     }
@@ -155,7 +154,7 @@ internal class ModelDatabase(){
      * @return the state of the model from the local database
      */
     private fun getStateLocal(): Model.State {
-        val notes = HashMap<UInt, Note>()
+        val notes = HashMap<UUID, Note>()
         val groups = HashMap<String, Group>()
 
         transaction {
@@ -178,7 +177,7 @@ internal class ModelDatabase(){
                     note.groupName = it[NotesTable.groupName]
 
                     // add the note to the group
-                    groups[it[NotesTable.groupName]]!!.notes.add(it[NotesTable.noteId].toUInt())
+                    groups[it[NotesTable.groupName]]!!.notes.add(it[NotesTable.noteId])
                 }
 
                 //store note obj in notes
@@ -219,8 +218,9 @@ internal class ModelDatabase(){
      * @return the status code of the HTTP request
      */
     private fun saveStateWebService(state: Model.State): Int {
-        val gson = GsonBuilder().registerTypeAdapter(UInt::class.java, UintJson())
-            .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeJson()).create()
+        val gson = GsonBuilder().registerTypeAdapter(UUID::class.java, UUIDAdapter())
+            .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeAdapter()).create()
+
         val stateJSON = gson.toJson(state, Model.State::class.java)
 
         val client = HttpClient.newBuilder().build()
@@ -245,7 +245,7 @@ internal class ModelDatabase(){
             // save notes to NotesTable
             for ((id, note) in state.notes) {
                 NotesTable.insert {
-                    it[noteId] = id.toInt()
+                    it[noteId] = id
                     it[title] = note.title
                     it[content] = note.content
                     it[dateCreated] = note.dateCreated

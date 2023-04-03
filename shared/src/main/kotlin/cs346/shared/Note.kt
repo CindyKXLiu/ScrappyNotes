@@ -1,6 +1,7 @@
 package cs346.shared
 
 import java.time.LocalDateTime
+import java.util.*
 
 /**
  * This is the Note class, it will contain the data of a note.
@@ -15,8 +16,8 @@ import java.time.LocalDateTime
  * @constructor creates a note with the given [title] and [content],
  *      if [newID] is set to true the note will be assigned a new UniqueID and UniqueID counter is incremented
  */
-class Note(title: String = "", content: String = "", newID: Boolean = true) {
-    var id: UInt = getID(newID)
+class Note(title: String = "", content: String = "") {
+    var id: UUID = UUID.randomUUID()
         internal set
     var dateCreated: LocalDateTime = LocalDateTime.now()
         internal set
@@ -41,24 +42,11 @@ class Note(title: String = "", content: String = "", newID: Boolean = true) {
     var groupName: String? = null
         internal set
 
-    constructor(note: Note) : this(note.title, note.content, false) {
+    constructor(note: Note) : this(note.title, note.content) {
         this.id = note.id
         this.dateCreated = note.dateCreated
         this.dateModified = note.dateModified
         this.groupName = note.groupName
-    }
-
-    /**
-     * Static counter for generating "unique" note ids
-     */
-    companion object UniqueID {
-        var noteCounter = -1
-        fun getID(newID: Boolean) : UInt{
-            if (!newID) return 0u
-
-            ++noteCounter
-            return noteCounter.toUInt()
-        }
     }
 
     /**
