@@ -3,6 +3,8 @@ package cs346.shared
 import java.time.LocalDateTime
 import java.util.*
 
+private const val PRIME = 31
+
 /**
  * This is the Note class, it will contain the data of a note.
  *
@@ -54,6 +56,21 @@ class Note(title: String = "", content: String = "") {
      */
     override fun toString(): String {
         return this.title
+    }
+
+    /**
+     * Generates the hash code of the note object
+     *
+     * @return the hashcode of the note
+     */
+    override fun hashCode(): Int {
+        var hash = id.hashCode()
+        hash = PRIME * hash + dateCreated.hashCode()
+        hash = PRIME * hash + dateModified.hashCode()
+        hash = PRIME * hash + title.hashCode()
+        hash = PRIME * hash + content.hashCode()
+        hash = PRIME * hash + groupName.hashCode()
+        return hash
     }
 }
 
