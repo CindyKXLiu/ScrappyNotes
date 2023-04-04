@@ -33,12 +33,6 @@ class ModelResource(val service: ModelService) {
      */
     @PostMapping
     fun saveState(@RequestBody state: State) = service.saveState(state)
-
-    /**
-     * Creates a DELETE mapping that clears all entries in the database
-     */
-    /**@DeleteMapping
-    fun clear() = service.clear()**/
 }
 
 data class State(val notes: HashMap<UUID, Note>, val groups: HashMap<String, Group>)
@@ -62,11 +56,4 @@ class ModelService {
     fun saveState(state: State) {
         ModelDatabase.saveState(state)
     }
-
-    /**
-     * Clears all entries the database
-     */
-    /**fun clear() {
-        ModelDatabase.clear()
-    }**/
 }

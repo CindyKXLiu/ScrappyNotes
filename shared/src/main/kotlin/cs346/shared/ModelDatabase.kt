@@ -231,7 +231,7 @@ internal class ModelDatabase{
      * Otherwise, retrieve the Model's state from the local database.
      * If web service state is accessible, sync it with the local state and return the sync state.
      *
-     * @return the state of the Model that was previously saved
+     * @return the synced state of the Model
      */
     fun getState(): Model.State {
         var webserviceState:Model.State? = null
@@ -343,49 +343,5 @@ internal class ModelDatabase{
         // update local regardless
         saveStateLocal(state)
     }
-
-/**
-    /**
-     * Deletes all notes and groups in the web service database state
-     *
-     * @return the status code of the HTTP request
-     */
-    private fun clearWebService(): Int {
-        val client = HttpClient.newBuilder().build()
-        val request = HttpRequest.newBuilder()
-            .uri(URI.create("$BASE_URL/model"))
-            .DELETE()
-            .build()
-
-        val response = client.send(request, HttpResponse.BodyHandlers.ofString())
-
-        return response.statusCode()
-    }
-
-    /**
-     * Deletes all notes and groups in the local database state
-     */
-    private fun clearLocal() {
-        transaction {
-            NotesTable.deleteAll()
-            GroupsTable.deleteAll()
-        }
-    }
-
-    /**
-     * Clears all entries the web service and local databases if possible. Otherwise,
-     * clears all entries in the local database only.
-     */
-    fun clear() {
-        // update both web service and local if possible
-        try {
-            clearWebService()
-        } catch (e: ConnectException) {
-            // continue without communicating with web service
-        }
-
-        // update local regardless
-        clearLocal()
-    }**/
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 }
