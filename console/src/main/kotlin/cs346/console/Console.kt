@@ -21,6 +21,8 @@ private const val HELP_MSG = "OPTIONS:\n" +
         "mv [noteID] [newGroup]     Moves note with id [noteID] to [newGroup]\n" +
         "undo                       Undo previous action\n" +
         "redo                       Redo previous action\n" +
+        "save                       Save state to databases (this action can not be undone/redone)\n" +
+        "update                     Update the state (this action can not be undone/redone)\n" +
         "h, help                    Print this message\n" +
         "quit                       Exit\n"
 private const val INVALID_COMMAND_MSG = "Invalid command. Type \"help\" for all options.\n"
@@ -48,11 +50,7 @@ class Console {
      */
     init {
         // populate alias_id
-        val notes = model.getAllNotes()
-        for (note in notes) {
-            aliasIds[nextID] = note.id
-            ++nextID
-        }
+        resetAliasId()
 
         // start prompting for user input
         while (true) {
@@ -181,6 +179,22 @@ class Console {
                 }
             }
 
+            "save" -> {
+                if (args.size == 1) {
+                    save()
+                } else {
+                    print(INVALID_COMMAND_MSG)
+                }
+            }
+
+            "update" -> {
+                if (args.size == 1) {
+                    update()
+                } else {
+                    print(INVALID_COMMAND_MSG)
+                }
+            }
+
             // Print help message
             "h", "help" -> print(HELP_MSG)
 
@@ -191,6 +205,21 @@ class Console {
         }
     }
 
+    /**
+     * Clears alias id and remap each note in model with an alias id
+     */
+    private fun resetAliasId() {
+        // reset alias id and counter
+        nextID = 0
+        aliasIds.clear()
+
+        // populate alias id and counter
+        val notes = model.getAllNotes()
+        for (note in notes) {
+            aliasIds[nextID] = note.id
+            ++nextID
+        }
+    }
     /**
      * Returns the UUID of the note with alias ID [aliasId],
      *      if no such note exist, print error message and null is returned
@@ -471,6 +500,20 @@ class Console {
         }
     }
 
+    /**
+     * Save the current model state to databases
+     */
+    private fun save() {
+        model.saveToDatabase()
+    }
+
+    /**
+     * Updates the model state with the synced state
+     */
+    private fun update() {
+        model.updateDatabase()
+        resetAliasId()
+    }
     /**
      * Saves the data to database and closes console app
      */

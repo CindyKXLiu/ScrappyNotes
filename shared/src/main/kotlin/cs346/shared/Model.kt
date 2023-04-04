@@ -1,6 +1,5 @@
 package cs346.shared
 
-import java.net.ConnectException
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.collections.ArrayList
@@ -42,25 +41,16 @@ class Model {
      * Saves the current state of the Model to the database
      */
     fun saveToDatabase() {
-        database.clear()
         database.saveState(State(notes, groups))
     }
 
     /**
-     * Saves the current state of the Model to the database
+     * Syncs the local database with the webservice database and updates the Model state with the synced state
      */
     fun updateDatabase() {
-        try {
-            val response = database.getStateWebService()
-            if (response.second != 200) {
-                return
-            }
-            database.syncStates(response.first, State(notes, groups)).let { state ->
-                notes = state.notes
-                groups = state.groups
-            }
-        } catch (e: ConnectException) {
-            // continue without communicating with web service
+        database.syncAndUpdate().let { state ->
+            notes = state.notes
+            groups = state.groups
         }
     }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

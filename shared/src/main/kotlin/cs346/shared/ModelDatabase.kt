@@ -2,6 +2,7 @@ package cs346.shared
 
 import com.google.gson.*
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.lang.reflect.Type
@@ -12,6 +13,7 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.LocalDateTime
 import java.util.*
+import kotlin.collections.HashMap
 
 private const val DB_URL = "jdbc:sqlite:model.db"
 private const val VARCHAR_LENGTH = 10000
@@ -22,22 +24,7 @@ private const val BASE_URL = "http://localhost:8080"
  *
  * @constructor creates a database at jdbc:sqlite:notes.db containing an empty state table
  */
-internal class ModelDatabase(){
-    private object NotesTable : Table("Notes") {
-        val noteId: Column<UUID> = uuid("noteId")
-        val title: Column<String> = varchar("title", VARCHAR_LENGTH)
-        val content: Column<String> = text("content")
-        val dateCreated: Column<LocalDateTime> = datetime("dateCreated")
-        val dateModified: Column<LocalDateTime> = datetime("dateModified")
-        val groupName: Column<String?> = varchar("groupName", VARCHAR_LENGTH).nullable()
-        override val primaryKey = PrimaryKey(noteId, name = "noteId")
-    }
-
-    private object GroupsTable : Table("Groups") {
-        val groupName: Column<String> = varchar("groupName", VARCHAR_LENGTH)
-        override val primaryKey = PrimaryKey(groupName, name = "groupName")
-    }
-
+internal class ModelDatabase{
     /**
      * Upon init ModelDatabase will connect to the database and create a NotesTable
      */
@@ -50,58 +37,32 @@ internal class ModelDatabase(){
             SchemaUtils.create(GroupsTable)
         }
 
-        try {
-            // attempt to connect and retrieve web service state
-            val response = getStateWebService()
-
-            if (response.second == 200) {
-                // if there is a local database instance, get local state
-                val stateLocal: Model.State = getStateLocal()
-
-                // sync web service and local states
-                val newState: Model.State = syncStates(response.first, stateLocal)
-
-                // clear local and web service dbs
-                clear()
-                // update local and web service dbs
-                saveState(newState)
-            }
-        } catch (e: ConnectException) {
-            // continue without communicating with web service
-        }
+        // sync local db with webservice db
+        syncAndUpdate()
     }
 
-    /**
-     * Merge the states of the web service and local databases. If there are duplicate
-     * notes, take the note with the newest dateModified.
-     *
-     * @param stateWebService contains the state retrieved from the web service database
-     * @param stateLocal contains the state retrieved from the local database
-     *
-     * @return a combined state object
-     */
-    fun syncStates(stateWebService: Model.State, stateLocal: Model.State): Model.State {
-        val notes = stateWebService.notes
-        val groups = stateWebService.groups
-
-        for ((id, note) in stateLocal.notes) {
-            if (!notes.containsKey(id) || (notes.containsKey(id) && note.dateModified > notes[id]?.dateModified)) {
-                // replace the note with the more recently updated one
-                // or add a note that is not in the list yet
-                notes[id] = note
-            }
-        }
-
-        for ((id, group) in stateLocal.groups) {
-            if (!groups.containsKey(id)) {
-                // add group if it does not exist
-                groups[id] = group
-            }
-        }
-
-        return Model.State(notes, groups)
+// Table Structures /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    private object NotesTable : Table("Notes") {
+        val noteId: Column<UUID> = uuid("noteId")
+        val noteHash: Column<Int> = integer("noteHash")
+        val title: Column<String> = varchar("title", VARCHAR_LENGTH)
+        val content: Column<String> = text("content")
+        val dateCreated: Column<LocalDateTime> = datetime("dateCreated")
+        val dateModified: Column<LocalDateTime> = datetime("dateModified")
+        val groupName: Column<String?> = varchar("groupName", VARCHAR_LENGTH).nullable()
+        override val primaryKey = PrimaryKey(noteId, name = "noteId")
     }
 
+    private object GroupsTable : Table("Groups") {
+        val groupName: Column<String> = varchar("groupName", VARCHAR_LENGTH)
+        override val primaryKey = PrimaryKey(groupName, name = "groupName")
+    }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+// Gson Serializers and Deserializers /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Gson UUID serializer and deserializer
     private class UUIDAdapter : JsonSerializer<UUID>, JsonDeserializer<UUID> {
         override fun serialize(src: UUID, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement? {
@@ -125,13 +86,90 @@ internal class ModelDatabase(){
             return LocalDateTime.parse(json.asString)
         }
     }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+// Helper functions /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /**
+     * Returns a hashmap of hashes in NotesTable
+     *
+     * @return a hashmap where the key is the uuid of the note and the value is the hash of the note
+     */
+    private fun getNotesTableHash(): HashMap<UUID, Int> {
+        val result = HashMap<UUID, Int>()
+
+        transaction {
+            // create notes and put them in their corresponding groups (if they belong to a group)
+            val query = NotesTable.selectAll()
+            query.forEach {
+                result[it[NotesTable.noteId]] = it[NotesTable.noteHash]
+            }
+        }
+
+        return result
+    }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+// Database functions /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /**
+     * Merge the states [state1] and [state2].
+     * If there are duplicate notes, take the note with the newest dateModified.
+     *
+     * @param state1 contains some state
+     * @param state2 contains some state
+     *
+     * @return a combined state object
+     */
+    private fun syncStates(state1: Model.State, state2: Model.State): Model.State {
+        val notes = state1.notes
+        val groups = state1.groups
+
+        for ((id, note) in state2.notes) {
+            if (!notes.containsKey(id)) { // note is in local db but not in webservice db
+                notes[id] = note
+            } else if (notes[id].hashCode() != note.hashCode() && note.dateModified > notes[id]!!.dateModified) { // note in local db is newer than note in webservice db
+                notes[id] = note
+            }
+        }
+
+        for ((id, group) in state2.groups) {
+            if (!groups.containsKey(id)) {
+                // add group if it does not exist
+                groups[id] = group
+            }
+        }
+
+        return Model.State(notes, groups)
+    }
+
+    /**
+     * Will sync the webservice database and the local database,
+     * and will update the webservice database and the local database with the synced state.
+     *
+     * @ return the synced state
+     */
+    fun syncAndUpdate(): Model.State {
+        try {
+            val response = getStateWebService()
+            if (response.second != 200) {
+                throw ConnectException()
+            }
+            val syncedState = syncStates(response.first, getStateLocal())
+            saveState(syncedState)
+        } catch (e: ConnectException) {}
+
+        // webservice can not be accessed, no sync and update were performed, returns the local state
+        return getStateLocal()
+    }
     /**
      * Retrieve the state object from the web service database via HTTP
      *
      * @return a pair containing the state of the model from the web service and the response status code
      */
-    fun getStateWebService(): Pair<Model.State, Int> {
+    private fun getStateWebService(): Pair<Model.State, Int> {
         val client = HttpClient.newBuilder().build()
         val request = HttpRequest.newBuilder()
             .uri(URI.create("$BASE_URL/model"))
@@ -167,7 +205,6 @@ internal class ModelDatabase(){
 
             // create notes and put them in their corresponding groups (if they belong to a group)
             query = NotesTable.selectAll()
-                .orderBy(NotesTable.noteId to SortOrder.ASC) // is sorted ascending so that internal note counter used for generating id aligns with database
             query.forEach {
                 //create note obj
                 val note = Note(it[NotesTable.title], it[NotesTable.content])
@@ -190,24 +227,30 @@ internal class ModelDatabase(){
     }
 
     /**
-     * Retrieve the Model's state from the web service if it is accessible. Otherwise,
-     * retrieve the Model's state from the local database
+     * Retrieve the Model's state from the web service if it is accessible.
+     * Otherwise, retrieve the Model's state from the local database.
+     * If web service state is accessible, sync it with the local state and return the sync state.
      *
      * @return the state of the Model that was previously saved
      */
     fun getState(): Model.State {
+        var webserviceState:Model.State? = null
+
         // try getting state from web service
         try {
             val response = getStateWebService()
 
             if (response.second == 200) {
-                return response.first
+                webserviceState = response.first
             }
-        } catch (e: ConnectException) {
-            // continue without communicating with web service
+        } catch (e: ConnectException) {}
+
+        // if a webservice state is accessible sync with local and return that
+        if (webserviceState != null) {
+            return syncStates(webserviceState, getStateLocal())
         }
 
-        // get from local database instance otherwise
+        // else get the local state
         return getStateLocal()
     }
 
@@ -244,20 +287,39 @@ internal class ModelDatabase(){
     private fun saveStateLocal(state: Model.State) {
         transaction {
             // save notes to NotesTable
+            val notesTableHash = getNotesTableHash()
+
             for ((id, note) in state.notes) {
-                NotesTable.insert {
-                    it[noteId] = id
-                    it[title] = note.title
-                    it[content] = note.content
-                    it[dateCreated] = note.dateCreated
-                    it[dateModified] = note.dateModified
-                    if (!note.groupName.isNullOrBlank()) {
+                if ( !notesTableHash.containsKey(id) ) { // This note was newly created
+                    NotesTable.insert {
+                        it[noteId] = id
+                        it[title] = note.title
+                        it[content] = note.content
+                        it[dateCreated] = note.dateCreated
+                        it[dateModified] = note.dateModified
+                        it[noteHash] = note.hashCode()
+                        it[groupName] = note.groupName
+                    }
+                } else if ( note.hashCode() != notesTableHash[id] ) { // this note was changed thus it need to be updated
+                    NotesTable.update({ NotesTable.noteId eq id}) {
+                        it[title] = note.title
+                        it[content] = note.content
+                        it[dateCreated] = note.dateCreated
+                        it[dateModified] = note.dateModified
+                        it[noteHash] = note.hashCode()
                         it[groupName] = note.groupName
                     }
                 }
+
+                notesTableHash.remove(id)
+            }
+            // delete the entries that are still in notesTableHash, since they are not in the local state, these notes were deleted
+            for ((id, _) in notesTableHash) {
+                NotesTable.deleteWhere{ NotesTable.noteId eq id }
             }
 
             // save groups to GroupsTable
+            GroupsTable.deleteAll()
             for ((name, _) in state.groups) {
                 GroupsTable.insert {
                     it[groupName] = name
@@ -276,14 +338,13 @@ internal class ModelDatabase(){
         // update both web service and local if possible
         try {
             saveStateWebService(state)
-        } catch (e: ConnectException) {
-            // continue without communicating with web service
-        }
+        } catch (e: ConnectException) {}
 
         // update local regardless
         saveStateLocal(state)
     }
 
+/**
     /**
      * Deletes all notes and groups in the web service database state
      *
@@ -325,5 +386,6 @@ internal class ModelDatabase(){
 
         // update local regardless
         clearLocal()
-    }
+    }**/
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 }
