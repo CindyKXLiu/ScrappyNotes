@@ -95,7 +95,7 @@ class Main : Application() {
 
         // FILE menubar manipulations /////////////////////////////////////////////////////////
         val fileMenu = Menu("File")
-        val fileQuit = MenuItem("Quit")
+        val fileQuit = MenuItem("Close")
         fileQuit.setOnAction { _ -> stop() }
 
         val newNote = MenuItem("New Note (CTRL+N)")
@@ -107,11 +107,11 @@ class Main : Application() {
         val newGroup = MenuItem("New Group (CTRL+G)")
         newGroup.setOnAction { _ -> createGroup() }
 
-        fileMenu.items.addAll(fileQuit, newNote, newGroup, deleteObject)
+        fileMenu.items.addAll(newNote, newGroup, deleteObject, fileQuit)
         menuBar.menus.add(fileMenu)
 
-        // ACTIONS menubar manipulations ////////////////////////////////////////////////////////
-        val actionsMenu = Menu("Actions")
+        // EDIT menubar manipulations ////////////////////////////////////////////////////////
+        val actionsMenu = Menu("Edit")
 
         val actionsRename = MenuItem("Rename")
         actionsRename.setOnAction { _ -> renameSelectedNote() }
@@ -132,12 +132,12 @@ class Main : Application() {
         val actionsRedo = MenuItem("Redo (CTRL+Y)")
         actionsRedo.setOnAction { _ -> redo() }
 
-        actionsMenu.items.addAll(actionsRename, actionsGroup, actionsRemove, actionsUndo,
-            actionsRedo)
+        actionsMenu.items.addAll(actionsUndo, actionsRedo, actionsRename, actionsGroup, actionsRemove)
         menuBar.menus.add(actionsMenu)
 
-        // THEMES menubar manipulations ///////////////////////////////////////////////////////////
-        val themesMenu = Menu("Themes")
+        // VIEW menubar manipulations ///////////////////////////////////////////////////////////
+        val viewMenu = Menu("View")
+        val themeOptions = Menu("Themes")
         val nordDark = MenuItem("Nord Dark")
         nordDark.setOnAction { _ ->
             currentTheme = "nord-dark"
@@ -163,8 +163,9 @@ class Main : Application() {
             applyThemeToHTMLEditorWebView(currentTheme)
         }
 
-        themesMenu.items.addAll(nordDark, nordLight, primerDark, primerLight)
-        menuBar.menus.add(themesMenu)
+        themeOptions.items.addAll(nordDark, nordLight, primerDark, primerLight)
+        viewMenu.items.add(themeOptions)
+        menuBar.menus.add(viewMenu)
 
         // DATABASE menubar ///////////////////////////////////////////////////////
         val databaseMenu = Menu("Sync")
