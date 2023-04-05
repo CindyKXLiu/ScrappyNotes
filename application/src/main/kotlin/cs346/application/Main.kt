@@ -142,17 +142,19 @@ class Main : Application() {
         optionsMenu.items.add(optionsTheme)
         menuBar.menus.add(optionsMenu)
 
-        // SYNC Button /////////////////////////////////////////////
-        val sync = Button("Update")
-        sync.setOnAction { _ ->
+        // DATABASE menubar ///////////////////////////////////////////////////////
+        val databaseMenu = Menu("Sync")
+        val saveDatabase = MenuItem("Save")
+        saveDatabase.setOnAction { _ ->
+            model.saveToDatabase()
+        }
+        val updateDatabase = MenuItem("Update")
+        updateDatabase.setOnAction { _ ->
             model.updateDatabase()
             updateNoteview()
         }
-        sync.prefHeight = 40.0
-
-        val topBar = HBox(menuBar, sync)
-        HBox.setHgrow(menuBar, Priority.ALWAYS)
-        HBox.setHgrow(sync, Priority.NEVER)
+        databaseMenu.items.addAll(saveDatabase, updateDatabase)
+        menuBar.menus.add(databaseMenu)
 
         /**
          * Set up for left side note list display
@@ -296,7 +298,7 @@ class Main : Application() {
         /**
          * Add all panels to scene and show
          */
-        layout.top = topBar
+        layout.top = menuBar
         layout.left = leftside
         layout.center = textarea
         layout.bottom = lastmodified
