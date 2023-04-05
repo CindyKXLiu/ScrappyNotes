@@ -151,7 +151,7 @@ internal class ModelDatabase{
      *
      * @ return the synced state
      */
-    fun syncAndUpdate(): Model.State {
+    internal fun syncAndUpdate(): Model.State {
         try {
             val response = getStateWebService()
             if (response.second != 200) {
@@ -233,7 +233,7 @@ internal class ModelDatabase{
      *
      * @return the synced state of the Model
      */
-    fun getState(): Model.State {
+    internal fun getState(): Model.State {
         var webserviceState:Model.State? = null
 
         // try getting state from web service
@@ -334,7 +334,7 @@ internal class ModelDatabase{
      *
      * @param state contains the state of the Model
      */
-    fun saveState(state: Model.State) {
+    internal fun saveState(state: Model.State) {
         // update both web service and local if possible
         try {
             saveStateWebService(state)

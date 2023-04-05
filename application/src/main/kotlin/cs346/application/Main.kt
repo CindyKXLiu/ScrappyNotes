@@ -25,8 +25,31 @@ import kotlinx.serialization.json.Json
 import java.io.File
 import java.time.format.DateTimeFormatter
 import java.util.*
+import javafx.scene.web.WebView
+
 
 private const val APP_SIZE_FILE = "appSizing.json"
+
+private const val NORD_DARK_CSS_HTML_EDITOR = "data:text/css," +
+        "body {" +
+        "  background-color: #2E3440;" +
+        "  color: #ECEFF4;" +
+        "}"
+private const val NORD_LIGHT_CSS_HTML_EDITOR = "data:text/css," +
+        "body {" +
+        "  background-color: #fafafc;" +
+        "  color: #2E3440;" +
+        "}"
+private const val PRIMER_LIGHT_CSS_HTML_EDITOR = "data:text/css," +
+        "body {" +
+        "  background-color: #ffffff;" +
+        "  color: #24292f;" +
+        "}"
+private const val PRIMER_DARK_CSS_HTML_EDITOR = "data:text/css," +
+        "body {" +
+        "  background-color: #0d1117;" +
+        "  color: #c9d1d9;" +
+        "}"
 
 @Serializable
 data class AppSizing(val posX: Double, val posY: Double, val height: Double, val width: Double, val theme: String)
@@ -119,23 +142,27 @@ class Main : Application() {
         val optionsTheme = Menu("Select Theme")
         val nordDark = MenuItem("Nord Dark")
         nordDark.setOnAction { _ ->
-            setUserAgentStylesheet("nord-dark.css")
             currentTheme = "nord-dark"
+            setUserAgentStylesheet("$currentTheme.css")
+            applyThemeToHTMLEditorWebView(currentTheme)
         }
         val nordLight = MenuItem("Nord Light")
         nordLight.setOnAction { _ ->
-            setUserAgentStylesheet("nord-light.css")
             currentTheme = "nord-light"
+            setUserAgentStylesheet("$currentTheme.css")
+            applyThemeToHTMLEditorWebView(currentTheme)
         }
         val primerDark = MenuItem("Primer Dark")
         primerDark.setOnAction { _ ->
-            setUserAgentStylesheet("primer-dark.css")
             currentTheme = "primer-dark"
+            setUserAgentStylesheet("$currentTheme.css")
+            applyThemeToHTMLEditorWebView(currentTheme)
         }
         val primerLight = MenuItem("Primer Light")
         primerLight.setOnAction { _ ->
-            setUserAgentStylesheet("primer-light.css")
             currentTheme = "primer-light"
+            setUserAgentStylesheet("$currentTheme.css")
+            applyThemeToHTMLEditorWebView(currentTheme)
         }
 
         optionsTheme.items.addAll(nordDark, nordLight, primerDark, primerLight)
@@ -279,6 +306,7 @@ class Main : Application() {
             stage.width = specifications.width
             stage.height = specifications.height
             setUserAgentStylesheet(specifications.theme + ".css")
+            applyThemeToHTMLEditorWebView(specifications.theme)
         } else {
             stage.width = defaultWidth
             stage.height = defaultHeight
@@ -327,6 +355,26 @@ class Main : Application() {
 
         updateNoteview()
         stage.show()
+    }
+
+    /**
+     * Applies the [theme] to the text area within the htmlEditor
+     *
+     * @param theme the theme to be set
+     */
+    private fun applyThemeToHTMLEditorWebView(theme: String) {
+        val webView = textarea.lookup("WebView") as WebView
+        val webEngine = webView.engine
+
+        var cssString = ""
+        when (theme) {
+            "nord-dark" -> cssString = NORD_DARK_CSS_HTML_EDITOR
+            "nord-light" -> cssString = NORD_LIGHT_CSS_HTML_EDITOR
+            "primer-dark" -> cssString = PRIMER_DARK_CSS_HTML_EDITOR
+            "primer-light" -> cssString = PRIMER_LIGHT_CSS_HTML_EDITOR
+        }
+
+        webEngine.userStyleSheetLocation = cssString
     }
 
     private fun updateNoteview(listofnotes : List<Note>? = model.getAllUngroupedNotes(), selectedNote : Note? = null,
