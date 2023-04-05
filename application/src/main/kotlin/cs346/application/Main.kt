@@ -151,7 +151,10 @@ class Main : Application() {
         val updateDatabase = MenuItem("Update")
         updateDatabase.setOnAction { _ ->
             model.updateDatabase()
-            updateNoteview()
+            val currSelection = noteview.selectionModel.selectedItem
+            if (currSelection.value is Note) {
+                updateNoteview(selectedNote=(currSelection.value as Note).id)
+            }
         }
         databaseMenu.items.addAll(saveDatabase, updateDatabase)
         menuBar.menus.add(databaseMenu)
@@ -331,7 +334,7 @@ class Main : Application() {
         stage.show()
     }
 
-    private fun updateNoteview(listofnotes : List<Note>? = model.getAllUngroupedNotes(), selectedNote : Note? = null,
+    private fun updateNoteview(listofnotes : List<Note>? = model.getAllUngroupedNotes(), selectedNote : UUID? = null,
                                listofgroups : List<Group>? = model.getAllGroups())
     {
         val rootitem = TreeItem<Any>()
@@ -363,8 +366,9 @@ class Main : Application() {
             notes.forEachIndexed { _, note ->
                 val newitem = TreeItem<Any>(note)
                 rootitem.children.add(newitem)
-                if (selectedNote != null && selectedNote == note) {
+                if (selectedNote != null && selectedNote == note.id) {
                     treeitemofnote = newitem
+                    displayNoteContents(note)
                 }
             }
             if (selectedNote != null) {
@@ -401,7 +405,7 @@ class Main : Application() {
             val newnote = model.createNote(result.get(),"")
             textarea.disableProperty().set(false)
             displayNoteContents(newnote)
-            updateNoteview(model.getAllUngroupedNotes(), newnote)
+            updateNoteview(model.getAllUngroupedNotes(), newnote.id)
         }
     }
 
@@ -493,7 +497,7 @@ class Main : Application() {
                 model.editNoteTitle(currNote.id, result.get())
                 textarea.disableProperty().set(false)
                 displayNoteContents(currNote)
-                updateNoteview(model.getAllUngroupedNotes(), currNote)
+                updateNoteview(model.getAllUngroupedNotes(), currNote.id)
             }
         } else if (currItem != null && currItem.value is Group) {
             val currGroup = currItem.value as Group
