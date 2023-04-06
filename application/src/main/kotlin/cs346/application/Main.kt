@@ -101,13 +101,15 @@ class Main : Application() {
         val newNote = MenuItem("New Note (CTRL+N)")
         newNote.setOnAction { _ -> createNote() }
 
-        val deleteObject = MenuItem("Delete")
+        val deleteObject = MenuItem("Delete (CTRL+D)")
         deleteObject.setOnAction { _ -> deleteSelectedNote() }
 
         val newGroup = MenuItem("New Group (CTRL+G)")
         newGroup.setOnAction { _ -> createGroup() }
 
-        fileMenu.items.addAll(newNote, newGroup, deleteObject, fileQuit)
+        fileMenu.items.addAll(newNote, newGroup,
+            SeparatorMenuItem(), deleteObject,
+            SeparatorMenuItem(), fileQuit)
         menuBar.menus.add(fileMenu)
 
         // EDIT menubar manipulations ////////////////////////////////////////////////////////
@@ -132,7 +134,9 @@ class Main : Application() {
         val actionsRedo = MenuItem("Redo (CTRL+Y)")
         actionsRedo.setOnAction { _ -> redo() }
 
-        actionsMenu.items.addAll(actionsUndo, actionsRedo, actionsRename, actionsGroup, actionsRemove)
+        actionsMenu.items.addAll(actionsUndo, actionsRedo,
+            SeparatorMenuItem(), actionsRename,
+            SeparatorMenuItem(), actionsGroup, actionsRemove)
         menuBar.menus.add(actionsMenu)
 
         // VIEW menubar manipulations ///////////////////////////////////////////////////////////
@@ -214,7 +218,7 @@ class Main : Application() {
          * Set up for left side search bar
          */
         val searchbox = TextField()
-        searchbox.promptText = "search"
+        searchbox.promptText = "Search"
         searchbox.setOnKeyPressed { event ->
             if (event.code == KeyCode.ENTER) {
                 searchNotes(searchbox.text)
@@ -245,7 +249,7 @@ class Main : Application() {
                 }
             }
         }
-        val searchsort = ChoiceBox(FXCollections.observableArrayList("Display by...", "Title", "Date created", "Last modified asc.", "Last modified desc.")).apply {
+        val searchsort = ChoiceBox(FXCollections.observableArrayList("Sort by", "Title", "Date created", "Last modified asc.", "Last modified desc.")).apply {
             selectionModel.select(0)
             // handles switch to selected sort order
             selectionModel.selectedItemProperty().addListener {
@@ -345,6 +349,7 @@ class Main : Application() {
                     KeyCode.Y -> redo()
                     KeyCode.S -> saveSelectedNote()
                     KeyCode.G -> createGroup()
+                    KeyCode.D -> deleteSelectedNote()
                     else -> {}
                 }
             }

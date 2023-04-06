@@ -4,6 +4,7 @@ import java.time.LocalDateTime
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
+import org.jsoup.Jsoup
 
 /**
  * This class is responsible for the logic behind the app and models the state of the app.
@@ -339,7 +340,8 @@ class Model {
     fun getNotesByContent(content: String): List<Note> {
         val retNotes = ArrayList<Note>()
         for ((_, note) in notes) {
-            if (note.content.contains(content)) {
+            val noteContent = Jsoup.parse(note.content).text()
+            if (noteContent.contains(content)) {
                 retNotes.add(note)
             }
         }
