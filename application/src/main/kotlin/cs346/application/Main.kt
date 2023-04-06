@@ -15,6 +15,7 @@ import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
 import javafx.scene.text.Text
 import javafx.scene.web.HTMLEditor
+import javafx.scene.web.WebView
 import javafx.stage.FileChooser
 import javafx.stage.Stage
 import javafx.stage.WindowEvent
@@ -27,6 +28,27 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 private const val APP_SIZE_FILE = "appSizing.json"
+
+private const val NORD_DARK_CSS_HTML_EDITOR = "data:text/css," +
+        "body {" +
+        "  background-color: #2E3440;" +
+        "  color: #ECEFF4;" +
+        "}"
+private const val NORD_LIGHT_CSS_HTML_EDITOR = "data:text/css," +
+        "body {" +
+        "  background-color: #fafafc;" +
+        "  color: #2E3440;" +
+        "}"
+private const val PRIMER_LIGHT_CSS_HTML_EDITOR = "data:text/css," +
+        "body {" +
+        "  background-color: #ffffff;" +
+        "  color: #24292f;" +
+        "}"
+private const val PRIMER_DARK_CSS_HTML_EDITOR = "data:text/css," +
+        "body {" +
+        "  background-color: #0d1117;" +
+        "  color: #c9d1d9;" +
+        "}"
 
 @Serializable
 data class AppSizing(val posX: Double, val posY: Double, val height: Double, val width: Double, val theme: String)
@@ -73,7 +95,7 @@ class Main : Application() {
 
         // FILE menubar manipulations /////////////////////////////////////////////////////////
         val fileMenu = Menu("File")
-        val fileQuit = MenuItem("Quit")
+        val fileQuit = MenuItem("Close")
         fileQuit.setOnAction { _ -> stop() }
 
         val newNote = MenuItem("New Note (CTRL+N)")
@@ -85,11 +107,11 @@ class Main : Application() {
         val newGroup = MenuItem("New Group (CTRL+G)")
         newGroup.setOnAction { _ -> createGroup() }
 
-        fileMenu.items.addAll(fileQuit, newNote, newGroup, deleteObject)
+        fileMenu.items.addAll(newNote, newGroup, deleteObject, fileQuit)
         menuBar.menus.add(fileMenu)
 
-        // ACTIONS menubar manipulations ////////////////////////////////////////////////////////
-        val actionsMenu = Menu("Actions")
+        // EDIT menubar manipulations ////////////////////////////////////////////////////////
+        val actionsMenu = Menu("Edit")
 
         val actionsRename = MenuItem("Rename")
         actionsRename.setOnAction { _ -> renameSelectedNote() }
@@ -110,37 +132,40 @@ class Main : Application() {
         val actionsRedo = MenuItem("Redo (CTRL+Y)")
         actionsRedo.setOnAction { _ -> redo() }
 
-        actionsMenu.items.addAll(actionsRename, actionsGroup, actionsRemove, actionsUndo,
-            actionsRedo)
+        actionsMenu.items.addAll(actionsUndo, actionsRedo, actionsRename, actionsGroup, actionsRemove)
         menuBar.menus.add(actionsMenu)
 
-        // OPTIONS menubar manipulations ///////////////////////////////////////////////////////////
-        val optionsMenu = Menu("Options")
-        val optionsTheme = Menu("Select Theme")
+        // VIEW menubar manipulations ///////////////////////////////////////////////////////////
+        val viewMenu = Menu("View")
+        val themeOptions = Menu("Themes")
         val nordDark = MenuItem("Nord Dark")
         nordDark.setOnAction { _ ->
-            setUserAgentStylesheet("nord-dark.css")
             currentTheme = "nord-dark"
+            setUserAgentStylesheet("$currentTheme.css")
+            applyThemeToHTMLEditorWebView(currentTheme)
         }
         val nordLight = MenuItem("Nord Light")
         nordLight.setOnAction { _ ->
-            setUserAgentStylesheet("nord-light.css")
             currentTheme = "nord-light"
+            setUserAgentStylesheet("$currentTheme.css")
+            applyThemeToHTMLEditorWebView(currentTheme)
         }
         val primerDark = MenuItem("Primer Dark")
         primerDark.setOnAction { _ ->
-            setUserAgentStylesheet("primer-dark.css")
             currentTheme = "primer-dark"
+            setUserAgentStylesheet("$currentTheme.css")
+            applyThemeToHTMLEditorWebView(currentTheme)
         }
         val primerLight = MenuItem("Primer Light")
         primerLight.setOnAction { _ ->
-            setUserAgentStylesheet("primer-light.css")
             currentTheme = "primer-light"
+            setUserAgentStylesheet("$currentTheme.css")
+            applyThemeToHTMLEditorWebView(currentTheme)
         }
 
-        optionsTheme.items.addAll(nordDark, nordLight, primerDark, primerLight)
-        optionsMenu.items.add(optionsTheme)
-        menuBar.menus.add(optionsMenu)
+        themeOptions.items.addAll(nordDark, nordLight, primerDark, primerLight)
+        viewMenu.items.add(themeOptions)
+        menuBar.menus.add(viewMenu)
 
         // DATABASE menubar ///////////////////////////////////////////////////////
         val databaseMenu = Menu("Sync")
@@ -284,6 +309,7 @@ class Main : Application() {
             stage.width = specifications.width
             stage.height = specifications.height
             setUserAgentStylesheet(specifications.theme + ".css")
+            applyThemeToHTMLEditorWebView(specifications.theme)
         } else {
             stage.width = defaultWidth
             stage.height = defaultHeight
@@ -332,6 +358,26 @@ class Main : Application() {
 
         updateNoteview()
         stage.show()
+    }
+
+    /**
+     * Applies the [theme] to the text area within the htmlEditor
+     *
+     * @param theme the theme to be set
+     */
+    private fun applyThemeToHTMLEditorWebView(theme: String) {
+        val webView = textarea.lookup("WebView") as WebView
+        val webEngine = webView.engine
+
+        var cssString = ""
+        when (theme) {
+            "nord-dark" -> cssString = NORD_DARK_CSS_HTML_EDITOR
+            "nord-light" -> cssString = NORD_LIGHT_CSS_HTML_EDITOR
+            "primer-dark" -> cssString = PRIMER_DARK_CSS_HTML_EDITOR
+            "primer-light" -> cssString = PRIMER_LIGHT_CSS_HTML_EDITOR
+        }
+
+        webEngine.userStyleSheetLocation = cssString
     }
 
     private fun updateNoteview(listofnotes : List<Note>? = model.getAllUngroupedNotes(), selectedNote : UUID? = null,
