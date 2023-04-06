@@ -27,6 +27,7 @@ dependencies {
     implementation(libs.sl4j.simple)
     implementation("com.google.code.gson:gson:2.10.1")
     testImplementation(libs.junit.jupiter)
+    implementation("org.jsoup:jsoup:1.14.3")
 }
 
 tasks.test {
