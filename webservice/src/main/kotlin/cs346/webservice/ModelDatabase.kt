@@ -8,7 +8,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 private const val VARCHAR_LENGTH = 10000
-private const val DB_URL = "jdbc:sqlite:model.db"
+private const val DB_URL = "jdbc:sqlite:data/model.db"
 object ModelDatabase {
     init {
         Database.connect(DB_URL)
@@ -131,7 +131,7 @@ object ModelDatabase {
 
             // delete the entries that are still in notesTableHash, since they are not in the local state, these notes were deleted
             for ((id, _) in notesTableHash) {
-                NotesTable.deleteWhere{ NotesTable.noteId eq id }
+                NotesTable.deleteWhere{ noteId eq id }
             }
 
             // save groups to GroupsTable
