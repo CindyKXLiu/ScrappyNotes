@@ -263,7 +263,6 @@ class Main : Application() {
         }
         textareaBar.items.addAll(imageButton, Separator(Orientation.VERTICAL))
 
-
         // MAIN scene set up ////////////////////////////////////////////////////////////////////////
 
         /**
@@ -601,7 +600,7 @@ class Main : Application() {
             val html = convertFile(selectedFile)
             if (html != "") {
                 val oldText = textarea.htmlText
-                textarea.htmlText = "$oldText<img src=\"$html\" width=\"100%\">"
+                textarea.htmlText = "$oldText<div class=\"resizable\"><img src=\"$html\" width=\"75%\"></div>"
             }
         }
     }
