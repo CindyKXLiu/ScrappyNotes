@@ -2,6 +2,7 @@ package cs346.shared
 
 import com.google.gson.*
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.lang.reflect.Type
@@ -23,7 +24,7 @@ private const val BASE_URL = "http://localhost:8080"
  *
  * @constructor creates a database at jdbc:sqlite:notes.db containing an empty state table
  */
-internal class ModelDatabase(){
+internal class ModelDatabase{
     /**
      * Upon init ModelDatabase will connect to the database and create a NotesTable
      */
@@ -36,29 +37,15 @@ internal class ModelDatabase(){
             SchemaUtils.create(GroupsTable)
         }
 
-        try {
-            // attempt to connect and retrieve web service state
-            val response = getStateWebService()
-
-            if (response.second == 200) {
-                // if there is a local database instance, get local state
-                val stateLocal: Model.State = getStateLocal()
-
-                // sync web service and local states
-                var newState: Model.State = syncStates(response.first, stateLocal)
-
-                // clear local and web service dbs
-                clear()
-                // update local and web service dbs
-                saveState(newState)
-            }
-        } catch (e: ConnectException) {
-            // continue without communicating with web service
-        }
+        // sync local db with webservice db
+        syncAndUpdate()
     }
 
+// Table Structures /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     private object NotesTable : Table("Notes") {
-        val noteId: Column<Int> = integer("noteId")
+        val noteId: Column<UUID> = uuid("noteId")
+        val noteHash: Column<Int> = integer("noteHash")
         val title: Column<String> = varchar("title", VARCHAR_LENGTH)
         val content: Column<String> = text("content")
         val dateCreated: Column<LocalDateTime> = datetime("dateCreated")
@@ -71,29 +58,84 @@ internal class ModelDatabase(){
         val groupName: Column<String> = varchar("groupName", VARCHAR_LENGTH)
         override val primaryKey = PrimaryKey(groupName, name = "groupName")
     }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+// Gson Serializers and Deserializers /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Gson UUID serializer and deserializer
+    private class UUIDAdapter : JsonSerializer<UUID>, JsonDeserializer<UUID> {
+        override fun serialize(src: UUID, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement? {
+            return JsonPrimitive(src.toString())
+        }
+
+        @Throws(JsonParseException::class)
+        override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?): UUID? {
+            return UUID.fromString(json.asString)
+        }
+    }
+
+    // Gson LocalDateTime serializer and deserializer
+    private class LocalDateTimeAdapter : JsonSerializer<LocalDateTime>, JsonDeserializer<LocalDateTime> {
+        override fun serialize(src: LocalDateTime, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
+            return JsonPrimitive(src.toString())
+        }
+
+        @Throws(JsonParseException::class)
+        override fun deserialize(json: JsonElement, type: Type, context: JsonDeserializationContext): LocalDateTime {
+            return LocalDateTime.parse(json.asString)
+        }
+    }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+// Helper functions /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /**
-     * Merge the states of the web service and local databases. If there are duplicate
-     * notes, take the note with the newest dateModified.
+     * Returns a hashmap of hashes in NotesTable
      *
-     * @param stateWebService contains the state retrieved from the web service database
-     * @param stateLocal contains the state retrieved from the local database
+     * @return a hashmap where the key is the uuid of the note and the value is the hash of the note
+     */
+    private fun getNotesTableHash(): HashMap<UUID, Int> {
+        val result = HashMap<UUID, Int>()
+
+        transaction {
+            // create notes and put them in their corresponding groups (if they belong to a group)
+            val query = NotesTable.selectAll()
+            query.forEach {
+                result[it[NotesTable.noteId]] = it[NotesTable.noteHash]
+            }
+        }
+
+        return result
+    }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+// Database functions /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /**
+     * Merge the states [state1] and [state2].
+     * If there are duplicate notes, take the note with the newest dateModified.
+     *
+     * @param state1 contains some state
+     * @param state2 contains some state
      *
      * @return a combined state object
      */
-    private fun syncStates(stateWebService: Model.State, stateLocal: Model.State): Model.State {
-        var notes = stateWebService.notes
-        var groups = stateWebService.groups
+    private fun syncStates(state1: Model.State, state2: Model.State): Model.State {
+        val notes = state1.notes
+        val groups = state1.groups
 
-        for ((id, note) in stateLocal.notes) {
-            if (!notes.containsKey(id) || (notes.containsKey(id) && note.dateModified > notes[id]?.dateModified)) {
-                // replace the note with the more recently updated one
-                // or add a note that is not in the list yet
+        for ((id, note) in state2.notes) {
+            if (!notes.containsKey(id)) { // note is in local db but not in webservice db
+                notes[id] = note
+            } else if (notes[id].hashCode() != note.hashCode() && note.dateModified > notes[id]!!.dateModified) { // note in local db is newer than note in webservice db
                 notes[id] = note
             }
         }
 
-        for ((id, group) in stateLocal.groups) {
+        for ((id, group) in state2.groups) {
             if (!groups.containsKey(id)) {
                 // add group if it does not exist
                 groups[id] = group
@@ -103,30 +145,25 @@ internal class ModelDatabase(){
         return Model.State(notes, groups)
     }
 
-    // Gson UInt serializer and deserializer
-    private class UintJson : JsonSerializer<UInt>, JsonDeserializer<UInt> {
-        override fun serialize(src: UInt, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
-            return JsonPrimitive(src.toLong())
-        }
+    /**
+     * Will sync the webservice database and the local database,
+     * and will update the webservice database and the local database with the synced state.
+     *
+     * @ return the synced state
+     */
+    fun syncAndUpdate(): Model.State {
+        try {
+            val response = getStateWebService()
+            if (response.second != 200) {
+                throw ConnectException()
+            }
+            val syncedState = syncStates(response.first, getStateLocal())
+            saveState(syncedState)
+        } catch (e: ConnectException) {}
 
-        @Throws(JsonParseException::class)
-        override fun deserialize(json: JsonElement, type: Type, context: JsonDeserializationContext): UInt {
-            return json.asLong.toUInt()
-        }
+        // webservice can not be accessed, no sync and update were performed, returns the local state
+        return getStateLocal()
     }
-
-    // Gson LocalDateTime serializer and deserializer
-    private class LocalDateTimeJson : JsonSerializer<LocalDateTime>, JsonDeserializer<LocalDateTime> {
-        override fun serialize(src: LocalDateTime, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
-            return JsonPrimitive(src.toString());
-        }
-
-        @Throws(JsonParseException::class)
-        override fun deserialize(json: JsonElement, type: Type, context: JsonDeserializationContext): LocalDateTime {
-            return LocalDateTime.parse(json.asString)
-        }
-    }
-
     /**
      * Retrieve the state object from the web service database via HTTP
      *
@@ -143,8 +180,8 @@ internal class ModelDatabase(){
 
         val responseBody: String = response.body()
 
-        val gson = GsonBuilder().registerTypeAdapter(UInt::class.java, UintJson())
-            .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeJson()).create()
+        val gson = GsonBuilder().registerTypeAdapter(UUID::class.java, UUIDAdapter())
+            .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeAdapter()).create()
 
         return Pair<Model.State, Int>(gson.fromJson(responseBody, Model.State::class.java), response.statusCode())
     }
@@ -155,7 +192,7 @@ internal class ModelDatabase(){
      * @return the state of the model from the local database
      */
     private fun getStateLocal(): Model.State {
-        val notes = HashMap<UInt, Note>()
+        val notes = HashMap<UUID, Note>()
         val groups = HashMap<String, Group>()
 
         transaction {
@@ -168,17 +205,17 @@ internal class ModelDatabase(){
 
             // create notes and put them in their corresponding groups (if they belong to a group)
             query = NotesTable.selectAll()
-                .orderBy(NotesTable.noteId to SortOrder.ASC) // is sorted ascending so that internal note counter used for generating id aligns with database
             query.forEach {
                 //create note obj
                 val note = Note(it[NotesTable.title], it[NotesTable.content])
+                note.id = it[NotesTable.noteId]
                 note.dateCreated = it[NotesTable.dateCreated]
                 note.dateModified = it[NotesTable.dateModified]
                 if (!it[NotesTable.groupName].isNullOrBlank()) {
                     note.groupName = it[NotesTable.groupName]
 
                     // add the note to the group
-                    groups[it[NotesTable.groupName]]!!.notes.add(it[NotesTable.noteId].toUInt())
+                    groups[it[NotesTable.groupName]]!!.notes.add(it[NotesTable.noteId])
                 }
 
                 //store note obj in notes
@@ -190,24 +227,30 @@ internal class ModelDatabase(){
     }
 
     /**
-     * Retrieve the Model's state from the web service if it is accessible. Otherwise,
-     * retrieve the Model's state from the local database
+     * Retrieve the Model's state from the web service if it is accessible.
+     * Otherwise, retrieve the Model's state from the local database.
+     * If web service state is accessible, sync it with the local state and return the sync state.
      *
-     * @return the state of the Model that was previously saved
+     * @return the synced state of the Model
      */
     fun getState(): Model.State {
+        var webserviceState:Model.State? = null
+
         // try getting state from web service
         try {
             val response = getStateWebService()
 
             if (response.second == 200) {
-                return response.first
+                webserviceState = response.first
             }
-        } catch (e: ConnectException) {
-            // continue without communicating with web service
+        } catch (e: ConnectException) {}
+
+        // if a webservice state is accessible sync with local and return that
+        if (webserviceState != null) {
+            return syncStates(webserviceState, getStateLocal())
         }
 
-        // get from local database instance otherwise
+        // else get the local state
         return getStateLocal()
     }
 
@@ -219,8 +262,9 @@ internal class ModelDatabase(){
      * @return the status code of the HTTP request
      */
     private fun saveStateWebService(state: Model.State): Int {
-        val gson = GsonBuilder().registerTypeAdapter(UInt::class.java, UintJson())
-            .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeJson()).create()
+        val gson = GsonBuilder().registerTypeAdapter(UUID::class.java, UUIDAdapter())
+            .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeAdapter()).create()
+
         val stateJSON = gson.toJson(state, Model.State::class.java)
 
         val client = HttpClient.newBuilder().build()
@@ -243,20 +287,39 @@ internal class ModelDatabase(){
     private fun saveStateLocal(state: Model.State) {
         transaction {
             // save notes to NotesTable
+            val notesTableHash = getNotesTableHash()
+
             for ((id, note) in state.notes) {
-                NotesTable.insert {
-                    it[noteId] = id.toInt()
-                    it[title] = note.title
-                    it[content] = note.content
-                    it[dateCreated] = note.dateCreated
-                    it[dateModified] = note.dateModified
-                    if (!note.groupName.isNullOrBlank()) {
+                if ( !notesTableHash.containsKey(id) ) { // This note was newly created
+                    NotesTable.insert {
+                        it[noteId] = id
+                        it[title] = note.title
+                        it[content] = note.content
+                        it[dateCreated] = note.dateCreated
+                        it[dateModified] = note.dateModified
+                        it[noteHash] = note.hashCode()
+                        it[groupName] = note.groupName
+                    }
+                } else if ( note.hashCode() != notesTableHash[id] ) { // this note was changed thus it need to be updated
+                    NotesTable.update({ NotesTable.noteId eq id}) {
+                        it[title] = note.title
+                        it[content] = note.content
+                        it[dateCreated] = note.dateCreated
+                        it[dateModified] = note.dateModified
+                        it[noteHash] = note.hashCode()
                         it[groupName] = note.groupName
                     }
                 }
+
+                notesTableHash.remove(id)
+            }
+            // delete the entries that are still in notesTableHash, since they are not in the local state, these notes were deleted
+            for ((id, _) in notesTableHash) {
+                NotesTable.deleteWhere{ NotesTable.noteId eq id }
             }
 
             // save groups to GroupsTable
+            GroupsTable.deleteAll()
             for ((name, _) in state.groups) {
                 GroupsTable.insert {
                     it[groupName] = name
@@ -275,54 +338,10 @@ internal class ModelDatabase(){
         // update both web service and local if possible
         try {
             saveStateWebService(state)
-        } catch (e: ConnectException) {
-            // continue without communicating with web service
-        }
+        } catch (e: ConnectException) {}
 
         // update local regardless
         saveStateLocal(state)
     }
-
-    /**
-     * Deletes all notes and groups in the web service database state
-     *
-     * @return the status code of the HTTP request
-     */
-    private fun clearWebService(): Int {
-        val client = HttpClient.newBuilder().build()
-        val request = HttpRequest.newBuilder()
-            .uri(URI.create("$BASE_URL/model"))
-            .DELETE()
-            .build()
-
-        val response = client.send(request, HttpResponse.BodyHandlers.ofString())
-
-        return response.statusCode()
-    }
-
-    /**
-     * Deletes all notes and groups in the local database state
-     */
-    private fun clearLocal() {
-        transaction {
-            NotesTable.deleteAll()
-            GroupsTable.deleteAll()
-        }
-    }
-
-    /**
-     * Clears all entries the web service and local databases if possible. Otherwise,
-     * clears all entries in the local database only.
-     */
-    fun clear() {
-        // update both web service and local if possible
-        try {
-            clearWebService()
-        } catch (e: ConnectException) {
-            // continue without communicating with web service
-        }
-
-        // update local regardless
-        clearLocal()
-    }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 }

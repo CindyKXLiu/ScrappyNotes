@@ -1,6 +1,9 @@
 package cs346.webservice
 
 import java.time.LocalDateTime
+import java.util.*
+
+private const val PRIME = 31
 
 /**
  * This is the Note class, it will contain the data of a note.
@@ -12,10 +15,12 @@ import java.time.LocalDateTime
  * @property dateModified is the time the note was last modified
  * @property groupName is the name of the group the note belongs to (if any)
  *
- * @constructor creates a note with the given [title] and [content]
+ * @constructor creates a note with the given [title] and [content],
+ *      if [newID] is set to true the note will be assigned a new UniqueID and UniqueID counter is incremented
  */
-class Note(title: String = "", content: String = "", id: UInt = 0u) {
-    var id = id
+class Note(title: String = "", content: String = "") {
+    var id: UUID = UUID.randomUUID()
+        internal set
     var dateCreated: LocalDateTime = LocalDateTime.now()
         internal set
     var dateModified: LocalDateTime = LocalDateTime.now()
@@ -39,7 +44,8 @@ class Note(title: String = "", content: String = "", id: UInt = 0u) {
     var groupName: String? = null
         internal set
 
-    constructor(note: Note) : this(note.title, note.content, note.id) {
+    constructor(note: Note) : this(note.title, note.content) {
+        this.id = note.id
         this.dateCreated = note.dateCreated
         this.dateModified = note.dateModified
         this.groupName = note.groupName
@@ -51,5 +57,19 @@ class Note(title: String = "", content: String = "", id: UInt = 0u) {
     override fun toString(): String {
         return this.title
     }
-}
 
+    /**
+     * Generates the hash code of the note object
+     *
+     * @return the hashcode of the note
+     */
+    override fun hashCode(): Int {
+        var hash = id.hashCode()
+        hash = PRIME * hash + dateCreated.hashCode()
+        hash = PRIME * hash + dateModified.hashCode()
+        hash = PRIME * hash + title.hashCode()
+        hash = PRIME * hash + content.hashCode()
+        hash = PRIME * hash + groupName.hashCode()
+        return hash
+    }
+}

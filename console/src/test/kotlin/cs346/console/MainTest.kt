@@ -56,7 +56,7 @@ internal class MainTest {
         System.setOut(PrintStream(output))
 
         // Deleting nonexistent note
-        var input = "delete 0"
+        var input = "delete -1"
         console.parseArgs(input)
         assertEquals(expectedOutput, output.toString())
 

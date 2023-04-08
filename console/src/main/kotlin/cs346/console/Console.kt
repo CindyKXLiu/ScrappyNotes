@@ -1,6 +1,8 @@
 package cs346.console
 
 import cs346.shared.*
+import java.util.*
+import kotlin.collections.HashMap
 
 private const val PAD = 45
 private const val PAD_SMALL = 25
@@ -19,6 +21,8 @@ private const val HELP_MSG = "OPTIONS:\n" +
         "mv [noteID] [newGroup]     Moves note with id [noteID] to [newGroup]\n" +
         "undo                       Undo previous action\n" +
         "redo                       Redo previous action\n" +
+        "save                       Save state to databases (this action can not be undone/redone)\n" +
+        "update                     Update the state (this action can not be undone/redone)\n" +
         "h, help                    Print this message\n" +
         "quit                       Exit\n"
 private const val INVALID_COMMAND_MSG = "Invalid command. Type \"help\" for all options.\n"
@@ -37,12 +41,18 @@ private const val INVALID_ACTION_MSG = "Invalid action.\n"
  */
 class Console {
     private val model = Model()
-    private val noteEditorlauncher = NoteEditorLauncher()
+    private val noteEditorLauncher = NoteEditorLauncher()
+    private var nextID = 0
+    private val aliasIds = HashMap<Int, UUID>()
 
     /**
      * Prompts user to enter commands until the quit command is entered
      */
     init {
+        // populate alias_id
+        resetAliasId()
+
+        // start prompting for user input
         while (true) {
             print(COMMAND_PROMPT_MSG)
             val input = readlnOrNull() ?: break
@@ -80,7 +90,7 @@ class Console {
             "d", "delete" -> { // Delete command
                 if (args.size == 2) { // Delete note
                     try {
-                        deleteNote(args[1].toUInt())
+                        deleteNote(args[1].toInt())
                     } catch (e: NumberFormatException) {
                         print(INVALID_ID_MSG)
                     }
@@ -94,7 +104,7 @@ class Console {
             "o", "open" -> { // Open note
                 if (args.size == 2) {
                     try {
-                        openNote(args[1].toUInt())
+                        openNote(args[1].toInt())
                     } catch (e: NumberFormatException) {
                         print(INVALID_ID_MSG)
                     }
@@ -106,7 +116,7 @@ class Console {
             "rename" -> { // Rename command
                 if (args.size == 3) { // Rename note
                     try {
-                        renameNote(args[1].toUInt(), args[2])
+                        renameNote(args[1].toInt(), args[2])
                     } catch (e: NumberFormatException) {
                         print(INVALID_ID_MSG)
                     }
@@ -120,7 +130,7 @@ class Console {
             "add" -> { // Add note to group
                 if (args.size == 3) {
                     try {
-                        addNoteToGroup(args[1].toUInt(), args[2])
+                        addNoteToGroup(args[1].toInt(), args[2])
                     } catch (e: NumberFormatException) {
                         print(INVALID_ID_MSG)
                     }
@@ -132,7 +142,7 @@ class Console {
             "rm" -> { // Remove note from group
                 if (args.size == 3) {
                     try {
-                        removeNoteFromGroup(args[1].toUInt(), args[2])
+                        removeNoteFromGroup(args[1].toInt(), args[2])
                     } catch (e: NumberFormatException) {
                         print(INVALID_ID_MSG)
                     }
@@ -144,7 +154,7 @@ class Console {
             "mv" -> { // Move note to new group
                 if (args.size == 3) {
                     try {
-                        moveNoteToGroup(args[1].toUInt(), args[2])
+                        moveNoteToGroup(args[1].toInt(), args[2])
                     } catch (e: NumberFormatException) {
                         print(INVALID_ID_MSG)
                     }
@@ -169,6 +179,22 @@ class Console {
                 }
             }
 
+            "save" -> {
+                if (args.size == 1) {
+                    save()
+                } else {
+                    print(INVALID_COMMAND_MSG)
+                }
+            }
+
+            "update" -> {
+                if (args.size == 1) {
+                    update()
+                } else {
+                    print(INVALID_COMMAND_MSG)
+                }
+            }
+
             // Print help message
             "h", "help" -> print(HELP_MSG)
 
@@ -180,10 +206,63 @@ class Console {
     }
 
     /**
+     * Clears alias id and remap each note in model with an alias id
+     */
+    private fun resetAliasId() {
+        // reset alias id and counter
+        nextID = 0
+        aliasIds.clear()
+
+        // populate alias id and counter
+        val notes = model.getAllNotes()
+        for (note in notes) {
+            aliasIds[nextID] = note.id
+            ++nextID
+        }
+    }
+    /**
+     * Returns the UUID of the note with alias ID [aliasId],
+     *      if no such note exist, print error message and null is returned
+     *
+     * @param aliasID the alias id of the note
+     * @return returns the UUID of the note, null if note does not exist
+     */
+    private fun getUUID(aliasId: Int): UUID? {
+        if (aliasIds.containsKey(aliasId)) {
+            return aliasIds[aliasId]!!
+        }
+
+        print(INVALID_ID_MSG)
+        return null
+    }
+
+    /**
+     * Opens a rich editor containing the content of note with id [noteID]
+     *
+     * @param noteId is the id of the note
+     */
+    private fun launchNoteEditor(noteId: UUID) {
+        val note = model.getNoteByID(noteId)
+
+        // Set editor settings
+        NoteEditorLauncher.Setting.active = true
+        NoteEditorLauncher.Setting.noteTitle = note.title
+        NoteEditorLauncher.Setting.noteContent = note.content
+
+        noteEditorLauncher.launch()
+
+        // wait until user finishes editing note/close editor
+        while (NoteEditorLauncher.Setting.active) Thread.sleep(1000)
+
+        // apply changes to model
+        model.editNoteContent(note.id, NoteEditorLauncher.Setting.noteContent)
+    }
+
+    /**
      * Prints a nicely formatted list of notes to console with their titles, creation, and modification dates
      */
     private fun listNotes() {
-        val notes = Sort.sortByID(model.getAllNotes(), Sort.Order.ASC)
+        val notes = model.getAllNotes()
 
         // print heading
         println("NUMBER OF NOTES: ${notes.size}")
@@ -195,7 +274,7 @@ class Console {
         // print all existing notes
         for (note in notes) {
             println(note.title.padEnd(PAD) +
-                    note.id.toString().padEnd(PAD_SMALL)+
+                    aliasIds.entries.find { it.value == note.id }!!.key.toString().padEnd(PAD_SMALL)+
                     note.dateCreated.toString().split("T")[0].padEnd(PAD_SMALL) +
                     note.dateModified.toString().split("T")[0]
             )
@@ -228,23 +307,6 @@ class Console {
         }
     }
 
-    private fun launchNoteEditor(noteId: UInt) {
-        val note = model.getNoteByID(noteId)
-
-        // Set editor settings
-        NoteEditorLauncher.Setting.active = true
-        NoteEditorLauncher.Setting.noteTitle = note.title
-        NoteEditorLauncher.Setting.noteContent = note.content
-
-        noteEditorlauncher.launch()
-
-        // wait until user finishes editing note/close editor
-        while (NoteEditorLauncher.Setting.active) Thread.sleep(1000)
-
-        // apply changes to model
-        model.editNoteContent(note.id, NoteEditorLauncher.Setting.noteContent)
-    }
-
     /**
      * Creates a new note titled [title]
      *
@@ -252,6 +314,10 @@ class Console {
      */
     private fun createNewNote(title: String) {
         val note = model.createNote(title, "")
+
+        aliasIds[nextID] = note.id
+        ++nextID
+
         launchNoteEditor(note.id)
         println("Created new note \"$title\".")
     }
@@ -272,13 +338,16 @@ class Console {
     }
 
     /**
-     * Deletes the note with the id [id]
+     * Deletes the note with the alias id [id]
      *
-     * @param id is the id of the note to be deleted
+     * @param id is the alias id of the note to be deleted
      */
-    private fun deleteNote(id: UInt) {
+    private fun deleteNote(id: Int) {
+        val uuid = getUUID(id) ?: return
+
         try{
-            model.deleteNote(id)
+            model.deleteNote(uuid)
+            aliasIds.remove(id)
             println("Deleted note with id $id.")
         } catch (e: NonExistentNoteException) {
             print(INVALID_ID_MSG)
@@ -300,13 +369,15 @@ class Console {
     }
 
     /**
-     * Opens an editor containing the content of the note with id [id]
+     * Opens an editor containing the content of the note with alias id [id]
      *
-     * @param id is the id of the note
+     * @param id is the alias id of the note
      */
-    private fun openNote(id: UInt) {
+    private fun openNote(id: Int) {
+        val uuid = getUUID(id) ?: return
+
         try {
-            val note = model.getNoteByID(id)
+            val note = model.getNoteByID(uuid)
             launchNoteEditor(note.id)
         } catch (e: NonExistentNoteException) {
             println(INVALID_ID_MSG)
@@ -314,14 +385,16 @@ class Console {
     }
 
     /**
-     * Rename the title of the note with id [id] to [newTitle]
+     * Rename the title of the note with alias id [id] to [newTitle]
      *
      * @param id is the alias id of the note
      * @param newTitle is the new title of the note
      */
-    private fun renameNote(id: UInt, newTitle: String){
+    private fun renameNote(id: Int, newTitle: String){
+        val uuid = getUUID(id) ?: return
+
         try{
-            model.editNoteTitle(id, newTitle)
+            model.editNoteTitle(uuid, newTitle)
             println("Renamed note with id $id to \"$newTitle\".")
         } catch (e: NonExistentNoteException) {
             println(INVALID_ID_MSG)
@@ -349,12 +422,14 @@ class Console {
     /**
      * Adds the note with alias id [id] to the group [groupName]
      *
-     * @param id is the id of the note to be added
+     * @param id is the alias id of the note to be added
      * @param groupName is the name of the group to add the note to
      */
-    private fun addNoteToGroup(id: UInt, groupName: String) {
+    private fun addNoteToGroup(id: Int, groupName: String) {
+        val uuid = getUUID(id) ?: return
+
         try{
-            model.addNoteToGroup(groupName, id)
+            model.addNoteToGroup(groupName, uuid)
             println("Added note with id $id to group \"$groupName\".")
         } catch (e: NonExistentNoteException) {
             print(INVALID_ID_MSG)
@@ -369,9 +444,11 @@ class Console {
      * @param id is the alias id of the note to be removed from [groupName]
      * @param groupName is the name of the group
      */
-    private fun removeNoteFromGroup(id: UInt, groupName: String) {
+    private fun removeNoteFromGroup(id: Int, groupName: String) {
+        val uuid = getUUID(id) ?: return
+
         try {
-            model.removeNoteFromGroup(groupName, id)
+            model.removeNoteFromGroup(groupName, uuid)
             println("Removed note with id $id from group \"$groupName\".")
         } catch (e: NonExistentNoteException) {
             print(INVALID_ID_MSG)
@@ -381,14 +458,16 @@ class Console {
     }
 
     /**
-     * Move the note with id [id] to the group [newGroup]
+     * Move the note with alias id [id] to the group [newGroup]
      *
-     * @param id is the id of the note
+     * @param id is the alias id of the note
      * @param newGroup is the name of the group the note will be moved to
      */
-    private fun moveNoteToGroup(id: UInt, newGroup: String){
+    private fun moveNoteToGroup(id: Int, newGroup: String){
+        val uuid = getUUID(id) ?: return
+
         try{
-            model.moveNoteToGroup(newGroup, id)
+            model.moveNoteToGroup(newGroup, uuid)
             println("Moved note with id $id to group \"$newGroup\"")
         } catch (e: NonExistentNoteException) {
             print(INVALID_ID_MSG)
@@ -421,6 +500,20 @@ class Console {
         }
     }
 
+    /**
+     * Save the current model state to databases
+     */
+    private fun save() {
+        model.saveToDatabase()
+    }
+
+    /**
+     * Updates the model state with the synced state
+     */
+    private fun update() {
+        model.updateDatabase()
+        resetAliasId()
+    }
     /**
      * Saves the data to database and closes console app
      */

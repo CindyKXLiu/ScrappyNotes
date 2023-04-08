@@ -2,7 +2,6 @@ package cs346.application
 
 import cs346.shared.*
 import javafx.application.Application
-import javafx.collections.FXCollections
 import javafx.geometry.Insets
 import javafx.geometry.Orientation
 import javafx.scene.Scene
@@ -10,11 +9,11 @@ import javafx.scene.control.*
 import javafx.scene.control.Alert.AlertType
 import javafx.scene.input.KeyCode
 import javafx.scene.layout.BorderPane
-import javafx.scene.layout.HBox
 import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
 import javafx.scene.text.Text
 import javafx.scene.web.HTMLEditor
+import javafx.scene.web.WebView
 import javafx.stage.FileChooser
 import javafx.stage.Stage
 import javafx.stage.WindowEvent
@@ -26,7 +25,29 @@ import java.io.File
 import java.time.format.DateTimeFormatter
 import java.util.*
 
+
 private const val APP_SIZE_FILE = "appSizing.json"
+
+private const val NORD_DARK_CSS_HTML_EDITOR = "data:text/css," +
+        "body {" +
+        "  background-color: #2E3440;" +
+        "  color: #ECEFF4;" +
+        "}"
+private const val NORD_LIGHT_CSS_HTML_EDITOR = "data:text/css," +
+        "body {" +
+        "  background-color: #fafafc;" +
+        "  color: #2E3440;" +
+        "}"
+private const val PRIMER_LIGHT_CSS_HTML_EDITOR = "data:text/css," +
+        "body {" +
+        "  background-color: #ffffff;" +
+        "  color: #24292f;" +
+        "}"
+private const val PRIMER_DARK_CSS_HTML_EDITOR = "data:text/css," +
+        "body {" +
+        "  background-color: #0d1117;" +
+        "  color: #c9d1d9;" +
+        "}"
 
 @Serializable
 data class AppSizing(val posX: Double, val posY: Double, val height: Double, val width: Double, val theme: String)
@@ -48,22 +69,21 @@ class Main : Application() {
      * TITLE = by title, CONTENT = by content
      */
     enum class NoteFilterType {
-        TITLE, CONTENT, DEFAULT
+        TITLE, CONTENT
     }
 
     /**
      * NoteSortType used to track what sorting option is currently
      * used by display noteview.
-     * ALPHA = alphabetical order, CREATED = date created,
-     * MASCENDING = last modified ascending
-     * MDESCENDING = last modified descending
+     * TITLE = title, DATE_CREATED = date created, DATE_MODIFIED = date modified
      */
     enum class NoteSortType {
-        ALPHA, CREATED, MASCENDING, MDESCENDING, DEFAULT
+        TITLE, DATE_CREATED, DATE_MODIFIED
     }
 
-    private var currentFilterType = NoteFilterType.DEFAULT
-    private var currentSortType = NoteSortType.DEFAULT
+    private var currentFilterType = NoteFilterType.TITLE
+    private var currentSortType = NoteSortType.TITLE
+    private var currentSortOrder = Sort.Order.ASC
 
     override fun start(stage: Stage) {
         /**
@@ -73,23 +93,25 @@ class Main : Application() {
 
         // FILE menubar manipulations /////////////////////////////////////////////////////////
         val fileMenu = Menu("File")
-        val fileQuit = MenuItem("Quit")
+        val fileQuit = MenuItem("Close")
         fileQuit.setOnAction { _ -> stop() }
 
         val newNote = MenuItem("New Note (CTRL+N)")
         newNote.setOnAction { _ -> createNote() }
 
-        val deleteObject = MenuItem("Delete")
+        val deleteObject = MenuItem("Delete (CTRL+D)")
         deleteObject.setOnAction { _ -> deleteSelectedNote() }
 
         val newGroup = MenuItem("New Group (CTRL+G)")
         newGroup.setOnAction { _ -> createGroup() }
 
-        fileMenu.items.addAll(fileQuit, newNote, newGroup, deleteObject)
+        fileMenu.items.addAll(newNote, newGroup,
+            SeparatorMenuItem(), deleteObject,
+            SeparatorMenuItem(), fileQuit)
         menuBar.menus.add(fileMenu)
 
-        // ACTIONS menubar manipulations ////////////////////////////////////////////////////////
-        val actionsMenu = Menu("Actions")
+        // EDIT menubar manipulations ////////////////////////////////////////////////////////
+        val actionsMenu = Menu("Edit")
 
         val actionsRename = MenuItem("Rename")
         actionsRename.setOnAction { _ -> renameSelectedNote() }
@@ -110,37 +132,152 @@ class Main : Application() {
         val actionsRedo = MenuItem("Redo (CTRL+Y)")
         actionsRedo.setOnAction { _ -> redo() }
 
-        actionsMenu.items.addAll(actionsRename, actionsGroup, actionsRemove, actionsUndo,
-            actionsRedo)
+        actionsMenu.items.addAll(actionsUndo, actionsRedo,
+            SeparatorMenuItem(), actionsRename,
+            SeparatorMenuItem(), actionsGroup, actionsRemove)
         menuBar.menus.add(actionsMenu)
 
-        // OPTIONS menubar manipulations ///////////////////////////////////////////////////////////
-        val optionsMenu = Menu("Options")
-        val optionsTheme = Menu("Select Theme")
-        val nordDark = MenuItem("Nord Dark")
+        // VIEW menubar manipulations ///////////////////////////////////////////////////////////
+        val viewMenu = Menu("View")
+
+        // Themes
+        val themeOptions = Menu("Themes")
+        val nordLight = CheckMenuItem("Nord Light")
+        val nordDark = CheckMenuItem("Nord Dark")
+        val primerDark = CheckMenuItem("Primer Dark")
+        val primerLight = CheckMenuItem("Primer Light")
         nordDark.setOnAction { _ ->
-            setUserAgentStylesheet("nord-dark.css")
             currentTheme = "nord-dark"
+            setUserAgentStylesheet("$currentTheme.css")
+            applyThemeToHTMLEditorWebView(currentTheme)
+            nordDark.isSelected = true
+            nordLight.isSelected = false
+            primerDark.isSelected = false
+            primerLight.isSelected = false
         }
-        val nordLight = MenuItem("Nord Light")
         nordLight.setOnAction { _ ->
-            setUserAgentStylesheet("nord-light.css")
             currentTheme = "nord-light"
+            setUserAgentStylesheet("$currentTheme.css")
+            applyThemeToHTMLEditorWebView(currentTheme)
+            nordDark.isSelected = false
+            nordLight.isSelected = true
+            primerDark.isSelected = false
+            primerLight.isSelected = false
         }
-        val primerDark = MenuItem("Primer Dark")
         primerDark.setOnAction { _ ->
-            setUserAgentStylesheet("primer-dark.css")
             currentTheme = "primer-dark"
+            setUserAgentStylesheet("$currentTheme.css")
+            applyThemeToHTMLEditorWebView(currentTheme)
+            nordDark.isSelected = false
+            nordLight.isSelected = false
+            primerDark.isSelected = true
+            primerLight.isSelected = false
         }
-        val primerLight = MenuItem("Primer Light")
         primerLight.setOnAction { _ ->
-            setUserAgentStylesheet("primer-light.css")
             currentTheme = "primer-light"
+            setUserAgentStylesheet("$currentTheme.css")
+            applyThemeToHTMLEditorWebView(currentTheme)
+            nordDark.isSelected = false
+            nordLight.isSelected = false
+            primerDark.isSelected = false
+            primerLight.isSelected = true
+        }
+        themeOptions.items.addAll(nordLight, nordDark,primerLight, primerDark)
+
+        /**
+         * Set up for left side search bar
+         */
+        val searchbox = TextField()
+        searchbox.promptText = "Search"
+        searchbox.setOnKeyPressed { event ->
+            if (event.code == KeyCode.ENTER) {
+                searchNotes(searchbox.text)
+            }
         }
 
-        optionsTheme.items.addAll(nordDark, nordLight, primerDark, primerLight)
-        optionsMenu.items.add(optionsTheme)
-        menuBar.menus.add(optionsMenu)
+        // Search by
+        val searchOptions = Menu("Search")
+        val searchByTitle = CheckMenuItem("Title")
+        searchByTitle.isSelected = true
+        val searchByContent = CheckMenuItem("Content")
+        searchByTitle.setOnAction {
+            currentFilterType = NoteFilterType.TITLE
+            searchByTitle.isSelected = true
+            searchByContent.isSelected = false
+            searchNotes(searchbox.text)
+        }
+        searchByContent.setOnAction {
+            currentFilterType = NoteFilterType.CONTENT
+            searchByTitle.isSelected = false
+            searchByContent.isSelected = true
+            searchNotes(searchbox.text)
+        }
+        searchOptions.items.addAll(searchByTitle, searchByContent)
+
+        // Sort by
+        val sortOptions = Menu("Sort")
+        val sortAscending = CheckMenuItem("Ascending")
+        val sortDescending = CheckMenuItem("Descending")
+        val sortByTitle = CheckMenuItem("Title")
+        val sortByDateCreated = CheckMenuItem("Date Created")
+        val sortByDateModified = CheckMenuItem("Date Modified")
+        sortAscending.isSelected = true
+        sortByTitle.isSelected = true
+        sortAscending.setOnAction {
+            currentSortOrder = Sort.Order.ASC
+            sortAscending.isSelected = true
+            sortDescending.isSelected = false
+            searchNotes(searchbox.text)
+        }
+        sortDescending.setOnAction {
+            currentSortOrder = Sort.Order.DESC
+            sortAscending.isSelected = false
+            sortDescending.isSelected = true
+            searchNotes(searchbox.text)
+        }
+        sortByTitle.setOnAction {
+            currentSortType = NoteSortType.TITLE
+            sortByTitle.isSelected = true
+            sortByDateCreated.isSelected = false
+            sortByDateModified.isSelected = false
+            searchNotes(searchbox.text)
+        }
+        sortByDateCreated.setOnAction {
+            currentSortType = NoteSortType.DATE_CREATED
+            sortByTitle.isSelected = false
+            sortByDateCreated.isSelected = true
+            sortByDateModified.isSelected = false
+            searchNotes(searchbox.text)
+        }
+        sortByDateModified.setOnAction {
+            currentSortType = NoteSortType.DATE_MODIFIED
+            sortByTitle.isSelected = false
+            sortByDateCreated.isSelected = false
+            sortByDateModified.isSelected = true
+            searchNotes(searchbox.text)
+        }
+        sortOptions.items.addAll(sortAscending, sortDescending, SeparatorMenuItem()
+            , sortByTitle, sortByDateCreated, sortByDateModified)
+
+        viewMenu.items.addAll(searchOptions, sortOptions, SeparatorMenuItem(), themeOptions)
+        menuBar.menus.add(viewMenu)
+
+        // DATABASE menubar ///////////////////////////////////////////////////////
+        val databaseMenu = Menu("Sync")
+        val saveDatabase = MenuItem("Save")
+        saveDatabase.setOnAction { _ ->
+            model.saveToDatabase()
+        }
+        val updateDatabase = MenuItem("Update")
+        updateDatabase.setOnAction { _ ->
+            model.updateDatabase()
+            val currSelection = noteview.selectionModel.selectedItem
+            if (currSelection.value is Note) {
+                updateNoteview(selectedNote=(currSelection.value as Note).id)
+            }
+        }
+        databaseMenu.items.addAll(saveDatabase, updateDatabase)
+        menuBar.menus.add(databaseMenu)
 
         /**
          * Set up for left side note list display
@@ -169,71 +306,17 @@ class Main : Application() {
         }
 
         /**
-         * Set up for left side search bar
-         */
-        val searchbox = TextField()
-        searchbox.promptText = "search"
-        searchbox.setOnKeyPressed { event ->
-            if (event.code == KeyCode.ENTER) {
-                searchNotes(searchbox.text)
-            }
-        }
-
-        /**
          * Set up for text fields for last modified and time
          */
         val bottomLine = BorderPane()
         bottomLine.left = lastmodified
         bottomLine.padding = Insets(3.0, 5.0, 3.0, 5.0)
 
-        /**
-         * Dropdown menus for search filtering
-         */
-        val searchfilter = ChoiceBox(FXCollections.observableArrayList("Filter results by...", "Title", "Content")).apply {
-            selectionModel.select(0)
-            // handles switch to selected filter type
-            selectionModel.selectedItemProperty().addListener {
-                    _, _, newFilter ->
-                currentFilterType = if (newFilter == "Title") {
-                    NoteFilterType.TITLE
-                } else if (newFilter == "Content") {
-                    NoteFilterType.CONTENT
-                } else {
-                    NoteFilterType.DEFAULT
-                }
-            }
-        }
-        val searchsort = ChoiceBox(FXCollections.observableArrayList("Display by...", "Title", "Date created", "Last modified asc.", "Last modified desc.")).apply {
-            selectionModel.select(0)
-            // handles switch to selected sort order
-            selectionModel.selectedItemProperty().addListener {
-                    _, _, newSort ->
-                currentSortType = if (newSort == "Title") {
-                    NoteSortType.ALPHA
-                } else if (newSort == "Date created") {
-                    NoteSortType.CREATED
-                } else if (newSort == "Last modified asc.") {
-                    NoteSortType.MASCENDING
-                } else if (newSort == "Last modified desc.") {
-                    NoteSortType.MDESCENDING
-                } else {
-                    NoteSortType.DEFAULT
-                }
-                searchNotes(searchbox.text)
-            }
-        }
-
-        // container for search filters
-        val filters = HBox()
-        HBox.setHgrow(searchfilter, Priority.ALWAYS)
-        HBox.setHgrow(searchsort, Priority.ALWAYS)
-        filters.children.addAll(searchfilter, searchsort)
-
         val leftside = VBox()
         leftside.spacing = 0.0
         VBox.setVgrow(noteview, Priority.ALWAYS)
         leftside.prefWidth = 250.0
-        leftside.children.addAll(searchbox, filters, noteview)
+        leftside.children.addAll(searchbox, noteview)
 
         textarea.focusTraversableProperty().set(false)
         textarea.htmlText = ""
@@ -251,13 +334,11 @@ class Main : Application() {
         }
         textareaBar.items.addAll(imageButton, Separator(Orientation.VERTICAL))
 
-
         // MAIN scene set up ////////////////////////////////////////////////////////////////////////
 
         /**
          * Check for app sizing and positioning
          */
-
         val appSpecifications = File(APP_SIZE_FILE)
         if (appSpecifications.exists()) {
             val appSpecs = appSpecifications.readText(Charsets.UTF_8)
@@ -267,10 +348,19 @@ class Main : Application() {
             stage.width = specifications.width
             stage.height = specifications.height
             setUserAgentStylesheet(specifications.theme + ".css")
+            applyThemeToHTMLEditorWebView(specifications.theme)
+            when (specifications.theme) {
+                "nord-light" -> nordLight.isSelected = true
+                "nord-dark" -> nordDark.isSelected = true
+                "primer-dark" -> primerDark.isSelected = true
+                "primer-light" -> primerLight.isSelected = true
+            }
         } else {
             stage.width = defaultWidth
             stage.height = defaultHeight
             setUserAgentStylesheet("nord-light.css")
+            applyThemeToHTMLEditorWebView("nord-light")
+            nordLight.isSelected = true
         }
 
         stage.setOnCloseRequest { _: WindowEvent? ->
@@ -302,6 +392,7 @@ class Main : Application() {
                     KeyCode.Y -> redo()
                     KeyCode.S -> saveSelectedNote()
                     KeyCode.G -> createGroup()
+                    KeyCode.D -> deleteSelectedNote()
                     else -> {}
                 }
             }
@@ -317,7 +408,27 @@ class Main : Application() {
         stage.show()
     }
 
-    private fun updateNoteview(listofnotes : List<Note>? = model.getAllUngroupedNotes(), selectedNote : Note? = null,
+    /**
+     * Applies the [theme] to the text area within the htmlEditor
+     *
+     * @param theme the theme to be set
+     */
+    private fun applyThemeToHTMLEditorWebView(theme: String) {
+        val webView = textarea.lookup("WebView") as WebView
+        val webEngine = webView.engine
+
+        var cssString = ""
+        when (theme) {
+            "nord-dark" -> cssString = NORD_DARK_CSS_HTML_EDITOR
+            "nord-light" -> cssString = NORD_LIGHT_CSS_HTML_EDITOR
+            "primer-dark" -> cssString = PRIMER_DARK_CSS_HTML_EDITOR
+            "primer-light" -> cssString = PRIMER_LIGHT_CSS_HTML_EDITOR
+        }
+
+        webEngine.userStyleSheetLocation = cssString
+    }
+
+    private fun updateNoteview(listofnotes : List<Note>? = model.getAllUngroupedNotes(), selectedNote : UUID? = null,
                                listofgroups : List<Group>? = model.getAllGroups())
     {
         val rootitem = TreeItem<Any>()
@@ -327,20 +438,18 @@ class Main : Application() {
             var notes = listofnotes
 
             if (listofnotes.isNotEmpty()) {
-                when (currentSortType) {
-                    NoteSortType.ALPHA -> {
-                        notes = Sort.sortByTitle(listofnotes, Sort.Order.ASC) as MutableList<Note>
+                notes = when (currentSortType) {
+                    NoteSortType.TITLE -> {
+                        Sort.sortByTitle(listofnotes, currentSortOrder) as MutableList<Note>
                     }
-                    NoteSortType.CREATED -> {
-                        notes = Sort.sortByDateCreated(listofnotes, Sort.Order.ASC) as MutableList<Note>
+
+                    NoteSortType.DATE_CREATED -> {
+                        Sort.sortByDateCreated(listofnotes, currentSortOrder) as MutableList<Note>
                     }
-                    NoteSortType.MASCENDING -> {
-                        notes = Sort.sortByDateModified(listofnotes, Sort.Order.ASC) as MutableList<Note>
+
+                    NoteSortType.DATE_MODIFIED -> {
+                        Sort.sortByDateModified(listofnotes, currentSortOrder) as MutableList<Note>
                     }
-                    NoteSortType.MDESCENDING -> {
-                        notes = Sort.sortByDateModified(listofnotes, Sort.Order.DESC) as MutableList<Note>
-                    }
-                    else -> {}
                 }
             }
 
@@ -349,8 +458,9 @@ class Main : Application() {
             notes.forEachIndexed { _, note ->
                 val newitem = TreeItem<Any>(note)
                 rootitem.children.add(newitem)
-                if (selectedNote != null && selectedNote == note) {
+                if (selectedNote != null && selectedNote == note.id) {
                     treeitemofnote = newitem
+                    displayNoteContents(note)
                 }
             }
             if (selectedNote != null) {
@@ -365,7 +475,6 @@ class Main : Application() {
 
         listofgroups?.forEachIndexed { _, group ->
             val newgroup = TreeItem<Any>(group)
-
             for (note in group.getNotes()) {
                 try {
                     newgroup.children.add(TreeItem(model.getNoteByID(note)))
@@ -387,7 +496,7 @@ class Main : Application() {
             val newnote = model.createNote(result.get(),"")
             textarea.disableProperty().set(false)
             displayNoteContents(newnote)
-            updateNoteview(model.getAllUngroupedNotes(), newnote)
+            updateNoteview(model.getAllUngroupedNotes(), newnote.id)
         }
     }
 
@@ -472,16 +581,8 @@ class Main : Application() {
         if (search.isNotEmpty()) {
             // handle search filtering by title or content
             when (currentFilterType) {
-                NoteFilterType.TITLE -> {
-                    notes.addAll(model.getNotesByTitle(search))
-                }
-                NoteFilterType.CONTENT -> {
-                    notes.addAll(model.getNotesByContent(search))
-                }
-                else -> {
-                    notes.addAll(model.getNotesByTitle(search))
-                    notes.addAll(model.getNotesByContent(search))
-                }
+                NoteFilterType.TITLE -> notes.addAll(model.getNotesByTitle(search))
+                NoteFilterType.CONTENT -> notes.addAll(model.getNotesByContent(search))
             }
             updateNoteview(notes, null, listOf<Group>())
         } else {
@@ -505,7 +606,7 @@ class Main : Application() {
 
                 textarea.disableProperty().set(false)
                 displayNoteContents(currNote)
-                updateNoteview(null, currNote)
+                updateNoteview(model.getAllUngroupedNotes(), currNote.id)
             }
         } else if (currItem != null && currItem.value is Group) {
             val currGroup = currItem.value as Group
@@ -634,7 +735,7 @@ class Main : Application() {
             val html = convertFile(selectedFile)
             if (html != "") {
                 val oldText = textarea.htmlText
-                textarea.htmlText = "$oldText<img src=\"$html\" width=\"100%\">"
+                textarea.htmlText = "$oldText<div class=\"resizable\"><img src=\"$html\" width=\"75%\"></div>"
             }
         }
     }

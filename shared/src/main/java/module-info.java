@@ -8,6 +8,7 @@ module shared {
     requires org.slf4j;
     requires java.net.http;
     requires com.google.gson;
+    requires org.jsoup;
     opens cs346.shared to com.google.gson;
     exports cs346.shared;
 }
