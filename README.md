@@ -19,6 +19,13 @@ Reyna Lu (Rerenah): r55lu@uwaterloo.ca
 ## Quick-start
 How to install and launch your application.
 
+To use the webservice, please run the following commands in terminal before starting the app:
+
+```
+docker pull rerenah/notes-app-webservice
+docker run -p 8080:8080 --mount type=volume,source=data-storage,destination=/data rerenah/notes-app-webservice
+```
+
 ## Screenshots/videos
 Optional, but often helpful to have a screenshot or demo-video for new users.
 

@@ -301,7 +301,7 @@ class Console {
             for (noteID in group.getNotes()) {
                 val note = model.getNoteByID(noteID)
                 println("".padEnd(PAD) +
-                        note.id.toString().padEnd(PAD_SMALL) +
+                        aliasIds.entries.find { it.value == note.id }!!.key.toString().padEnd(PAD_SMALL) +
                         note.title)
             }
         }

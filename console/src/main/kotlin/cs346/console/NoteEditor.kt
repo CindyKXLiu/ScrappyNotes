@@ -17,6 +17,7 @@ class NoteEditor() : Application() {
         stage!!.scene = scene
         stage!!.title =  NoteEditorLauncher.Setting.noteTitle
         htmlEditor.htmlText = NoteEditorLauncher.Setting.noteContent
+        stage!!.toFront()
         stage!!.show()
 
         stage.setOnCloseRequest { _: WindowEvent? ->
