@@ -775,7 +775,7 @@ class Main : Application() {
         val currItem = noteview.selectionModel.selectedItem
         if (currItem != null && currItem.value is Note) {
             val currNote = currItem.value as Note
-            updateNoteview(selectedNote = currNote)
+            updateNoteview(selectedNote = currNote.id)
             displayNoteContents(currNote)
         } else {
             updateNoteview()
@@ -792,7 +792,7 @@ class Main : Application() {
         val currItem = noteview.selectionModel.selectedItem
         if (currItem != null && currItem.value is Note) {
             val currNote = currItem.value as Note
-            updateNoteview(selectedNote = currNote)
+            updateNoteview(selectedNote = currNote.id)
             displayNoteContents(currNote)
         } else {
             updateNoteview()
