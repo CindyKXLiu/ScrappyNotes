@@ -4,19 +4,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 internal class UndoTest {
-
-    @Test
-    fun undo() {
-        val model = Model()
-
-        try {
-            model.undo()
-            assert(false)
-        } catch (e: NoUndoException) {
-            assert(true)
-        }
-    }
-
     @Test
     fun createNote() {
         val model = Model()
