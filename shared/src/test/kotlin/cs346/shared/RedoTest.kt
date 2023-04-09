@@ -5,6 +5,18 @@ import org.junit.jupiter.api.Test
 
 internal class RedoTest {
     @Test
+    fun redo() {
+        val model = Model()
+
+        try {
+            model.redo()
+            assert(false)
+        } catch (e: NoRedoException) {
+            assert(true)
+        }
+    }
+
+    @Test
     fun createNote() {
         val model = Model()
         var expectedNotesSize = 0
