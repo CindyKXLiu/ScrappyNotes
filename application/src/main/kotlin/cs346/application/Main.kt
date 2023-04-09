@@ -513,7 +513,16 @@ class Main : Application() {
 
             val result = alert.showAndWait()
             if (result.get() == ButtonType.OK) {
-                model.deleteNote(currNote.id)
+                try {
+                    model.deleteNote(currNote.id)
+                } catch (e : NonExistentNoteException) {
+                    val newalert = Alert(AlertType.WARNING)
+                    newalert.title = "Warning"
+                    newalert.headerText = "Could not delete note."
+                    newalert.showAndWait()
+                    return
+                }
+
                 textarea.htmlText = ""
                 textarea.disableProperty().set(true)
                 currSelection.parent.children.remove(currSelection)
@@ -531,7 +540,15 @@ class Main : Application() {
 
             val result = alert.showAndWait()
             if (result.get() == ButtonType.OK) {
-                model.deleteGroup(currGroup.name)
+                try {
+                    model.deleteGroup(currGroup.name)
+                } catch (e : NonExistentGroupException) {
+                    val newalert = Alert(AlertType.WARNING)
+                    newalert.title = "Warning"
+                    newalert.headerText = "Could not delete group."
+                    newalert.showAndWait()
+                    return
+                }
                 textarea.htmlText = ""
                 textarea.disableProperty().set(true)
                 currSelection.parent.children.remove(currSelection)
@@ -551,7 +568,15 @@ class Main : Application() {
     private fun saveSelectedNote() {
         val currItem = noteview.selectionModel.selectedItem
         if (currItem != null && currItem.value is Note) {
-            model.editNoteContent((currItem.value as Note).id, textarea.htmlText)
+            try {
+                model.editNoteContent((currItem.value as Note).id, textarea.htmlText)
+            } catch ( e : NonExistentNoteException ) {
+                val newalert = Alert(AlertType.WARNING)
+                newalert.title = "Warning"
+                newalert.headerText = "Could not save note."
+                newalert.showAndWait()
+                return
+            }
         }
     }
 
@@ -577,7 +602,16 @@ class Main : Application() {
             td.headerText = "Enter a new title for your note."
             val result: Optional<String> = td.showAndWait()
             if (result.isPresent) {
-                model.editNoteTitle(currNote.id, result.get())
+                try {
+                    model.editNoteTitle(currNote.id, result.get())
+                } catch ( e : NonExistentNoteException ) {
+                    val newalert = Alert(AlertType.WARNING)
+                    newalert.title = "Warning"
+                    newalert.headerText = "Could not rename note."
+                    newalert.showAndWait()
+                    return
+                }
+
                 textarea.disableProperty().set(false)
                 displayNoteContents(currNote)
                 updateNoteview(model.getAllUngroupedNotes(), currNote.id)
@@ -588,7 +622,18 @@ class Main : Application() {
             td.headerText = "Enter a new title for your group."
             val result: Optional<String> = td.showAndWait()
             if (result.isPresent) {
-                model.editGroupName(currGroup.name, result.get())
+                try {
+                    model.editGroupName(currGroup.name, result.get())
+                } catch ( e : NonExistentGroupException) {
+                    return
+                } catch ( e : DuplicateGroupException ) {
+                    val alert = Alert(AlertType.WARNING)
+                    alert.title = "Warning"
+                    alert.headerText = "There already exists a group with this name."
+                    alert.showAndWait()
+                    return
+                }
+
                 textarea.htmlText = ""
                 textarea.disableProperty().set(true)
                 updateNoteview()
@@ -601,7 +646,16 @@ class Main : Application() {
         td.headerText = "Create a new Group"
         val result: Optional<String> = td.showAndWait()
         if (result.isPresent) {
-            model.createGroup(result.get())
+            try {
+                model.createGroup(result.get())
+            } catch ( e : DuplicateGroupException ) {
+                val alert = Alert(AlertType.WARNING)
+                alert.title = "Warning"
+                alert.headerText = "There already exists a group with this name."
+                alert.showAndWait()
+                return
+            }
+
             textarea.htmlText = ""
             textarea.disableProperty().set(true)
             updateNoteview()
@@ -641,7 +695,6 @@ class Main : Application() {
             alert.headerText = "Cannot add selected item to group"
             alert.showAndWait()
         }
-
     }
 
     private fun removeSelectedNoteFromGroup() {
@@ -721,12 +774,36 @@ class Main : Application() {
     }
 
     private fun undo() {
-        model.undo()
-        updateNoteview()
+        try {
+            model.undo()
+        } catch (e : NoUndoException) {
+            return
+        }
+
+        val currItem = noteview.selectionModel.selectedItem
+        if (currItem != null && currItem.value is Note) {
+            val currNote = currItem.value as Note
+            updateNoteview(selectedNote = currNote.id)
+            displayNoteContents(currNote)
+        } else {
+            updateNoteview()
+        }
     }
 
     private fun redo() {
-        model.redo()
-        updateNoteview()
+        try {
+            model.redo()
+        } catch ( e: NoRedoException ) {
+            return
+        }
+
+        val currItem = noteview.selectionModel.selectedItem
+        if (currItem != null && currItem.value is Note) {
+            val currNote = currItem.value as Note
+            updateNoteview(selectedNote = currNote.id)
+            displayNoteContents(currNote)
+        } else {
+            updateNoteview()
+        }
     }
 }
