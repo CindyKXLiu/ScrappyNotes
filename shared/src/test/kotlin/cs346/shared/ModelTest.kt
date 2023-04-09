@@ -105,6 +105,13 @@ internal class ModelTest {
         } catch (e: NonExistentGroupException) {
             assert(false)
         }
+
+        try {
+            model.deleteNote(note1.id)
+            assert(false)
+        } catch (e: NonExistentNoteException) {
+            assert(true)
+        }
     }
 
     @Test
@@ -117,6 +124,15 @@ internal class ModelTest {
         model.editNoteTitle(noteID, "new title")
         expectedTitle = "new title"
         assertEquals(expectedTitle, model.getNoteByID(noteID).title)
+
+        model.deleteNote(noteID)
+
+        try {
+            model.editNoteTitle(noteID, "nonexistent note title")
+            assert(false)
+        } catch (e: NonExistentNoteException) {
+            assert(true)
+        }
     }
 
     @Test
@@ -129,6 +145,15 @@ internal class ModelTest {
         model.editNoteContent(noteID, "new content")
         expectedContent = "new content"
         assertEquals(expectedContent, model.getNoteByID(noteID).content)
+
+        model.deleteNote(noteID)
+
+        try {
+            model.editNoteContent(noteID, "try updating nonexistent note")
+            assert(false)
+        } catch (e: NonExistentNoteException) {
+            assert(true)
+        }
     }
 
     @Test
@@ -206,6 +231,13 @@ internal class ModelTest {
         model.deleteGroup("group3")
         groups = model.getAllGroups()
         assertEquals(0, groups.size)
+
+        try {
+            model.deleteGroup("nonexistent group")
+            assert(false)
+        } catch (e: NonExistentGroupException) {
+            assert(true)
+        }
     }
 
     @Test
@@ -321,6 +353,20 @@ internal class ModelTest {
         } catch (e: NonExistentGroupException) {
             assert(false)
         }
+
+        try {
+            model.editGroupName("group1", "group1modified")
+            assert(false)
+        } catch (e: NonExistentGroupException) {
+            assert(true)
+        }
+
+        try {
+            model.editGroupName("group1modified", "group2modified")
+            assert(false)
+        } catch (e: DuplicateGroupException) {
+            assert(true)
+        }
     }
 
     @Test
@@ -350,6 +396,13 @@ internal class ModelTest {
         model.addNoteToGroup("group1", note4.id)
         notes = model.getAllNotesInGroup("group1")
         assertEquals(4, notes.size)
+
+        try {
+            model.addNoteToGroup("nonexistent group", note4.id)
+            assert(false)
+        } catch (e: NonExistentGroupException) {
+            assert(true)
+        }
     }
 
     @Test
@@ -383,6 +436,15 @@ internal class ModelTest {
         model.removeNoteFromGroup("group1", note4.id)
         notesInGroup = model.getAllNotesInGroup("group1")
         assertEquals(0, notesInGroup.size)
+
+        model.addNoteToGroup("group1", note1.id)
+
+        try {
+            model.removeNoteFromGroup("nonexistent group", note1.id)
+            assert(false)
+        } catch (e: NonExistentGroupException) {
+            assert(true)
+        }
     }
 
     @Test
@@ -425,6 +487,13 @@ internal class ModelTest {
         notesInGroup2 = model.getAllNotesInGroup("group2")
         assertEquals(0, notesInGroup1.size)
         assertEquals(4, notesInGroup2.size)
+
+        try {
+            model.moveNoteToGroup("nonexistent group", note3.id)
+            assert(false)
+        } catch (e: NonExistentGroupException) {
+            assert(true)
+        }
     }
 
     @Test
@@ -512,6 +581,27 @@ internal class ModelTest {
         expectedSize = 0
         assertEquals(expectedSize, model.getAllUngroupedNotes().size)
     }
+
+    @Test
+    fun getNoteByID() {
+        val model = Model()
+        val note1 = model.createNote("n1", "c1")
+
+        val retrievedNote = model.getNoteByID(note1.id)
+
+        assertEquals(note1.title, retrievedNote.title)
+        assertEquals(note1.content, retrievedNote.content)
+
+        model.deleteNote(note1.id)
+
+        try {
+            model.getNoteByID(note1.id)
+            assert(false)
+        } catch (e: NonExistentNoteException) {
+            assert(true)
+        }
+    }
+
     @Test
     fun getNotesByDateCreated() {
         val model = Model()
