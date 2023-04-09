@@ -571,6 +571,10 @@ class Main : Application() {
             try {
                 model.editNoteContent((currItem.value as Note).id, textarea.htmlText)
             } catch ( e : NonExistentNoteException ) {
+                val newalert = Alert(AlertType.WARNING)
+                newalert.title = "Warning"
+                newalert.headerText = "Could not save note."
+                newalert.showAndWait()
                 return
             }
         }
@@ -601,6 +605,10 @@ class Main : Application() {
                 try {
                     model.editNoteTitle(currNote.id, result.get())
                 } catch ( e : NonExistentNoteException ) {
+                    val newalert = Alert(AlertType.WARNING)
+                    newalert.title = "Warning"
+                    newalert.headerText = "Could not rename note."
+                    newalert.showAndWait()
                     return
                 }
 
