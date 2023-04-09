@@ -29,6 +29,15 @@ internal class NoteTest {
         expectedContent = "content"
         assertEquals(expectedTitle, note4.title)
         assertEquals(expectedContent, note4.content)
+
+        // copy constructor
+        val note4Copy = Note(note4)
+        assertEquals(note4.id, note4Copy.id)
+        assertEquals(note4.title, note4Copy.title)
+        assertEquals(note4.content, note4Copy.content)
+        assertEquals(note4.dateCreated, note4Copy.dateCreated)
+        assertEquals(note4.dateModified, note4Copy.dateModified)
+        assertEquals(note4.groupName, note4Copy.groupName)
     }
 
     @Test
@@ -73,5 +82,13 @@ internal class NoteTest {
         assertEquals(expectedContent, note1.content)
         assert(note1.dateCreated == dateCreatedBeforeSetter)
         assert(note1.dateModified > dateModifiedBeforeSetter)
+    }
+
+    @Test
+    fun noteToString() {
+        val note1 = Note("title")
+        val expectedTitle = "title"
+
+        assertEquals(expectedTitle, note1.toString())
     }
 }
