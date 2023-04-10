@@ -35,16 +35,20 @@ Optional, but often helpful to have a screenshot or demo-video for new users.
 
 ## Releases
 version 1.0.0: released Feb 17, 2023
-* release-notes ([md](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-release-1.0.0.md))
-* installers ([console](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-Console-release-1.0.0.tar), [app](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-GUI-release-1.0.0.tar))
+* [release-note](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-release-1.0.0.md)
+* installers ([Console-Windows](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-Console-release-1.0.0.tar), [GUI-Windows](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-GUI-release-1.0.0.tar))
 
 version 2.0.0: released March 10, 2023
-* release-notes ([md](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-release-2.0.0.md))
-* installers ([console](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-Console-release-2.0.0.tar), [app](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-GUI-release-2.0.0.tar))
+* [release-notes](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-release-2.0.0.md)
+* installers ([Console-Windows](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-Console-release-2.0.0.tar), [GUI-Windows](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-GUI-release-2.0.0.tar))
 
 version 3.0.0: released March 24, 2023
-* release-notes ([md](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-release-3.0.0.md))
-* installers ([console](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-Console-release-3.0.0.tar), [app](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-GUI-release-3.0.0.tar))
+* [release-notes](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-release-3.0.0.md)
+* installers ([Console-Windows](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-Console-release-3.0.0.tar), [GUI-Windows](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-GUI-release-3.0.0.tar))
+
+version 4.0.0: released April 10, 2023
+*  [release-notes](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-release-4.0.0.md)
+* installers ([Console-Windows](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-Console-release-4.0.0.tar), [Console-macOS](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-GUI-release-4.0.0-macOS.zip), [GUI-Windows](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-GUI-release-4.0.0.tar), [GUI-macOS](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-GUI-release-4.0.0-macOS.zip))
 
 ## Other
 CSS themes are from the [atalantafx library](https://mkpaz.github.io/atlantafx)
