@@ -55,13 +55,17 @@ docker run -p 8080:8080 --mount type=volume,source=data-storage,destination=/dat
 
 ## Screenshots/videos
 ### GUI
+* Users can create a note, edit note content in a rich text html editor, rename a note and delete a note ([video demo](https://drive.google.com/file/d/1UrbI7FA_jqCs39Vq2dvTtHpGQ-nSVVqJ/view?usp=share_link))
+* Users can create a group, add a note to the group, rename the group and delete the group ([video demo](https://drive.google.com/file/d/1bgvOjfgD_mxA7I-hh3oC_N8qsZAFMqkH/view?usp=share_link))
+* Users can choose between 4 different themes for their notes application. The theme they previously chose before exiting the application gets persisted for the next time they open the application ([video demo](https://drive.google.com/file/d/16oTqnqip6WqV2db2obLTmxSRVAywbS6Y/view?usp=share_link))
+
 ### Console
 * Users can create a new note, rename or open an existing note, delete a note, and list all notes from console ([video demo](https://drive.google.com/file/d/1oLhTXym_qVIVblunN512YIpH83nYHo6j/view?usp=share_link))
 * Users can create groups, and add/remove existing notes to groups from console ([video demo](https://drive.google.com/file/d/1ZsM2TBDj7LC1-V-KQ-RC1anvCCwNbrAP/view?usp=share_link ))
 * Users can undo and redo previous actions from console ([video demo](https://drive.google.com/file/d/1Jw9DrosP7_MfeG8DduZNTISvqwmv4LlR/view?usp=share_link ))
 
 ### Web Service
-
+* When the user is not connected to the webservice, their notes data is still persisted to a local database. The notes created in one session are stored to this local database and retrieved in new subsequent sessions ([video demo](https://drive.google.com/file/d/1mTKNdS5zCpVgUFKgNRzRYt083BfG3k4X/view?usp=share_link))
 
 ## Releases
 version 1.0.0: released Feb 17, 2023
