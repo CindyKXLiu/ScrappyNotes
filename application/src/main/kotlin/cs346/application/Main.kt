@@ -569,6 +569,7 @@ class Main : Application() {
         val currItem = noteview.selectionModel.selectedItem
         if (currItem != null && currItem.value is Note) {
             try {
+                if ((currItem.value as Note).content == textarea.htmlText) return
                 model.editNoteContent((currItem.value as Note).id, textarea.htmlText)
             } catch ( e : NonExistentNoteException ) {
                 val newalert = Alert(AlertType.WARNING)
