@@ -237,25 +237,27 @@ class Console {
     }
 
     /**
-     * Opens a rich editor containing the content of note with id [noteID]
+     * Opens a rich editor with titled [title] containing [content]
      *
-     * @param noteId is the id of the note
+     * @param title the title of the note editor (this should be set to the note title)
+     * @param content the content of the note editor (this should be set to the note content)
+     *
+     * @return returns the content of the note editor upon closing
      */
-    private fun launchNoteEditor(noteId: UUID) {
-        val note = model.getNoteByID(noteId)
+    private fun launchNoteEditor(title: String, content: String = ""): String {
 
         // Set editor settings
         NoteEditorLauncher.Setting.active = true
-        NoteEditorLauncher.Setting.noteTitle = note.title
-        NoteEditorLauncher.Setting.noteContent = note.content
+        NoteEditorLauncher.Setting.noteTitle = title
+        NoteEditorLauncher.Setting.noteContent = content
 
         noteEditorLauncher.launch()
 
         // wait until user finishes editing note/close editor
         while (NoteEditorLauncher.Setting.active) Thread.sleep(1000)
 
-        // apply changes to model
-        model.editNoteContent(note.id, NoteEditorLauncher.Setting.noteContent)
+        // return edited content
+        return NoteEditorLauncher.Setting.noteContent
     }
 
     /**
@@ -313,13 +315,11 @@ class Console {
      * @param title is the title of the new note created
      */
     private fun createNewNote(title: String) {
-        val note = model.createNote(title, "")
-
+        val noteContent = launchNoteEditor(title)
+        val note = model.createNote(title, noteContent)
         aliasIds[nextID] = note.id
         ++nextID
-
-        launchNoteEditor(note.id)
-        println("Created new note \"$title\".")
+        println("!Created new note \"$title\".")
     }
 
     /**
@@ -378,7 +378,8 @@ class Console {
 
         try {
             val note = model.getNoteByID(uuid)
-            launchNoteEditor(note.id)
+            val newContent = launchNoteEditor(note.title, note.content)
+            model.editNoteContent(note.id, newContent)
         } catch (e: NonExistentNoteException) {
             println(INVALID_ID_MSG)
         }
