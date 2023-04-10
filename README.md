@@ -2,9 +2,8 @@
 
 ## Goal
 A note-taking application which encourages users to store their fleeing thoughts and ideas in a chaotic yet organized way.
-It includes common notes features such as adding, editing, deleting notes, as well as ways to organize/search them.
-
-Our application includes both a GUI and a simple console interface.
+It includes common notes features such as adding, editing, deleting notes, as well as ways to organize/search them. 
+Our application includes both a GUI and a console interface.
 
 ## Team members
 Cindy Liu: kxliu@uwaterloo.ca
@@ -17,7 +16,25 @@ Reyna Lu (Rerenah): r55lu@uwaterloo.ca
 
 
 ## Quick-start
+### GUI
+#### Windows
+#### MacOS
+1. Unzip the GUI zip file.
+2. Go to the ```/bin``` folder and click on the executable.
 
+The GUI can also be accessed via console app from the command line.
+1. Unzip the Console zip file.
+2. Open up terminal and navigate to the ```/bin``` folder.
+3. Run the console with ```--launchGUI``` argument (```./console --launchGUI```). 
+
+### Console
+#### Windows
+#### MacOS
+1. Unzip the Console zip file. 
+2. Open up terminal and navigate to the ```/bin``` folder.
+3. Run the console with no arguments (```./console```).
+
+### Web Service
 To use the webservice, please run the following commands in terminal before starting the app:
 
 ```
@@ -25,13 +42,11 @@ docker pull rerenah/notes-app-webservice
 docker run -p 8080:8080 --mount type=volume,source=data-storage,destination=/data rerenah/notes-app-webservice
 ```
 
-To run the application:
-* Select the latest available version of either the GUI, or Console release.
-* Download the available tar files and extract them to the desired location.
-* Open the bin folder and run the batch file
-
 ## Screenshots/videos
-Optional, but often helpful to have a screenshot or demo-video for new users.
+### GUI
+### Console
+### Web Service
+
 
 ## Releases
 version 1.0.0: released Feb 17, 2023
