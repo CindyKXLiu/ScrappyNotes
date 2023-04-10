@@ -21,6 +21,12 @@ Reyna Lu (Rerenah): r55lu@uwaterloo.ca
 #### Windows
 1. Unzip the GUI tar file.
 2. Go to the ```/bin``` folder and run the batch file. It may take a few seconds to start.
+
+The GUI can also be accessed via console app from the command line.
+1. Unzip the Console zip file.
+2. Open up terminal and navigate to the ```/bin``` folder.
+3. Run the console with ```--launchGUI``` argument (```console --launchGUI```). 
+
 #### MacOS
 1. Unzip the GUI zip file.
 2. Go to the ```/bin``` folder and click on the executable.
