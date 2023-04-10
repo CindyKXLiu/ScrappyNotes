@@ -11,7 +11,7 @@ Cindy Liu: kxliu@uwaterloo.ca
 
 Amanda Tang: a54tang@uwaterloo.ca
 
-Joanne Wu: j545wu1@uwaterloo.ca
+Joanne Wu: j525wu1@uwaterloo.ca
 
 Reyna Lu (Rerenah): r55lu@uwaterloo.ca
 
@@ -56,6 +56,10 @@ docker run -p 8080:8080 --mount type=volume,source=data-storage,destination=/dat
 ## Screenshots/videos
 ### GUI
 ### Console
+* Users can create a new note, rename or open an existing note, delete a note, and list all notes from console ([video demo](https://drive.google.com/file/d/1oLhTXym_qVIVblunN512YIpH83nYHo6j/view?usp=share_link))
+* Users can create groups, and add/remove existing notes to groups from console ([video demo](https://drive.google.com/file/d/1ZsM2TBDj7LC1-V-KQ-RC1anvCCwNbrAP/view?usp=share_link ))
+* Users can undo and redo previous actions from console ([video demo](https://drive.google.com/file/d/1Jw9DrosP7_MfeG8DduZNTISvqwmv4LlR/view?usp=share_link ))
+
 ### Web Service
 
 
