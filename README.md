@@ -3,6 +3,7 @@
 ## Goal
 A note-taking application which encourages users to store their fleeing thoughts and ideas in a chaotic yet organized way.
 It includes common notes features such as adding, editing, deleting notes, as well as ways to organize/search them. 
+It also includes some additional features such as themes, image support, etc. 
 Our application includes both a GUI and a console interface.
 
 ## Team members
