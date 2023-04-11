@@ -784,15 +784,7 @@ class Main : Application() {
         } catch (e : NoUndoException) {
             return
         }
-
-        val currItem = noteview.selectionModel.selectedItem
-        if (currItem != null && currItem.value is Note) {
-            val currNote = currItem.value as Note
-            updateNoteview(selectedNote = currNote.id)
-            displayNoteContents(currNote)
-        } else {
-            updateNoteview()
-        }
+        updateNoteview()
     }
 
     private fun redo() {
@@ -801,14 +793,6 @@ class Main : Application() {
         } catch ( e: NoRedoException ) {
             return
         }
-
-        val currItem = noteview.selectionModel.selectedItem
-        if (currItem != null && currItem.value is Note) {
-            val currNote = currItem.value as Note
-            updateNoteview(selectedNote = currNote.id)
-            displayNoteContents(currNote)
-        } else {
-            updateNoteview()
-        }
+        updateNoteview()
     }
 }
