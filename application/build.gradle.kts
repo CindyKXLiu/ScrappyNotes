@@ -27,6 +27,7 @@ dependencies {
     implementation(libs.kotlin.coroutines)
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
     testImplementation(libs.junit.jupiter)
+    implementation("org.jsoup:jsoup:1.14.3")
 }
 
 tasks.test {

@@ -21,6 +21,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.jsoup.Jsoup
 import java.io.File
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -571,7 +572,8 @@ class Main : Application() {
         val currItem = noteview.selectionModel.selectedItem
         if (currItem != null && currItem.value is Note) {
             try {
-                if ((currItem.value as Note).content == textarea.htmlText) return
+                val textareaContent = Jsoup.parse(textarea.htmlText).text()
+                if ((currItem.value as Note).content == textareaContent) return
                 model.editNoteContent((currItem.value as Note).id, textarea.htmlText)
             } catch ( e : NonExistentNoteException ) {
                 val newalert = Alert(AlertType.WARNING)
