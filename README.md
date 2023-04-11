@@ -53,7 +53,7 @@ docker pull rerenah/notes-app-webservice
 docker run -p 8080:8080 --mount type=volume,source=data-storage,destination=/data rerenah/notes-app-webservice
 ```
 
-## Screenshots/videos
+## Features and Demos
 ### GUI
 * Users can create a note, edit note content in a rich text html editor, rename a note and delete a note ([video demo](https://drive.google.com/file/d/1UrbI7FA_jqCs39Vq2dvTtHpGQ-nSVVqJ/view?usp=share_link))
 * Users can create a group, add a note to the group, rename the group and delete the group ([video demo](https://drive.google.com/file/d/1bgvOjfgD_mxA7I-hh3oC_N8qsZAFMqkH/view?usp=share_link))
