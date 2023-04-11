@@ -53,14 +53,14 @@ docker pull rerenah/notes-app-webservice
 docker run -p 8080:8080 --mount type=volume,source=data-storage,destination=/data rerenah/notes-app-webservice
 ```
 
-## Screenshots/videos
+## Features and Demos
 ### GUI
 * Users can create a note, edit note content in a rich text html editor, rename a note and delete a note ([video demo](https://drive.google.com/file/d/1UrbI7FA_jqCs39Vq2dvTtHpGQ-nSVVqJ/view?usp=share_link))
 * Users can create a group, add a note to the group, rename the group and delete the group ([video demo](https://drive.google.com/file/d/1bgvOjfgD_mxA7I-hh3oC_N8qsZAFMqkH/view?usp=share_link))
 * Users can move and remove notes to and from groups ([video demo](https://drive.google.com/file/d/1sYwxGe6aHbmk9zyFkgN6bII1SRSQULOr/view?usp=sharing))
 * Users can search the notes by content and by title ([video demo](https://drive.google.com/file/d/1fjwvD-hxM5la1SCMa00M0Yga9Hjhw66K/view?usp=sharing))
 * Users can sort the notes by title, date modified and date created in ascending and descending order ([video demo](https://drive.google.com/file/d/1GyhmvAB-nDY4jytwtFcwm88DVIj_x8fP/view?usp=sharing))
-* Users can undo/redo previous actions (new note/group, delete note/group, rename note/group, edit note content, add note to group, move note to group) from GUI
+* Users can undo and redo previous actions (new note/group, delete note/group, rename note/group, edit note content, add note to group, move note to group) ([video demo](https://drive.google.com/file/d/1gXW179Y3NW6iuBmKduQc9qvkwky3nVzI/view?usp=sharing))
 * Users can choose between 4 different themes for their notes application. The theme they previously chose before exiting the application gets persisted for the next time they open the application ([video demo](https://drive.google.com/file/d/16oTqnqip6WqV2db2obLTmxSRVAywbS6Y/view?usp=share_link))
 ### Console
 * Users can create a new note, rename or open an existing note, delete a note, and list all notes ([video demo](https://drive.google.com/file/d/1oLhTXym_qVIVblunN512YIpH83nYHo6j/view?usp=share_link))
@@ -87,7 +87,7 @@ version 3.0.0: released March 24, 2023
 
 version 4.0.0: released April 10, 2023
 *  [release-note](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-release-4.0.0.md)
-* installers ([Console-Windows](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-Console-release-4.0.0.tar), [Console-macOS](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-GUI-release-4.0.0-macOS.zip), [GUI-Windows](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-GUI-release-4.0.0.tar), [GUI-macOS](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-GUI-release-4.0.0-macOS.zip))
+* installers ([Console-Windows](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-Console-release-4.0.0.tar), [Console-macOS](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-Console-release-4.0.0-macOS.zip), [GUI-Windows](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-GUI-release-4.0.0.tar), [GUI-macOS](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-GUI-release-4.0.0-macOS.zip))
 
 ## Other
 CSS themes are from the [atlantafx library](https://mkpaz.github.io/atlantafx)
