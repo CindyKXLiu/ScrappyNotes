@@ -70,7 +70,7 @@ docker run -p 8080:8080 --mount type=volume,source=data-storage,destination=/dat
 
 ### Web Service
 * When the user is not connected to the webservice, their notes data is still persisted to a local database. The notes created in one session are stored to this local database and retrieved in new subsequent sessions ([video demo](https://drive.google.com/file/d/1mTKNdS5zCpVgUFKgNRzRYt083BfG3k4X/view?usp=share_link))
-* When the user is connected to the webservice, users can save and update to sync changes from across instances. ([video demo](https://drive.google.com/file/d/1NbmUcn3jhJUyYCK555TZpw8zdjS3OOQC/view?usp=sharing))
+* When the user is connected to the webservice, users can save and update to sync changes from across instances ([video demo](https://drive.google.com/file/d/1NbmUcn3jhJUyYCK555TZpw8zdjS3OOQC/view?usp=sharing))
 ## Releases
 version 1.0.0: released Feb 17, 2023
 * [release-note](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-release-1.0.0.md)
