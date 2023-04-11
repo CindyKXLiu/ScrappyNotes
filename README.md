@@ -86,7 +86,7 @@ version 3.0.0: released March 24, 2023
 
 version 4.0.0: released April 10, 2023
 *  [release-note](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-release-4.0.0.md)
-* installers ([Console-Windows](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-Console-release-4.0.0.tar), [Console-macOS](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-GUI-release-4.0.0-macOS.zip), [GUI-Windows](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-GUI-release-4.0.0.tar), [GUI-macOS](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-GUI-release-4.0.0-macOS.zip))
+* installers ([Console-Windows](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-Console-release-4.0.0.tar), [Console-macOS](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-Console-release-4.0.0-macOS.zip), [GUI-Windows](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-GUI-release-4.0.0.tar), [GUI-macOS](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-GUI-release-4.0.0-macOS.zip))
 
 ## Other
 CSS themes are from the [atlantafx library](https://mkpaz.github.io/atlantafx)
