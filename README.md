@@ -60,7 +60,7 @@ docker run -p 8080:8080 --mount type=volume,source=data-storage,destination=/dat
 * Users can move and remove notes to and from groups ([video demo](https://drive.google.com/file/d/1sYwxGe6aHbmk9zyFkgN6bII1SRSQULOr/view?usp=sharing))
 * Users can search the notes by content and by title ([video demo](https://drive.google.com/file/d/1fjwvD-hxM5la1SCMa00M0Yga9Hjhw66K/view?usp=sharing))
 * Users can sort the notes by title, date modified and date created in ascending and descending order ([video demo](https://drive.google.com/file/d/1GyhmvAB-nDY4jytwtFcwm88DVIj_x8fP/view?usp=sharing))
-* Users can undo/redo previous actions (new note/group, delete note/group, rename note/group, edit note content, add note to group, move note to group) from GUI
+* Users can undo/redo previous actions (new note/group, delete note/group, rename note/group, edit note content, add note to group, move note to group) ([video demo](https://drive.google.com/file/d/1gXW179Y3NW6iuBmKduQc9qvkwky3nVzI/view?usp=sharing))
 * Users can choose between 4 different themes for their notes application. The theme they previously chose before exiting the application gets persisted for the next time they open the application ([video demo](https://drive.google.com/file/d/16oTqnqip6WqV2db2obLTmxSRVAywbS6Y/view?usp=share_link))
 ### Console
 * Users can create a new note, rename or open an existing note, delete a note, and list all notes ([video demo](https://drive.google.com/file/d/1oLhTXym_qVIVblunN512YIpH83nYHo6j/view?usp=share_link))
