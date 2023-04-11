@@ -6,5 +6,6 @@ module application {
     requires kotlinx.serialization.core;
     requires kotlinx.serialization.json;
     requires javafx.web;
+    requires org.jsoup;
     exports cs346.application;
 }
