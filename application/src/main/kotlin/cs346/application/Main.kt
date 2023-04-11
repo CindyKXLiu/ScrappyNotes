@@ -272,8 +272,10 @@ class Main : Application() {
         updateDatabase.setOnAction { _ ->
             model.updateDatabase()
             val currSelection = noteview.selectionModel.selectedItem
-            if (currSelection.value is Note) {
+            if (currSelection != null && currSelection.value is Note) {
                 updateNoteview(selectedNote=(currSelection.value as Note).id)
+            } else {
+                updateNoteview()
             }
         }
         databaseMenu.items.addAll(saveDatabase, updateDatabase)
