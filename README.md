@@ -74,20 +74,20 @@ docker run -p 8080:8080 --mount type=volume,source=data-storage,destination=/dat
 * Both console and GUI will automatically connect to the web service, and can communicate with one another ([video demo](https://drive.google.com/file/d/1BIpusfVSL44OLLQfx4imsPORxbfFKDeL/view?usp=share_link))
 ## Releases
 version 1.0.0: released Feb 17, 2023
-* [release-note](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-release-1.0.0.md)
-* installers ([Console-Windows](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-Console-release-1.0.0.tar), [GUI-Windows](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-GUI-release-1.0.0.tar))
+* [release-note](https://github.com/CindyKXLiu/ScrappyNotes/blob/main/releases/Notes-Application-release-1.0.0.md)
+* installers ([Console-Windows](https://github.com/CindyKXLiu/ScrappyNotes/blob/main/releases/Notes-Application-Console-release-1.0.0.tar), [GUI-Windows](https://github.com/CindyKXLiu/ScrappyNotes/blob/main/releases/Notes-Application-GUI-release-1.0.0.tar))
 
 version 2.0.0: released March 10, 2023
-* [release-note](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-release-2.0.0.md)
-* installers ([Console-Windows](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-Console-release-2.0.0.tar), [GUI-Windows](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-GUI-release-2.0.0.tar))
+* [release-note](https://github.com/CindyKXLiu/ScrappyNotes/blob/main/releases/Notes-Application-release-2.0.0.md)
+* installers ([Console-Windows](https://github.com/CindyKXLiu/ScrappyNotes/blob/main/releases/Notes-Application-Console-release-2.0.0.tar), [GUI-Windows](https://github.com/CindyKXLiu/ScrappyNotes/blob/main/releases/Notes-Application-GUI-release-2.0.0.tar))
 
 version 3.0.0: released March 24, 2023
-* [release-note](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-release-3.0.0.md)
-* installers ([Console-Windows](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-Console-release-3.0.0.tar), [GUI-Windows](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-GUI-release-3.0.0.tar))
+* [release-note](https://github.com/CindyKXLiu/ScrappyNotes/blob/main/releases/Notes-Application-release-3.0.0.md)
+* installers ([Console-Windows](https://github.com/CindyKXLiu/ScrappyNotes/blob/main/releases/Notes-Application-Console-release-3.0.0.tar), [GUI-Windows](https://github.com/CindyKXLiu/ScrappyNotes/blob/main/releases/Notes-Application-GUI-release-3.0.0.tar))
 
 version 4.0.0: released April 10, 2023
-*  [release-note](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-release-4.0.0.md)
-* installers ([Console-Windows](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-Console-release-4.0.0.tar), [Console-macOS](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-Console-release-4.0.0-macOS.zip), [GUI-Windows](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-GUI-release-4.0.0.tar), [GUI-macOS](https://git.uwaterloo.ca/a54tang/cs346/-/blob/main/releases/Notes-Application-GUI-release-4.0.0-macOS.zip))
+*  [release-note](https://github.com/CindyKXLiu/ScrappyNotes/blob/main/releases/Notes-Application-release-4.0.0.md)
+* installers ([Console-Windows](https://github.com/CindyKXLiu/ScrappyNotes/blob/main/releases/Notes-Application-Console-release-4.0.0.tar), [Console-macOS](https://github.com/CindyKXLiu/ScrappyNotes/blob/main/releases/Notes-Application-Console-release-4.0.0-macOS.zip), [GUI-Windows](https://github.com/CindyKXLiu/ScrappyNotes/blob/main/releases/Notes-Application-GUI-release-4.0.0.tar), [GUI-macOS](https://github.com/CindyKXLiu/ScrappyNotes/blob/main/releases/Notes-Application-GUI-release-4.0.0-macOS.zip))
 
 ## Other
 CSS themes are from the [atlantafx library](https://mkpaz.github.io/atlantafx)
